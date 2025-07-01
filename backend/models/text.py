@@ -1,0 +1,29 @@
+from sqlalchemy import Column, Integer, String, Text as SQLText, DateTime, Enum, ForeignKey
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from database import Base
+import enum
+
+
+class TextStatus(enum.Enum):
+    INITIALIZED = "initialized"
+    ANNOTATED = "annotated"
+    REVIEWED = "reviewed"
+
+
+class Text(Base):
+    __tablename__ = "texts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False, index=True)
+    content = Column(SQLText, nullable=False)
+    source = Column(String, nullable=True)  # Source document/file
+    language = Column(String, default="en")
+    status = Column(Enum(TextStatus), default=TextStatus.INITIALIZED, nullable=False)
+    reviewer_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    annotations = relationship("Annotation", back_populates="text", cascade="all, delete-orphan")
+    reviewer = relationship("User", back_populates="reviewed_texts") 
