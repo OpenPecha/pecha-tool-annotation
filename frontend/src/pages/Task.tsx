@@ -88,7 +88,6 @@ const Index = () => {
       setAnnotations(convertedAnnotations);
     }
   }, [textData]);
-  console.log(textData);
   // Mutation for creating annotations
   const createAnnotationMutation = useMutation({
     mutationFn: async (annotationData: AnnotationCreate) => {
@@ -114,7 +113,6 @@ const Index = () => {
       });
     },
     onError: (error) => {
-      console.error("Error creating annotation:", error);
       toast({
         title: "❌ Failed to Create Annotation",
         description:
@@ -143,7 +141,6 @@ const Index = () => {
       });
     },
     onError: (error) => {
-      console.error("Error deleting annotation:", error);
       toast({
         title: "❌ Failed to Delete Annotation",
         description:
@@ -171,7 +168,6 @@ const Index = () => {
       setTimeout(() => navigate("/"), 2000);
     },
     onError: (error) => {
-      console.error("Error updating text status:", error);
       toast({
         title: "❌ Failed to Submit Task",
         description:
