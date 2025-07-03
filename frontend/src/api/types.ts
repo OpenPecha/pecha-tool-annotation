@@ -64,6 +64,7 @@ export interface AnnotationBase {
   end_position: number;
   selected_text?: string;
   label?: string;
+  name?: string; // Custom name for the annotation (especially for headers)
   meta?: Record<string, unknown>;
   confidence: number;
 }
@@ -78,6 +79,7 @@ export interface AnnotationUpdate {
   end_position?: number;
   selected_text?: string;
   label?: string;
+  name?: string; // Custom name for the annotation
   meta?: Record<string, unknown>;
   confidence?: number;
 }

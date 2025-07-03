@@ -24,6 +24,7 @@ export type Annotation = {
   text: string;
   start: number;
   end: number;
+  name?: string; // Custom name for the annotation
 };
 
 const Index = () => {
@@ -64,6 +65,7 @@ const Index = () => {
       text: ann.selected_text || "",
       start: ann.start_position,
       end: ann.end_position,
+      name: ann.name,
     }));
   };
 
@@ -75,6 +77,12 @@ const Index = () => {
     start: number;
     end: number;
   } | null>(null);
+  const [pendingHeader, setPendingHeader] = useState<{
+    text: string;
+    start: number;
+    end: number;
+  } | null>(null);
+
   const [tocOpen, setTocOpen] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const textAnnotatorRef = useRef<TextAnnotatorRef>(null);
@@ -101,6 +109,7 @@ const Index = () => {
         text: data.selected_text || "",
         start: data.start_position,
         end: data.end_position,
+        name: data.name,
       };
       setAnnotations((prev) => [...prev, newAnnotation]);
 
@@ -178,7 +187,7 @@ const Index = () => {
     },
   });
 
-  const addAnnotation = async (type: string) => {
+  const addAnnotation = async (type: string, name?: string) => {
     if (!selectedText || !textId) return;
 
     // Load configuration and validate annotation type
@@ -209,12 +218,56 @@ const Index = () => {
       selected_text: selectedText.text,
       confidence: 1.0,
       label: type,
+      name: name,
       meta: {},
     };
 
     // Save to database immediately
     createAnnotationMutation.mutate(annotationData);
     setSelectedText(null);
+  };
+
+  const handleHeaderSelected = (selection: {
+    text: string;
+    start: number;
+    end: number;
+  }) => {
+    setPendingHeader(selection);
+    setSelectedText(null);
+  };
+
+  const handleHeaderNameSubmit = (name: string) => {
+    if (!pendingHeader || !textId) return;
+
+    const textIdNumber = parseInt(textId, 10);
+    if (isNaN(textIdNumber)) {
+      toast({
+        title: "❌ Error",
+        description: "Invalid text ID. Cannot create annotation.",
+      });
+      return;
+    }
+
+    // Create header annotation with custom name
+    const annotationData: AnnotationCreate = {
+      text_id: textIdNumber,
+      annotation_type: "header",
+      start_position: pendingHeader.start,
+      end_position: pendingHeader.end,
+      selected_text: pendingHeader.text,
+      confidence: 1.0,
+      label: "header",
+      name: name,
+      meta: {},
+    };
+
+    // Save to database
+    createAnnotationMutation.mutate(annotationData);
+    setPendingHeader(null);
+  };
+
+  const handleHeaderNameCancel = () => {
+    setPendingHeader(null);
   };
 
   const removeAnnotation = (id: string) => {
@@ -325,6 +378,9 @@ const Index = () => {
           onRemoveAnnotation={removeAnnotation}
           isOpen={tocOpen}
           onToggle={() => setTocOpen(!tocOpen)}
+          pendingHeader={pendingHeader}
+          onHeaderNameSubmit={handleHeaderNameSubmit}
+          onHeaderNameCancel={handleHeaderNameCancel}
         />
 
         {/* Main Content Area */}
@@ -350,6 +406,7 @@ const Index = () => {
             onTextSelect={setSelectedText}
             onAddAnnotation={addAnnotation}
             onRemoveAnnotation={removeAnnotation}
+            onHeaderSelected={handleHeaderSelected}
             readOnly={true}
           />
         </div>

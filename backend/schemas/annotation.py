@@ -9,6 +9,7 @@ class AnnotationBase(BaseModel):
     end_position: int
     selected_text: Optional[str] = None
     label: Optional[str] = None
+    name: Optional[str] = None  # Custom name for the annotation (especially for headers)
     meta: Optional[Dict[str, Any]] = None
     confidence: int = 100
 
@@ -41,6 +42,7 @@ class AnnotationUpdate(BaseModel):
     end_position: Optional[int] = None
     selected_text: Optional[str] = None
     label: Optional[str] = None
+    name: Optional[str] = None  # Custom name for the annotation
     meta: Optional[Dict[str, Any]] = None
     confidence: Optional[int] = None
 

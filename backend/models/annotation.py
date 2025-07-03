@@ -15,6 +15,7 @@ class Annotation(Base):
     end_position = Column(Integer, nullable=False)    # End character position in text
     selected_text = Column(String, nullable=True)     # The actual text that was annotated
     label = Column(String, nullable=True)             # The annotation label/value
+    name = Column(String, nullable=True)              # Custom name for the annotation (especially for headers)
     meta = Column(JSON, nullable=True)                # Additional metadata as JSON
     confidence = Column(Integer, default=100)         # Confidence score (0-100)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

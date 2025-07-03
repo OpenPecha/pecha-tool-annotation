@@ -64,8 +64,13 @@ interface EditorProps {
   onTextSelect: (
     selection: { text: string; start: number; end: number } | null
   ) => void;
-  onAddAnnotation: (type: string) => void;
+  onAddAnnotation: (type: string, name?: string) => void;
   onRemoveAnnotation: (id: string) => void;
+  onHeaderSelected?: (selection: {
+    text: string;
+    start: number;
+    end: number;
+  }) => void;
   readOnly?: boolean;
 }
 
@@ -89,6 +94,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       onTextSelect,
       onAddAnnotation,
       onRemoveAnnotation,
+      onHeaderSelected,
       readOnly = true,
     },
     ref
@@ -102,10 +108,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       y: 0,
     });
     const [annotationText, setAnnotationText] = useState("");
-    const [isSelecting, setIsSelecting] = useState(false);
-    const [firstClickPosition, setFirstClickPosition] = useState<number | null>(
-      null
-    );
+
     const [deletePopupVisible, setDeletePopupVisible] = useState(false);
     const [deletePopupPosition, setDeletePopupPosition] = useState({
       x: 0,
@@ -179,17 +182,14 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       }
     }, [editorReady, annotations]);
 
-    // Unified click event handler for both annotation deletion and text selection
+    // Handle annotation deletion clicks
     useEffect(() => {
-      const handleUnifiedClick = (event: MouseEvent) => {
-        console.log("🖱️ Click detected:", event.target);
-
+      const handleClick = (event: MouseEvent) => {
         const target = event.target as HTMLElement;
         const annotationElement = target.closest("[data-annotation-id]");
 
-        // Handle annotation deletion clicks
+        // Only handle annotation clicks for deletion
         if (annotationElement) {
-          console.log("📌 Annotation clicked");
           const annotationId =
             annotationElement.getAttribute("data-annotation-id");
           const annotation = annotations.find((ann) => ann.id === annotationId);
@@ -202,122 +202,30 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
             });
             setAnnotationToDelete(annotation);
             setDeletePopupVisible(true);
-            setBubbleMenuVisible(false); // Hide selection bubble if open
-          }
-          return; // Don't handle text selection for annotation clicks
-        }
-
-        // Handle text selection clicks
-        if (editorRef.current?.view) {
-          const view = editorRef.current.view;
-          const clickPos = view.posAtCoords({
-            x: event.clientX,
-            y: event.clientY,
-          });
-
-          console.log("📝 Text click detected at position:", clickPos);
-
-          if (clickPos !== null) {
             setBubbleMenuVisible(false);
-            setDeletePopupVisible(false);
-
-            if (firstClickPosition === null) {
-              // First click - start selection
-              console.log("🟢 First click - Selection start:", {
-                position: clickPos,
-                character: text.charAt(clickPos),
-                textAround: text.substring(
-                  Math.max(0, clickPos - 10),
-                  clickPos + 10
-                ),
-              });
-
-              setFirstClickPosition(clickPos);
-              setIsSelecting(true);
-
-              // Set cursor position
-              view.dispatch({
-                selection: { anchor: clickPos, head: clickPos },
-              });
-
-              // Visual feedback for selection mode
-              view.focus();
-            } else {
-              // Second click - complete selection
-              const startPos = Math.min(firstClickPosition, clickPos);
-              const endPos = Math.max(firstClickPosition, clickPos);
-
-              console.log("🔴 Second click - Selection end:", {
-                firstClickPosition: firstClickPosition,
-                secondClickPosition: clickPos,
-                startPos: startPos,
-                endPos: endPos,
-                selectedText: text.substring(startPos, endPos),
-                selectionLength: endPos - startPos,
-              });
-
-              if (startPos !== endPos) {
-                // Create selection
-                view.dispatch({
-                  selection: { anchor: startPos, head: endPos },
-                });
-
-                console.log("✅ Selection created:", {
-                  range: `${startPos}-${endPos}`,
-                  text: text.substring(startPos, endPos),
-                  length: endPos - startPos,
-                });
-
-                // Handle the selection
-                handleClickSelection(startPos, endPos);
-              } else {
-                console.log(
-                  "⚠️ No selection - start and end positions are the same"
-                );
-              }
-
-              // Reset selection state
-              setFirstClickPosition(null);
-              setIsSelecting(false);
-            }
           }
         }
       };
 
-      const editorElement = editorRef.current?.editor;
+      const editorElement = editorRef.current?.view?.dom;
+
       if (editorElement) {
-        editorElement.addEventListener("click", handleUnifiedClick);
+        editorElement.addEventListener("click", handleClick, true);
       }
 
       return () => {
         if (editorElement) {
-          editorElement.removeEventListener("click", handleUnifiedClick);
+          editorElement.removeEventListener("click", handleClick, true);
         }
       };
-    }, [annotations, firstClickPosition]);
+    }, [annotations]);
 
-    // Add keyboard event listener for canceling selection
+    // Add keyboard event listener for closing popups
     useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
-        if (
-          event.key === "Escape" &&
-          isSelecting &&
-          firstClickPosition !== null
-        ) {
-          // Cancel selection mode
-          setFirstClickPosition(null);
-          setIsSelecting(false);
+        if (event.key === "Escape") {
           setBubbleMenuVisible(false);
           setDeletePopupVisible(false);
-
-          // Clear any current selection
-          if (editorRef.current?.view) {
-            const view = editorRef.current.view;
-            const currentPos = view.state.selection.main.head;
-            view.dispatch({
-              selection: { anchor: currentPos, head: currentPos },
-            });
-          }
         }
       };
 
@@ -325,7 +233,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       return () => {
         document.removeEventListener("keydown", handleKeyDown);
       };
-    }, [isSelecting, firstClickPosition]);
+    }, []);
 
     useImperativeHandle(ref, () => ({
       scrollToPosition: (start: number, end: number) => {
@@ -351,74 +259,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     );
 
     const handleSelection = (selection: EditorSelection) => {
-      // Only handle selection during typing/keyboard navigation, not click selection
-      if (!isSelecting) {
-        handleSelectionComplete(selection);
-      }
-    };
-
-    const handleClickSelection = (startPos: number, endPos: number) => {
-      const selectedText = text.substring(startPos, endPos);
-
-      setCurrentSelection({
-        text: selectedText,
-        startIndex: startPos,
-        endIndex: endPos,
-      });
-
-      onTextSelect({
-        text: selectedText,
-        start: startPos,
-        end: endPos,
-      });
-
-      // Position bubble menu
-      if (editorRef.current) {
-        const view = editorRef.current.view;
-        if (view) {
-          const startCoords = view.coordsAtPos(startPos);
-          const endCoords = view.coordsAtPos(endPos);
-
-          if (startCoords && endCoords) {
-            const selectionCenterX = (startCoords.left + endCoords.right) / 2;
-            const selectionBottom = Math.max(
-              startCoords.bottom,
-              endCoords.bottom
-            );
-            const selectionTop = Math.min(startCoords.top, endCoords.top);
-
-            // Get viewport dimensions
-            const viewportHeight = window.innerHeight;
-            const bubbleHeight = 200; // Approximate bubble menu height
-            const margin = 20; // Margin from viewport edges
-
-            // Determine if bubble should be above or below
-            const spaceBelow = viewportHeight - selectionBottom;
-            const spaceAbove = selectionTop;
-
-            let bubbleY;
-            if (spaceBelow >= bubbleHeight + margin) {
-              // Place below selection
-              bubbleY = selectionBottom + 10;
-            } else if (spaceAbove >= bubbleHeight + margin) {
-              // Place above selection
-              bubbleY = selectionTop - bubbleHeight - 10;
-            } else {
-              // Place below if more space, otherwise above
-              bubbleY =
-                spaceBelow > spaceAbove
-                  ? selectionBottom + 10
-                  : selectionTop - bubbleHeight - 10;
-            }
-
-            setBubbleMenuPosition({
-              x: selectionCenterX,
-              y: bubbleY,
-            });
-            setBubbleMenuVisible(true);
-          }
-        }
-      }
+      // Handle normal text selection
+      handleSelectionComplete(selection);
     };
 
     const handleSelectionComplete = (selection: EditorSelection) => {
@@ -501,8 +343,17 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     const addAnnotation = (type: string) => {
       if (!currentSelection) return;
 
-      // Call the parent's onAddAnnotation with the selected type
-      onAddAnnotation(type);
+      // Handle header annotations differently - show in table of contents for naming
+      if (type === "header" && onHeaderSelected) {
+        onHeaderSelected({
+          text: currentSelection.text,
+          start: currentSelection.startIndex,
+          end: currentSelection.endIndex,
+        });
+      } else {
+        // Call the parent's onAddAnnotation with the selected type
+        onAddAnnotation(type);
+      }
 
       // Reset state
       setBubbleMenuVisible(false);
@@ -538,23 +389,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           handleSelection(update.state.selection);
         }
       }),
-      // Disable default mouse selection behavior
-      EditorView.domEventHandlers({
-        mousedown: (event) => {
-          // Prevent default drag selection
-          const target = event.target as HTMLElement;
-          const annotationElement = target.closest("[data-annotation-id]");
 
-          // Allow normal behavior for annotation clicks
-          if (annotationElement) {
-            return false;
-          }
-
-          // Prevent default selection for text clicks
-          event.preventDefault();
-          return true;
-        },
-      }),
       EditorView.theme({
         "&": {
           fontSize: "16px",
@@ -634,15 +469,6 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           <div className="absolute top-2 right-2 z-10">
             <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium border">
               Read Only
-            </span>
-          </div>
-        )}
-
-        {/* Selection mode indicator */}
-        {isSelecting && firstClickPosition !== null && (
-          <div className="absolute top-2 left-2 z-10">
-            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium border border-blue-300 animate-pulse">
-              Click to complete selection • Press Esc to cancel
             </span>
           </div>
         )}

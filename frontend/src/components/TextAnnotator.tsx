@@ -11,8 +11,13 @@ interface TextAnnotatorProps {
   onTextSelect: (
     selection: { text: string; start: number; end: number } | null
   ) => void;
-  onAddAnnotation: (type: string) => void;
+  onAddAnnotation: (type: string, name?: string) => void;
   onRemoveAnnotation: (id: string) => void;
+  onHeaderSelected?: (selection: {
+    text: string;
+    start: number;
+    end: number;
+  }) => void;
   readOnly?: boolean;
 }
 
@@ -30,6 +35,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
       onTextSelect,
       onAddAnnotation,
       onRemoveAnnotation,
+      onHeaderSelected,
       readOnly = true,
     },
     ref
@@ -52,6 +58,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
         onTextSelect={onTextSelect}
         onAddAnnotation={onAddAnnotation}
         onRemoveAnnotation={onRemoveAnnotation}
+        onHeaderSelected={onHeaderSelected}
         readOnly={readOnly}
       />
     );

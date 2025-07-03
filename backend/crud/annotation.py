@@ -17,6 +17,7 @@ class AnnotationCRUD:
             end_position=obj_in.end_position,
             selected_text=obj_in.selected_text,
             label=obj_in.label,
+            name=obj_in.name,
             meta=obj_in.meta,
             confidence=obj_in.confidence,
         )
