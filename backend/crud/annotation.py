@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from models.annotation import Annotation
-from models.text import Text, TextStatus
+from models.text import Text, INITIALIZED, ANNOTATED, PROGRESS
 from schemas.annotation import AnnotationCreate, AnnotationUpdate
 
 
@@ -22,10 +22,10 @@ class AnnotationCRUD:
         )
         db.add(db_obj)
         
-        # Update text status to annotated if it was initialized
+        # Update text status to progress if it was initialized  
         text = db.query(Text).filter(Text.id == obj_in.text_id).first()
-        if text and text.status == TextStatus.INITIALIZED:
-            text.status = TextStatus.ANNOTATED
+        if text and text.status == INITIALIZED:
+            text.status = PROGRESS
             db.add(text)
         
         db.commit()
@@ -101,8 +101,8 @@ class AnnotationCRUD:
             
             if remaining_annotations == 0:
                 text = db.query(Text).filter(Text.id == text_id).first()
-                if text and text.status == TextStatus.ANNOTATED:
-                    text.status = TextStatus.INITIALIZED
+                if text and text.status == ANNOTATED:
+                    text.status = INITIALIZED
                     db.add(text)
             
             db.commit()

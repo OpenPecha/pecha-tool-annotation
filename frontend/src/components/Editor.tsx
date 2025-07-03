@@ -13,7 +13,12 @@ import { EditorSelection, StateField, StateEffect } from "@codemirror/state";
 import type { DecorationSet } from "@codemirror/view";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import type { Annotation } from "@/pages/Index";
+import type { Annotation } from "@/pages/Task";
+import {
+  loadAnnotationConfig,
+  type AnnotationConfig,
+  type AnnotationOption,
+} from "@/config/annotation-options";
 
 // Create state effects for managing annotations
 const addAnnotationEffect = StateEffect.define<Annotation>();
@@ -59,7 +64,7 @@ interface EditorProps {
   onTextSelect: (
     selection: { text: string; start: number; end: number } | null
   ) => void;
-  onAddAnnotation: (type: "header" | "person" | "object") => void;
+  onAddAnnotation: (type: string) => void;
   onRemoveAnnotation: (id: string) => void;
   readOnly?: boolean;
 }
@@ -105,25 +110,71 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     });
     const [annotationToDelete, setAnnotationToDelete] =
       useState<Annotation | null>(null);
+    const [editorReady, setEditorReady] = useState(false);
+    const [annotationConfig, setAnnotationConfig] =
+      useState<AnnotationConfig | null>(null);
+
+    // Load annotation configuration on component mount
+    useEffect(() => {
+      const loadConfig = async () => {
+        try {
+          const config = await loadAnnotationConfig();
+          setAnnotationConfig(config);
+        } catch (error) {
+          console.error("Failed to load annotation configuration:", error);
+        }
+      };
+      loadConfig();
+    }, []);
 
     // Update annotations in the editor when annotations prop changes
     useEffect(() => {
-      if (editorRef.current?.view) {
-        const view = editorRef.current.view;
+      const updateAnnotations = () => {
+        if (editorRef.current?.view) {
+          const view = editorRef.current.view;
 
-        // Clear existing annotations
-        view.dispatch({
-          effects: clearAnnotationsEffect.of(null),
-        });
-
-        // Add all current annotations
-        annotations.forEach((annotation) => {
+          // Clear existing annotations
           view.dispatch({
-            effects: addAnnotationEffect.of(annotation),
+            effects: clearAnnotationsEffect.of(null),
           });
-        });
-      }
+
+          // Add all current annotations
+          if (annotations.length > 0) {
+            console.log(annotations);
+
+            annotations.forEach((annotation) => {
+              view.dispatch({
+                effects: addAnnotationEffect.of(annotation),
+              });
+            });
+          }
+        } else {
+          console.log("Editor: View not ready yet");
+        }
+      };
+
+      // Small delay to ensure CodeMirror is fully initialized
+      const timer = setTimeout(updateAnnotations, 100);
+      return () => clearTimeout(timer);
     }, [annotations]);
+
+    // Apply annotations when editor becomes ready
+    useEffect(() => {
+      if (editorReady && annotations.length > 0) {
+        const timer = setTimeout(() => {
+          if (editorRef.current?.view) {
+            const view = editorRef.current.view;
+            annotations.forEach((annotation) => {
+              console.log(annotation);
+              view.dispatch({
+                effects: addAnnotationEffect.of(annotation),
+              });
+            });
+          }
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }, [editorReady, annotations]);
 
     // Add click event listener for annotation deletion
     useEffect(() => {
@@ -302,7 +353,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       }
     };
 
-    const addAnnotation = (type: "header" | "person" | "object") => {
+    const addAnnotation = (type: string) => {
       if (!currentSelection) return;
 
       // Call the parent's onAddAnnotation with the selected type
@@ -351,12 +402,12 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         ".cm-content": {
           padding: "12px",
           fontFamily: "'monlam', monospace",
-          lineHeight: "normal",
           whiteSpace: "pre-wrap",
           fontSize: "14px",
           minHeight: "100%",
           maxWidth: "95%",
           overflowWrap: "break-word",
+          lineHeight: "2",
           wordBreak: "break-word",
         },
         ".cm-line": {
@@ -381,28 +432,17 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         ".cm-focused": {
           outline: "none",
         },
-        // Annotation styling
-        ".annotation-header": {
-          backgroundColor: "rgba(147, 51, 234, 0.2)",
-          border: "2px solid #9333ea",
-          borderRadius: "20px",
-          padding: "1px 2px",
-          position: "relative",
-        },
-        ".annotation-person": {
-          backgroundColor: "rgba(34, 197, 94, 0.2)",
-          borderBottom: "2px solid #22c55e",
-          borderRadius: "2px",
-          padding: "1px 2px",
-          position: "relative",
-        },
-        ".annotation-object": {
-          backgroundColor: "rgba(59, 130, 246, 0.2)",
-          borderBottom: "2px solid #3b82f6",
-          borderRadius: "2px",
-          padding: "1px 2px",
-          position: "relative",
-        },
+        // Dynamic annotation styling based on configuration
+        ...(annotationConfig?.options.reduce((styles, option) => {
+          styles[`.annotation-${option.id}`] = {
+            backgroundColor: option.backgroundColor,
+            borderBottom: `2px solid ${option.borderColor}`,
+            borderRadius: "2px",
+            padding: "1px 2px",
+            position: "relative",
+          };
+          return styles;
+        }, {} as Record<string, Record<string, string>>) || {}),
         // Custom scrollbar styling
         ".cm-scroller::-webkit-scrollbar": {
           width: "12px",
@@ -444,6 +484,10 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           extensions={extensions}
           onChange={handleChange}
           editable={!readOnly}
+          onCreateEditor={() => {
+            // Set editor as ready when view is created
+            setEditorReady(true);
+          }}
           basicSetup={{
             lineNumbers: true,
             foldGutter: true,
@@ -458,7 +502,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         {/* Bubble Menu */}
         {bubbleMenuVisible && currentSelection && (
           <div
-            className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50 min-w-72 "
+            className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50  "
             style={{
               left: `${bubbleMenuPosition.x}px`,
               top: `${bubbleMenuPosition.y}px`,
@@ -488,32 +532,29 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               </p>
 
               <div className="flex flex-wrap gap-2 mb-3">
-                <Button
-                  onClick={() => addAnnotation("header")}
-                  size="sm"
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
-                >
-                  <span className="w-3 h-3 bg-purple-300 rounded-full"></span>
-                  Header
-                </Button>
-
-                <Button
-                  onClick={() => addAnnotation("person")}
-                  size="sm"
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
-                >
-                  <span className="w-3 h-3 bg-green-300 rounded-full"></span>
-                  Person
-                </Button>
-
-                <Button
-                  onClick={() => addAnnotation("object")}
-                  size="sm"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
-                >
-                  <span className="w-3 h-3 bg-blue-300 rounded-full"></span>
-                  Object
-                </Button>
+                {annotationConfig?.options.map((option: AnnotationOption) => (
+                  <Button
+                    key={option.id}
+                    onClick={() => addAnnotation(option.id)}
+                    size="sm"
+                    className="px-4 py-2 text-white rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+                    style={{
+                      backgroundColor: option.borderColor,
+                      color: option.color,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = "0.8";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = "1";
+                    }}
+                  >
+                    {option.icon && (
+                      <span className="text-xs">{option.icon}</span>
+                    )}
+                    {option.label}
+                  </Button>
+                ))}
               </div>
             </div>
 
@@ -528,7 +569,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                     cancelAnnotation();
                   }
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>

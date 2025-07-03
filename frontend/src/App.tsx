@@ -2,12 +2,12 @@ import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // import Header from "./components/Header";
-import Index from "./pages/Index";
+import Task from "./pages/Task";
+import Dashboard from "./pages/Dashboard";
 import { AuthProvider } from "./auth/auth-context-provider";
 import { Suspense, useEffect } from "react";
 
 import OpenPecha from "./assets/icon.png";
-import One from "./assets/1.png";
 import { useAuth } from "./auth/use-auth-hook";
 
 const queryClient = new QueryClient();
@@ -17,7 +17,6 @@ function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isAuthenticated) {
       getToken().then((token) => {
-        console.log(token);
         localStorage.setItem("access_token", token!);
       });
       return;
@@ -39,10 +38,13 @@ function AppContent() {
         path="/"
         element={
           <Layout>
-            <Index />
+            <Dashboard />
           </Layout>
         }
       />
+
+      {/* <Route path="/login" element={<Login />} /> */}
+      <Route path="/task/:textId" element={<Task />} />
     </Routes>
   );
 }
@@ -51,7 +53,9 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
-        <AppContent />
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
       </QueryClientProvider>
     </AuthProvider>
   );

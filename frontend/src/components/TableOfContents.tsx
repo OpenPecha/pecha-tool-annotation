@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, List, Trash2 } from "lucide-react";
-import type { Annotation } from "@/pages/Index";
+import type { Annotation } from "@/pages/Task";
 
 interface TableOfContentsProps {
   annotations: Annotation[];

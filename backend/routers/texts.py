@@ -7,22 +7,46 @@ from crud.text import text_crud
 from schemas.text import TextCreate, TextUpdate, TextResponse
 from schemas.combined import TextWithAnnotations
 from models.user import User
-from models.text import TextStatus
+from models.text import VALID_STATUSES, INITIALIZED, ANNOTATED, REVIEWED, SKIPPED, PROGRESS
 
 router = APIRouter(prefix="/texts", tags=["Texts"])
+
+
+@router.get("/status-options")
+def get_status_options(
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get available text status options."""
+    return {
+        "status_options": VALID_STATUSES,
+        "status_constants": {
+            "INITIALIZED": INITIALIZED,
+            "ANNOTATED": ANNOTATED,
+            "REVIEWED": REVIEWED,
+            "SKIPPED": SKIPPED,
+            "PROGRESS": PROGRESS
+        }
+    }
 
 
 @router.get("/", response_model=List[TextResponse])
 def read_texts(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    status: Optional[TextStatus] = Query(None),
+    status: Optional[str] = Query(None),
     language: Optional[str] = Query(None),
     reviewer_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """Get texts list with optional filtering."""
+    # Validate status if provided
+    if status is not None and status not in VALID_STATUSES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}"
+        )
+    
     texts = text_crud.get_multi(
         db=db,
         skip=skip,
@@ -140,11 +164,18 @@ def update_text(
 @router.put("/{text_id}/status", response_model=TextResponse)
 def update_text_status(
     text_id: int,
-    new_status: TextStatus,
+    new_status: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_reviewer)
 ):
     """Update text status - Reviewer only."""
+    # Validate status
+    if new_status not in VALID_STATUSES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}"
+        )
+    
     text = text_crud.get(db=db, text_id=text_id)
     if not text:
         raise HTTPException(
@@ -152,7 +183,7 @@ def update_text_status(
             detail="Text not found"
         )
     
-    reviewer_id = current_user.id if new_status == TextStatus.REVIEWED else None
+    reviewer_id = current_user.id if new_status == REVIEWED else None
     updated_text = text_crud.update_status(
         db=db, 
         text_id=text_id, 

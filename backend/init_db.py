@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 Database initialization script for Pecha Annotation Tool
-Creates sample data for testing with Auth0 authentication
 """
 
 import sys
@@ -9,7 +8,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 from models import User, Text, Annotation
 from models.user import UserRole
-from models.text import TextStatus
+from models.text import INITIALIZED, ANNOTATED
 from database import Base
 
 
@@ -100,7 +99,7 @@ def create_sample_texts(db: Session):
                 content=text_data["content"],
                 source=text_data["source"],
                 language=text_data["language"],
-                status=TextStatus.INITIALIZED
+                status=INITIALIZED
             )
             db.add(text)
             created_texts.append(text)
@@ -160,7 +159,7 @@ def create_sample_annotations(db: Session, users: list, texts: list):
             created_annotations.append(annotation)
             
             # Update text status to annotated
-            text.status = TextStatus.ANNOTATED
+            text.status = ANNOTATED
             db.add(text)
             
             print(f"✅ Created {ann_data['annotation_type']} annotation for text {ann_data['text_id']}")

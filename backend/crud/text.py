@@ -1,7 +1,7 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from models.text import Text, TextStatus
+from models.text import Text, INITIALIZED, ANNOTATED, REVIEWED, SKIPPED, PROGRESS, VALID_STATUSES
 from models.annotation import Annotation
 from schemas.text import TextCreate, TextUpdate
 
@@ -33,7 +33,7 @@ class TextCRUD:
         db: Session, 
         skip: int = 0, 
         limit: int = 100,
-        status: Optional[TextStatus] = None,
+        status: Optional[str] = None,
         language: Optional[str] = None,
         reviewer_id: Optional[int] = None
     ) -> List[Text]:
@@ -56,7 +56,7 @@ class TextCRUD:
         db: Session, 
         skip: int = 0, 
         limit: int = 100,
-        status: Optional[TextStatus] = None
+        status: Optional[str] = None
     ) -> List[dict]:
         """Get texts with annotation count."""
         query = db.query(
@@ -82,6 +82,10 @@ class TextCRUD:
         obj_data = obj_in.model_dump(exclude_unset=True)
         
         for field, value in obj_data.items():
+            # Validate status if being updated
+            if field == 'status' and value is not None:
+                if value not in VALID_STATUSES:
+                    raise ValueError(f'Status must be one of: {", ".join(VALID_STATUSES)}')
             setattr(db_obj, field, value)
         
         db.add(db_obj)
@@ -89,7 +93,7 @@ class TextCRUD:
         db.refresh(db_obj)
         return db_obj
 
-    def update_status(self, db: Session, text_id: int, status: TextStatus, reviewer_id: Optional[int] = None) -> Optional[Text]:
+    def update_status(self, db: Session, text_id: int, status: str, reviewer_id: Optional[int] = None) -> Optional[Text]:
         """Update text status."""
         db_obj = db.query(Text).filter(Text.id == text_id).first()
         if db_obj:
@@ -114,30 +118,34 @@ class TextCRUD:
         search_filter = Text.title.contains(query) | Text.content.contains(query)
         return db.query(Text).filter(search_filter).offset(skip).limit(limit).all()
 
-    def get_by_status(self, db: Session, status: TextStatus, skip: int = 0, limit: int = 100) -> List[Text]:
+    def get_by_status(self, db: Session, status: str, skip: int = 0, limit: int = 100) -> List[Text]:
         """Get texts by status."""
         return db.query(Text).filter(Text.status == status).offset(skip).limit(limit).all()
 
     def get_texts_for_annotation(self, db: Session, skip: int = 0, limit: int = 100) -> List[Text]:
         """Get texts available for annotation (initialized status)."""
-        return db.query(Text).filter(Text.status == TextStatus.INITIALIZED).offset(skip).limit(limit).all()
+        return db.query(Text).filter(Text.status == INITIALIZED).offset(skip).limit(limit).all()
 
     def get_texts_for_review(self, db: Session, skip: int = 0, limit: int = 100) -> List[Text]:
         """Get texts ready for review (annotated status)."""
-        return db.query(Text).filter(Text.status == TextStatus.ANNOTATED).offset(skip).limit(limit).all()
+        return db.query(Text).filter(Text.status == ANNOTATED).offset(skip).limit(limit).all()
 
     def get_stats(self, db: Session) -> dict:
         """Get text statistics."""
         total = db.query(Text).count()
-        initialized = db.query(Text).filter(Text.status == TextStatus.INITIALIZED).count()
-        annotated = db.query(Text).filter(Text.status == TextStatus.ANNOTATED).count()
-        reviewed = db.query(Text).filter(Text.status == TextStatus.REVIEWED).count()
+        initialized = db.query(Text).filter(Text.status == INITIALIZED).count()
+        annotated = db.query(Text).filter(Text.status == ANNOTATED).count()
+        reviewed = db.query(Text).filter(Text.status == REVIEWED).count()
+        skipped = db.query(Text).filter(Text.status == SKIPPED).count()
+        progress = db.query(Text).filter(Text.status == PROGRESS).count()
         
         return {
             "total": total,
             "initialized": initialized,
             "annotated": annotated,
-            "reviewed": reviewed
+            "reviewed": reviewed,
+            "skipped": skipped,
+            "progress": progress
         }
 
 

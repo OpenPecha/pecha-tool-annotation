@@ -1,4 +1,7 @@
-// Authentication utilities
+import type { ValidationError } from "./types";
+
+const SERVER_URL =
+  import.meta.env.VITE_SERVER_URL || "http://localhost:8000/v1";
 
 type CustomHeaders = Record<string, string>;
 
@@ -47,3 +50,138 @@ export const getHeaders = (): CustomHeaders => ({
 });
 
 export const getHeadersMultipart = (): CustomHeaders => getBaseHeaders();
+
+// API client with error handling
+class ApiClient {
+  private baseURL: string;
+
+  constructor(baseURL: string) {
+    this.baseURL = baseURL;
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`;
+    const headers = getHeaders();
+
+    const config: RequestInit = {
+      ...options,
+      headers: {
+        ...headers,
+        ...options.headers,
+      },
+    };
+
+    try {
+      const response = await fetch(url, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(
+          errorData.detail || `HTTP error! status: ${response.status}`,
+          response.status
+        );
+      }
+
+      // Handle 204 No Content
+      if (response.status === 204) {
+        return {} as T;
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+    }
+  }
+
+  async get<T>(
+    endpoint: string,
+    params?: Record<string, string | number | boolean | undefined>
+  ): Promise<T> {
+    const urlParams = params
+      ? "?" +
+        new URLSearchParams(
+          Object.entries(params).reduce((acc, [key, value]) => {
+            if (value !== undefined) {
+              acc[key] = String(value);
+            }
+            return acc;
+          }, {} as Record<string, string>)
+        ).toString()
+      : "";
+
+    return this.request<T>(`${endpoint}${urlParams}`, {
+      method: "GET",
+    });
+  }
+
+  async post<T>(endpoint: string, data?: unknown): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async put<T>(endpoint: string, data?: unknown): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async patch<T>(endpoint: string, data?: unknown): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: "PATCH",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: "DELETE",
+    });
+  }
+}
+
+// Create the main API client instance
+export const apiClient = new ApiClient(SERVER_URL);
+
+// Error handling utilities
+export const handleApiError = (error: unknown): string => {
+  if (error instanceof ApiError) {
+    return error.detail;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "An unknown error occurred";
+};
+
+export const isValidationError = (error: unknown): error is ValidationError => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "detail" in error &&
+    Array.isArray((error as ValidationError).detail)
+  );
+};
+
+// Create custom ApiError class
+class ApiError extends Error {
+  constructor(message: string, public status_code?: number) {
+    super(message);
+    this.name = "ApiError";
+    this.detail = message;
+  }
+
+  detail: string;
+}

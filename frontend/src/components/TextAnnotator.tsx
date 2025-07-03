@@ -1,7 +1,7 @@
 import { useRef, useImperativeHandle, forwardRef } from "react";
 import { Editor } from "./Editor";
 import type { EditorRef } from "./Editor";
-import type { Annotation } from "@/pages/Index";
+import type { Annotation } from "@/pages/Task";
 
 interface TextAnnotatorProps {
   text: string;
@@ -11,7 +11,7 @@ interface TextAnnotatorProps {
   onTextSelect: (
     selection: { text: string; start: number; end: number } | null
   ) => void;
-  onAddAnnotation: (type: "header" | "person" | "object") => void;
+  onAddAnnotation: (type: string) => void;
   onRemoveAnnotation: (id: string) => void;
   readOnly?: boolean;
 }

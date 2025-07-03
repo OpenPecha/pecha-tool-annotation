@@ -1,53 +1,47 @@
 import { Button } from "./ui/button";
-import { useToast } from "@/hooks/use-toast";
-import type { Annotation } from "@/pages/Index";
-import { Send, StopCircle } from "lucide-react";
+import type { Annotation } from "@/pages/Task";
+import { Send, SkipForward, StopCircle } from "lucide-react";
 
 function ActionButtons({
-  text,
   annotations,
+  onSubmitTask,
+  isSubmitting = false,
 }: {
-  readonly text: string;
   readonly annotations: Annotation[];
+  readonly onSubmitTask: () => void;
+  readonly isSubmitting?: boolean;
 }) {
-  const { toast } = useToast();
-
-  const handleSubmit = () => {
-    const result = {
-      text,
-      annotations: annotations.map((ann) => ({
-        annotation: ann.text,
-        type: ann.type,
-        start: ann.start,
-        end: ann.end,
-      })),
-    };
-
-    console.log("Submitted Annotations:", result);
-
-    toast({
-      title: "Work Submitted",
-      description: "Check the console for annotation data",
-    });
-  };
   return (
     <div className="flex flex-1 gap-2">
       <Button
-        onClick={handleSubmit}
+        onClick={onSubmitTask}
         className="bg-green-600 flex-1 hover:bg-green-700 text-white cursor-pointer"
-        disabled={annotations.length === 0}
+        disabled={annotations.length === 0 || isSubmitting}
         size={"lg"}
       >
         <Send className="w-4 h-4 mr-2" />
-        Submit Work
+        {isSubmitting ? "Submitting..." : "Submit Task"}
       </Button>
       <Button
-        onClick={handleSubmit}
+        onClick={() => {
+          /* TODO: Implement skip functionality */
+        }}
+        className="bg-yellow-600 flex-1 hover:bg-yellow-700 text-white cursor-pointer"
+        disabled={annotations.length === 0}
+        size={"lg"}
+      >
+        <SkipForward className="w-4 h-4 mr-2" />
+        Skip Work
+      </Button>
+      <Button
+        onClick={() => {
+          /* TODO: Implement trash/cancel functionality */
+        }}
         className="bg-red-600 hover:bg-red-800 text-white cursor-pointer"
         size={"lg"}
       >
         <StopCircle className="w-4 h-4 mr-2" />
-        Skip
+        Cancel
       </Button>
     </div>
   );

@@ -43,9 +43,9 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 # Include routers
-app.include_router(users.router, prefix="/api/v1")
-app.include_router(texts.router, prefix="/api/v1")
-app.include_router(annotations.router, prefix="/api/v1")
+app.include_router(users.router, prefix="/v1")
+app.include_router(texts.router, prefix="/v1")
+app.include_router(annotations.router, prefix="/v1")
 
 
 @app.get("/")
