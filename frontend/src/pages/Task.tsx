@@ -459,7 +459,7 @@ const Index = () => {
             onAddAnnotation={addAnnotation}
             onRemoveAnnotation={removeAnnotation}
             onHeaderSelected={handleHeaderSelected}
-            readOnly={true}
+            readOnly={isCompletedTask}
           />
         </div>
 

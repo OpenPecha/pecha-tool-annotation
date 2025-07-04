@@ -2,6 +2,7 @@ import { useRef, useImperativeHandle, forwardRef } from "react";
 import { Editor } from "./Editor";
 import type { EditorRef } from "./Editor";
 import type { Annotation } from "@/pages/Task";
+import { SearchComponent } from "./SearchComponent";
 
 interface TextAnnotatorProps {
   text: string;
@@ -48,19 +49,37 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
       },
     }));
 
+    // Handle search result selection
+    const handleSearchResultSelect = (start: number, end: number) => {
+      editorRef.current?.scrollToPosition(start, end);
+    };
+
     return (
-      <Editor
-        ref={editorRef}
-        text={text}
-        setText={setText}
-        annotations={annotations}
-        selectedText={selectedText}
-        onTextSelect={onTextSelect}
-        onAddAnnotation={onAddAnnotation}
-        onRemoveAnnotation={onRemoveAnnotation}
-        onHeaderSelected={onHeaderSelected}
-        readOnly={readOnly}
-      />
+      <div className="flex flex-col h-full">
+        {/* Search Bar - Always visible */}
+        <SearchComponent
+          text={text}
+          isVisible={true}
+          onClose={() => {}} // No close functionality needed
+          onResultSelect={handleSearchResultSelect}
+        />
+
+        {/* Editor */}
+        <div className="flex-1">
+          <Editor
+            ref={editorRef}
+            text={text}
+            setText={setText}
+            annotations={annotations}
+            selectedText={selectedText}
+            onTextSelect={onTextSelect}
+            onAddAnnotation={onAddAnnotation}
+            onRemoveAnnotation={onRemoveAnnotation}
+            onHeaderSelected={onHeaderSelected}
+            readOnly={readOnly}
+          />
+        </div>
+      </div>
     );
   }
 );

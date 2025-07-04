@@ -12,14 +12,13 @@ import { EditorView, Decoration } from "@codemirror/view";
 import { EditorSelection, StateField, StateEffect } from "@codemirror/state";
 import type { DecorationSet } from "@codemirror/view";
 import { Button } from "@/components/ui/button";
-import { X, Search } from "lucide-react";
+import { X } from "lucide-react";
 import type { Annotation } from "@/pages/Task";
 import {
   loadAnnotationConfig,
   type AnnotationConfig,
   type AnnotationOption,
 } from "@/config/annotation-options";
-import { SearchComponent } from "./SearchComponent";
 
 // Create state effects for managing annotations
 const addAnnotationEffect = StateEffect.define<Annotation>();
@@ -120,7 +119,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     const [editorReady, setEditorReady] = useState(false);
     const [annotationConfig, setAnnotationConfig] =
       useState<AnnotationConfig | null>(null);
-    const [searchVisible, setSearchVisible] = useState(false);
+
     const charlength = text?.length;
 
     // Load annotation configuration on component mount
@@ -283,18 +282,6 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         }
       },
     }));
-
-    // Handle search result selection
-    const handleSearchResultSelect = (start: number, end: number) => {
-      if (editorRef.current?.view) {
-        const view = editorRef.current.view;
-        view.dispatch({
-          selection: { anchor: start, head: end },
-          effects: EditorView.scrollIntoView(start, { y: "center" }),
-        });
-        view.focus();
-      }
-    };
 
     const handleChange = React.useCallback(
       (val: string) => {
@@ -547,19 +534,6 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
 
     return (
       <div className="h-[calc(100vh-70px)] overflow-y-scroll overflow-x-hidden  bg-white rounded-lg shadow-lg relative ">
-        {/* Search Button */}
-        <div className="absolute top-2 left-2 z-10">
-          <Button
-            onClick={() => setSearchVisible(!searchVisible)}
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full"
-            title="Search in text"
-          >
-            <Search className="w-4 h-4" />
-          </Button>
-        </div>
-
         {readOnly && (
           <div className="absolute top-2 right-2 z-10">
             <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium border">
@@ -717,14 +691,6 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
             </div>
           </div>
         )}
-
-        {/* Search Component */}
-        <SearchComponent
-          text={text}
-          isVisible={searchVisible}
-          onClose={() => setSearchVisible(false)}
-          onResultSelect={handleSearchResultSelect}
-        />
       </div>
     );
   }

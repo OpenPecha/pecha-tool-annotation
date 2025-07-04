@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Search, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, ChevronUp, ChevronDown } from "lucide-react";
 
 interface SearchResult {
   index: number;
@@ -145,99 +145,87 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
   if (!isVisible) return null;
 
   return (
-    <div className="absolute top-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-4 w-80 max-h-96 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
+    <div className="w-full bg-white border-b border-gray-200 shadow-sm p-3 z-50">
+      {/* Main Search Row */}
+      <div className="flex items-center gap-3 mb-2">
+        {/* Search Icon and Input */}
+        <div className="flex items-center gap-2 flex-1">
           <Search className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Search</span>
-        </div>
-        <Button
-          onClick={onClose}
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
-        >
-          <X className="w-4 h-4" />
-        </Button>
-      </div>
-
-      {/* Search Input */}
-      <div className="mb-3">
-        <input
-          ref={searchInputRef}
-          type="text"
-          placeholder="Search in text..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
-
-      {/* Search Options */}
-      <div className="flex items-center gap-3 mb-3 text-xs">
-        <label className="flex items-center gap-1 cursor-pointer">
           <input
-            type="checkbox"
-            checked={caseSensitive}
-            onChange={(e) => setCaseSensitive(e.target.checked)}
-            className="w-3 h-3"
+            ref={searchInputRef}
+            type="text"
+            placeholder="Search in text..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="flex-1 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
-          <span className="text-gray-600">Case sensitive</span>
-        </label>
-        <label className="flex items-center gap-1 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={wholeWord}
-            onChange={(e) => setWholeWord(e.target.checked)}
-            className="w-3 h-3"
-          />
-          <span className="text-gray-600">Whole word</span>
-        </label>
+        </div>
+
+        {/* Results Summary and Navigation */}
+        {searchTerm && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 whitespace-nowrap">
+              {searchResults.length === 0
+                ? "No results"
+                : `${currentResultIndex + 1} of ${searchResults.length}`}
+            </span>
+            {searchResults.length > 0 && (
+              <div className="flex items-center gap-1">
+                <Button
+                  onClick={() => navigateToResult("prev")}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  disabled={searchResults.length === 0}
+                >
+                  <ChevronUp className="w-3 h-3" />
+                </Button>
+                <Button
+                  onClick={() => navigateToResult("next")}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  disabled={searchResults.length === 0}
+                >
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Search Options */}
+        <div className="flex items-center gap-2 text-xs">
+          <label className="flex items-center gap-1 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={caseSensitive}
+              onChange={(e) => setCaseSensitive(e.target.checked)}
+              className="w-3 h-3"
+            />
+            <span className="text-gray-600">Aa</span>
+          </label>
+          <label className="flex items-center gap-1 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={wholeWord}
+              onChange={(e) => setWholeWord(e.target.checked)}
+              className="w-3 h-3"
+            />
+            <span className="text-gray-600">W</span>
+          </label>
+        </div>
       </div>
 
-      {/* Results Summary */}
-      {searchTerm && (
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-gray-500">
-            {searchResults.length === 0
-              ? "No results found"
-              : `${currentResultIndex + 1} of ${searchResults.length} results`}
-          </span>
-          {searchResults.length > 0 && (
-            <div className="flex items-center gap-1">
-              <Button
-                onClick={() => navigateToResult("prev")}
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                disabled={searchResults.length === 0}
-              >
-                <ChevronUp className="w-3 h-3" />
-              </Button>
-              <Button
-                onClick={() => navigateToResult("next")}
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                disabled={searchResults.length === 0}
-              >
-                <ChevronDown className="w-3 h-3" />
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Results List */}
-      {searchResults.length > 0 && (
-        <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-md">
+      {/* Results List - Only show if there are results and search term */}
+      {searchTerm && searchResults.length > 0 && (
+        <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-md bg-gray-50">
           {searchResults.map((result) => (
             <div
               key={result.index}
               onClick={() => handleResultClick(result)}
-              className={`p-2 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
+              className={`p-2 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-white transition-colors ${
                 result.index === currentResultIndex
                   ? "bg-blue-50 border-blue-200"
                   : ""
@@ -248,7 +236,7 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
                   <div className="text-xs text-gray-500 mb-1">
                     Line {result.line}
                   </div>
-                  <div className="text-sm text-gray-700 truncate">
+                  <div className="text-xs text-gray-700 truncate">
                     {result.preview}
                   </div>
                 </div>
@@ -260,11 +248,6 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
           ))}
         </div>
       )}
-
-      {/* Help Text */}
-      <div className="mt-3 text-xs text-gray-400">
-        Press Enter to navigate, Shift+Enter for previous, Esc to close
-      </div>
     </div>
   );
 };
