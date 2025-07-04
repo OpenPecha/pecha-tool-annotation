@@ -253,7 +253,7 @@ const Dashboard = () => {
                   size="lg"
                   variant="outline"
                   className="w-full"
-                  onClick={handleReviewWork}
+                  onClick={() => {}}
                 >
                   Start Reviewing
                 </Button>

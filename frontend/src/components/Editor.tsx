@@ -12,13 +12,14 @@ import { EditorView, Decoration } from "@codemirror/view";
 import { EditorSelection, StateField, StateEffect } from "@codemirror/state";
 import type { DecorationSet } from "@codemirror/view";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Search } from "lucide-react";
 import type { Annotation } from "@/pages/Task";
 import {
   loadAnnotationConfig,
   type AnnotationConfig,
   type AnnotationOption,
 } from "@/config/annotation-options";
+import { SearchComponent } from "./SearchComponent";
 
 // Create state effects for managing annotations
 const addAnnotationEffect = StateEffect.define<Annotation>();
@@ -119,6 +120,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     const [editorReady, setEditorReady] = useState(false);
     const [annotationConfig, setAnnotationConfig] =
       useState<AnnotationConfig | null>(null);
+    const [searchVisible, setSearchVisible] = useState(false);
+    const charlength = text?.length;
 
     // Load annotation configuration on component mount
     useEffect(() => {
@@ -196,13 +199,43 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
 
           if (annotation) {
             const rect = annotationElement.getBoundingClientRect();
-            setDeletePopupPosition({
-              x: rect.left + rect.width / 2,
-              y: rect.bottom + 5,
-            });
-            setAnnotationToDelete(annotation);
-            setDeletePopupVisible(true);
-            setBubbleMenuVisible(false);
+
+            // Get the editor element's position relative to the viewport
+            const editorElement = annotationElement.closest(".cm-editor");
+            const editorRect = editorElement?.getBoundingClientRect();
+
+            if (editorRect) {
+              // Calculate position relative to the editor element
+              const popupWidth = 256; // min-w-64 = 256px
+              const popupHeight = 120; // Approximate popup height
+              const margin = 10; // Margin from editor edges
+
+              let popupX = rect.left + rect.width / 2 - editorRect.left;
+              let popupY = rect.bottom + 5 - editorRect.top;
+
+              // Ensure popup stays within horizontal bounds
+              const popupHalfWidth = popupWidth / 2;
+              if (popupX - popupHalfWidth < margin) {
+                popupX = popupHalfWidth + margin;
+              } else if (popupX + popupHalfWidth > editorRect.width - margin) {
+                popupX = editorRect.width - popupHalfWidth - margin;
+              }
+
+              // Ensure popup stays within vertical bounds
+              if (popupY < margin) {
+                popupY = margin;
+              } else if (popupY + popupHeight > editorRect.height - margin) {
+                popupY = editorRect.height - popupHeight - margin;
+              }
+
+              setDeletePopupPosition({
+                x: popupX,
+                y: popupY,
+              });
+              setAnnotationToDelete(annotation);
+              setDeletePopupVisible(true);
+              setBubbleMenuVisible(false);
+            }
           }
         }
       };
@@ -251,6 +284,18 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       },
     }));
 
+    // Handle search result selection
+    const handleSearchResultSelect = (start: number, end: number) => {
+      if (editorRef.current?.view) {
+        const view = editorRef.current.view;
+        view.dispatch({
+          selection: { anchor: start, head: end },
+          effects: EditorView.scrollIntoView(start, { y: "center" }),
+        });
+        view.focus();
+      }
+    };
+
     const handleChange = React.useCallback(
       (val: string) => {
         setText(val);
@@ -292,21 +337,28 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               const endCoords = view.coordsAtPos(end);
 
               if (startCoords && endCoords) {
-                const selectionCenterX =
-                  (startCoords.left + endCoords.right) / 2;
-                const selectionBottom = Math.max(
-                  startCoords.bottom,
-                  endCoords.bottom
-                );
-                const selectionTop = Math.min(startCoords.top, endCoords.top);
+                // Get the editor element's position relative to the viewport
+                const editorElement = view.dom; // This is the .cm-editor element
+                const editorRect = editorElement.getBoundingClientRect();
 
-                // Get viewport dimensions
-                const viewportHeight = window.innerHeight;
+                // Calculate positions relative to the editor element
+                const selectionCenterX =
+                  (startCoords.left + endCoords.right) / 2 - editorRect.left;
+                const selectionBottom =
+                  Math.max(startCoords.bottom, endCoords.bottom) -
+                  editorRect.top;
+                const selectionTop =
+                  Math.min(startCoords.top, endCoords.top) - editorRect.top;
+
+                // Get editor dimensions
+                const editorWidth = editorRect.width;
+                const editorHeight = editorRect.height;
+                const bubbleWidth = 320; // Approximate bubble menu width
                 const bubbleHeight = 200; // Approximate bubble menu height
-                const margin = 20; // Margin from viewport edges
+                const margin = 10; // Margin from editor edges
 
                 // Determine if bubble should be above or below
-                const spaceBelow = viewportHeight - selectionBottom;
+                const spaceBelow = editorHeight - selectionBottom;
                 const spaceAbove = selectionTop;
 
                 let bubbleY;
@@ -324,8 +376,28 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                       : selectionTop - bubbleHeight - 10;
                 }
 
+                // Ensure bubble stays within vertical bounds
+                if (bubbleY < margin) {
+                  bubbleY = margin;
+                } else if (bubbleY + bubbleHeight > editorHeight - margin) {
+                  bubbleY = editorHeight - bubbleHeight - margin;
+                }
+
+                // Calculate horizontal position and ensure it stays within bounds
+                let bubbleX = selectionCenterX;
+                const bubbleHalfWidth = bubbleWidth / 2;
+
+                // Check if bubble would go off the left edge
+                if (bubbleX - bubbleHalfWidth < margin) {
+                  bubbleX = bubbleHalfWidth + margin;
+                }
+                // Check if bubble would go off the right edge
+                else if (bubbleX + bubbleHalfWidth > editorWidth - margin) {
+                  bubbleX = editorWidth - bubbleHalfWidth - margin;
+                }
+
                 setBubbleMenuPosition({
-                  x: selectionCenterX,
+                  x: bubbleX,
                   y: bubbleY,
                 });
                 setBubbleMenuVisible(true);
@@ -420,11 +492,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           overflow: "hidden",
         },
         ".cm-scroller": {
+          overflow: "hidden !important",
           height: "100%",
-          width: "100%",
-          maxWidth: "100%",
-          overflow: "auto !important",
-          scrollbarWidth: "auto",
         },
         ".cm-focused": {
           outline: "none",
@@ -460,11 +529,37 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         ".cm-scroller::-webkit-scrollbar-corner": {
           background: "#f8f9fa",
         },
+        ".cm-activeLine": {
+          backgroundColor: "transparent",
+        },
+        ".cm-cursor": {
+          borderLeft: "2px solid #333",
+          display: "block !important",
+          opacity: "1 !important",
+        },
+        ".cm-editor.cm-readonly .cm-cursor": {
+          borderLeft: "2px solid #666",
+          display: "block !important",
+          opacity: "1 !important",
+        },
       }),
     ];
 
     return (
-      <div className="h-[calc(100vh-120px)] overflow-scroll  w-full bg-white rounded-lg shadow-lg relative ">
+      <div className="h-[calc(100vh-70px)] overflow-y-scroll overflow-x-hidden  bg-white rounded-lg shadow-lg relative ">
+        {/* Search Button */}
+        <div className="absolute top-2 left-2 z-10">
+          <Button
+            onClick={() => setSearchVisible(!searchVisible)}
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full"
+            title="Search in text"
+          >
+            <Search className="w-4 h-4" />
+          </Button>
+        </div>
+
         {readOnly && (
           <div className="absolute top-2 right-2 z-10">
             <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium border">
@@ -477,10 +572,9 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           ref={editorRef}
           value={text}
           height="100%"
-          width="100%"
           extensions={extensions}
           onChange={handleChange}
-          editable={!readOnly}
+          readOnly={readOnly}
           onCreateEditor={() => {
             // Set editor as ready when view is created
             setEditorReady(true);
@@ -495,11 +589,14 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
             searchKeymap: true,
           }}
         />
+        <div className="text-sm text-gray-500 sticky w-max bottom-0 right-2 float-right border bg-white border-gray-200 rounded-md p-2">
+          {charlength} characters
+        </div>
 
         {/* Bubble Menu */}
         {bubbleMenuVisible && currentSelection && (
           <div
-            className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50  "
+            className="absolute bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50  "
             style={{
               left: `${bubbleMenuPosition.x}px`,
               top: `${bubbleMenuPosition.y}px`,
@@ -575,7 +672,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         {/* Delete Annotation Popup */}
         {deletePopupVisible && annotationToDelete && (
           <div
-            className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-64"
+            className="absolute bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-64"
             style={{
               left: `${deletePopupPosition.x}px`,
               top: `${deletePopupPosition.y}px`,
@@ -620,6 +717,14 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
             </div>
           </div>
         )}
+
+        {/* Search Component */}
+        <SearchComponent
+          text={text}
+          isVisible={searchVisible}
+          onClose={() => setSearchVisible(false)}
+          onResultSelect={handleSearchResultSelect}
+        />
       </div>
     );
   }
