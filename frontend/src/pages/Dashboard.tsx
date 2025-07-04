@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/auth/use-auth-hook";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { textApi } from "@/api/text";
 import { Loader2 } from "lucide-react";
@@ -67,78 +67,107 @@ const RecentActivityIcon = () => (
 const Dashboard = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { toast } = useToast();
   const [isLoadingText, setIsLoadingText] = useState(false);
 
-  // Mutation to fetch available texts for annotation
-  const fetchAvailableTextMutation = useMutation({
+  // Mutation to start work - find work in progress or assign new text
+  const startWorkMutation = useMutation({
     mutationFn: async () => {
-      return textApi.getTextsForAnnotation({ limit: 1 });
+      return textApi.startWork();
     },
-    onSuccess: (texts) => {
-      if (texts.length > 0) {
-        const assignedText = texts[0];
-        toast({
-          title: "✅ Text Assigned",
-          description: `Starting work on: "${assignedText.title}"`,
-        });
-        navigate(`/task/${assignedText.id}`);
-      } else {
-        toast({
-          title: "📋 No Available Texts",
-          description:
-            "No texts are currently available for annotation. Please check back later.",
-        });
-      }
+    onSuccess: (text) => {
+      toast.success(`✅ Work Started`, {
+        description: `Starting work on: "${text.title}"`,
+      });
+      navigate(`/task/${text.id}`);
       setIsLoadingText(false);
     },
     onError: (error) => {
-      console.error("Error fetching available texts:", error);
-      toast({
-        title: "❌ Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch available texts",
-      });
+      // Extract error message from different error types
+      let errorMessage = "Failed to start work";
+      let errorTitle = "❌ Error";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error && typeof error === "object" && "detail" in error) {
+        // Handle API errors with detail field
+        const apiError = error as { detail: string; status_code?: number };
+        errorMessage = apiError.detail || "Failed to start work";
+
+        // Handle 404 specifically for "no texts available" scenario
+        if (apiError.status_code === 404) {
+          errorTitle = "📝 No Tasks Available";
+          errorMessage =
+            "No texts available for annotation at this time. Please contact your administrator to add more texts to the system.";
+        }
+      }
+
+      // Show toast with proper error handling
+      if (errorTitle.includes("No Tasks Available")) {
+        toast.info(errorTitle, {
+          description: errorMessage,
+        });
+      } else {
+        toast.error(errorTitle, {
+          description: errorMessage,
+        });
+      }
+
       setIsLoadingText(false);
     },
   });
 
   const handleStartWork = () => {
     setIsLoadingText(true);
-    fetchAvailableTextMutation.mutate();
+    startWorkMutation.mutate();
   };
 
   const handleReviewWork = () => {
     // TODO: Implement similar functionality for review texts
-    toast({
-      title: "🚧 Coming Soon",
+    toast.info("🚧 Coming Soon", {
       description: "Review functionality will be implemented soon!",
     });
   };
 
-  // Mock data for recent activity - replace with actual data from your API
-  const recentActivity = [
-    {
-      id: 1,
-      title: "Text Annotation #1",
-      date: "2024-01-15",
-      type: "annotation",
-    },
-    { id: 2, title: "Review Session #3", date: "2024-01-14", type: "review" },
-    {
-      id: 3,
-      title: "Text Annotation #2",
-      date: "2024-01-13",
-      type: "annotation",
-    },
-  ];
+  // Fetch recent activity data from API
+  const { data: recentActivity = [], isLoading: isLoadingActivity } = useQuery({
+    queryKey: ["recent-activity"],
+    queryFn: () => textApi.getRecentActivity(10),
+    refetchOnWindowFocus: false,
+  });
 
+  // Fetch user statistics
+  const { data: userStats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ["user-stats"],
+    queryFn: () => textApi.getUserStats(),
+    refetchOnWindowFocus: false,
+  });
+
+  // Helper function to format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Helper function to determine activity type
+  const getActivityType = (text: { reviewer_id?: number }) => {
+    // If user is reviewer, it's a review activity
+    if (text.reviewer_id === currentUser?.id) {
+      return "review";
+    }
+    // Otherwise, it's an annotation activity
+    return "annotation";
+  };
+
+  // Handle clicking on recent activity item
+  const handleActivityClick = (textId: number) => {
+    navigate(`/task/${textId}`);
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Navbar />
-
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
@@ -152,77 +181,88 @@ const Dashboard = () => {
         </div>
 
         {/* Main Action Cards */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {/* Start Working Card */}
-          <Card
-            className={`hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200 ${
-              isLoadingText ? "opacity-75" : "cursor-pointer"
-            }`}
-            onClick={!isLoadingText ? handleStartWork : undefined}
-          >
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-center mb-4">
-                <StartWorkIcon />
-              </div>
-              <CardTitle className="text-2xl">Start Working</CardTitle>
-              <CardDescription className="text-base">
-                Begin annotating new texts or continue working on existing
-                annotations
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center">
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={handleStartWork}
-                disabled={isLoadingText}
-              >
-                {isLoadingText ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Finding Text...
-                  </>
-                ) : (
-                  "Start Annotating"
-                )}
-              </Button>
-              <p className="text-sm text-gray-500 mt-3">
-                {isLoadingText
-                  ? "Looking for available texts to annotate..."
-                  : "Create new annotations, mark headers, identify persons and objects"}
-              </p>
-            </CardContent>
-          </Card>
+        <div
+          className="grid gap-6 mb-8"
+          style={{
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          }}
+        >
+          {/* Start Working Card - Show for annotators, users without role, or admins */}
+          {(!currentUser?.role ||
+            currentUser.role === "annotator" ||
+            currentUser.role === "admin") && (
+            <Card
+              className={`hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200 ${
+                isLoadingText ? "opacity-75" : ""
+              }`}
+            >
+              <CardHeader className="text-center pb-4">
+                <div className="flex justify-center mb-4">
+                  <StartWorkIcon />
+                </div>
+                <CardTitle className="text-2xl">Start Working</CardTitle>
+                <CardDescription className="text-base">
+                  Begin annotating new texts or continue working on existing
+                  annotations
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <Button
+                  size="lg"
+                  className="w-full"
+                  onClick={handleStartWork}
+                  disabled={isLoadingText}
+                >
+                  {isLoadingText ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Finding Text...
+                    </>
+                  ) : (
+                    "Start Annotating"
+                  )}
+                </Button>
+                <p className="text-sm text-gray-500 mt-3">
+                  {isLoadingText
+                    ? "Looking for available texts to annotate..."
+                    : "Create new annotations, mark headers, identify persons and objects"}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Review Work Card */}
-          <Card
-            className="hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-green-200"
-            onClick={handleReviewWork}
-          >
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-center mb-4">
-                <ReviewWorkIcon />
-              </div>
-              <CardTitle className="text-2xl">Review Work</CardTitle>
-              <CardDescription className="text-base">
-                Review and validate existing annotations from yourself or other
-                contributors
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full"
-                onClick={handleReviewWork}
-              >
-                Start Reviewing
-              </Button>
-              <p className="text-sm text-gray-500 mt-3">
-                Quality check annotations, approve or suggest improvements
-              </p>
-            </CardContent>
-          </Card>
+          {/* Review Work Card - Show for reviewers or admins */}
+          {(currentUser?.role === "reviewer" ||
+            currentUser?.role === "admin") && (
+            <Card
+              className="hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-green-200"
+              onClick={handleReviewWork}
+            >
+              <CardHeader className="text-center pb-4">
+                <div className="flex justify-center mb-4">
+                  <ReviewWorkIcon />
+                </div>
+                <CardTitle className="text-2xl">Review Work</CardTitle>
+                <CardDescription className="text-base">
+                  Review and validate existing annotations from yourself or
+                  other contributors
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleReviewWork}
+                >
+                  Start Reviewing
+                </Button>
+                <p className="text-sm text-gray-500 mt-3">
+                  Quality check annotations, approve or suggest improvements
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Recent Activity Section */}
@@ -237,33 +277,45 @@ const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {recentActivity.length > 0 ? (
+            {isLoadingActivity ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading recent activity...</p>
+              </div>
+            ) : recentActivity.length > 0 ? (
               <div className="space-y-3">
-                {recentActivity.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-3 h-3 rounded-full ${
-                          activity.type === "annotation"
-                            ? "bg-blue-500"
-                            : "bg-green-500"
-                        }`}
-                      ></div>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {activity.title}
-                        </p>
-                        <p className="text-sm text-gray-500">{activity.date}</p>
+                {recentActivity.map((text) => {
+                  const activityType = getActivityType(text);
+                  return (
+                    <div
+                      key={text.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                      onClick={() => handleActivityClick(text.id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-3 h-3 rounded-full ${
+                            activityType === "annotation"
+                              ? "bg-blue-500"
+                              : "bg-green-500"
+                          }`}
+                        ></div>
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {text.title}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {formatDate(text.updated_at || text.created_at)} •{" "}
+                            {text.status}
+                          </p>
+                        </div>
                       </div>
+                      <Button variant="ghost" size="sm">
+                        {activityType === "annotation" ? "Edit" : "Review"}
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      View
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8">
@@ -280,26 +332,70 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
           <Card className="text-center">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-blue-600 mb-1">12</div>
-              <div className="text-sm text-gray-600">Texts Annotated</div>
+              {isLoadingStats ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded mb-1"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-blue-600 mb-1">
+                    {userStats?.texts_annotated || 0}
+                  </div>
+                  <div className="text-sm text-gray-600">Texts Annotated</div>
+                </>
+              )}
             </CardContent>
           </Card>
           <Card className="text-center">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-green-600 mb-1">8</div>
-              <div className="text-sm text-gray-600">Reviews Completed</div>
+              {isLoadingStats ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded mb-1"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-green-600 mb-1">
+                    {userStats?.reviews_completed || 0}
+                  </div>
+                  <div className="text-sm text-gray-600">Reviews Completed</div>
+                </>
+              )}
             </CardContent>
           </Card>
           <Card className="text-center">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-purple-600 mb-1">45</div>
-              <div className="text-sm text-gray-600">Total Annotations</div>
+              {isLoadingStats ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded mb-1"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-purple-600 mb-1">
+                    {userStats?.total_annotations || 0}
+                  </div>
+                  <div className="text-sm text-gray-600">Total Annotations</div>
+                </>
+              )}
             </CardContent>
           </Card>
           <Card className="text-center">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-orange-600 mb-1">92%</div>
-              <div className="text-sm text-gray-600">Accuracy Rate</div>
+              {isLoadingStats ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded mb-1"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-orange-600 mb-1">
+                    {userStats?.accuracy_rate || 0}%
+                  </div>
+                  <div className="text-sm text-gray-600">Accuracy Rate</div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>

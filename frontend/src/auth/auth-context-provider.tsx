@@ -1,12 +1,14 @@
 import React, {
   useState,
-  ReactNode,
   useMemo,
   useCallback,
   createContext,
+  useEffect,
 } from "react";
+import type { ReactNode } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import type { AuthContextType } from "./types";
+import { usersApi } from "../api/users";
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -17,8 +19,9 @@ interface AuthProviderProps {
 type UserType = {
   id: string;
   email: string;
-  name: string;
-  picture: string;
+  name?: string;
+  picture?: string;
+  role?: string;
 };
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
@@ -32,7 +35,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout: auth0Logout,
     error,
   } = useAuth0();
+
+  // State for backend user data
+  const [backendUser, setBackendUser] = useState<UserType | null>(null);
+  const [fetchingBackendUser, setFetchingBackendUser] = useState(false);
+
   const logout = useCallback(() => {
+    // Clear backend user data
+    setBackendUser(null);
+    setFetchingBackendUser(false);
+
     // If using Auth0, use their logout function
     auth0Logout({
       logoutParams: { returnTo: window.location.origin },
@@ -51,15 +63,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [getAccessTokenSilently]);
 
-  // Ensure user object matches the User interface requirements
-  const currentUser: UserType | null = user
-    ? {
-        id: user.sub,
-        email: user.email,
-        name: user.name,
-        picture: user.picture,
+  // Fetch backend user data when Auth0 user is available
+  useEffect(() => {
+    const fetchBackendUser = async () => {
+      if (isAuthenticated && user && !fetchingBackendUser && !backendUser) {
+        setFetchingBackendUser(true);
+        try {
+          const userData = await usersApi.getCurrentUser();
+          setBackendUser({
+            id: userData.id.toString(),
+            email: userData.email,
+            name: userData.full_name || user.name,
+            picture: user.picture,
+            role: userData.role,
+          });
+        } catch (error) {
+          console.error("Error fetching backend user:", error);
+          // Fallback to Auth0 data if backend fetch fails
+          setBackendUser({
+            id: user.sub || "",
+            email: user.email || "",
+            name: user.name,
+            picture: user.picture,
+          });
+        } finally {
+          setFetchingBackendUser(false);
+        }
       }
-    : null;
+    };
+
+    fetchBackendUser();
+  }, [isAuthenticated, user, fetchingBackendUser, backendUser]);
+
+  // Use backend user data if available, otherwise use Auth0 data
+  const currentUser: UserType | null =
+    backendUser ||
+    (user
+      ? {
+          id: user.sub || "",
+          email: user.email || "",
+          name: user.name,
+          picture: user.picture,
+        }
+      : null);
   // Track silent auth attempts to prevent infinite loops
   const [silentAuthAttempted, setSilentAuthAttempted] = useState(false);
 

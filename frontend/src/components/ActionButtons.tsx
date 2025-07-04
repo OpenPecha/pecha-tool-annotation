@@ -6,10 +6,12 @@ function ActionButtons({
   annotations,
   onSubmitTask,
   isSubmitting = false,
+  isCompletedTask = false,
 }: {
   readonly annotations: Annotation[];
   readonly onSubmitTask: () => void;
   readonly isSubmitting?: boolean;
+  readonly isCompletedTask?: boolean;
 }) {
   return (
     <div className="flex flex-1 gap-2">
@@ -20,7 +22,13 @@ function ActionButtons({
         size={"lg"}
       >
         <Send className="w-4 h-4 mr-2" />
-        {isSubmitting ? "Submitting..." : "Submit Task"}
+        {isSubmitting
+          ? isCompletedTask
+            ? "Updating..."
+            : "Submitting..."
+          : isCompletedTask
+          ? "Update Task"
+          : "Submit Task"}
       </Button>
       <Button
         onClick={() => {

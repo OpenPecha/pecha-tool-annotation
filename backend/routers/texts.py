@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from deps import get_db
 from auth import get_current_active_user, require_admin, require_reviewer
 from crud.text import text_crud
-from schemas.text import TextCreate, TextUpdate, TextResponse
+from schemas.text import TextCreate, TextUpdate, TextResponse, TaskSubmissionResponse
 from schemas.combined import TextWithAnnotations
 from models.user import User
 from models.text import VALID_STATUSES, INITIALIZED, ANNOTATED, REVIEWED, SKIPPED, PROGRESS
@@ -79,6 +79,113 @@ def get_texts_for_annotation(
     return text_crud.get_texts_for_annotation(db=db, skip=skip, limit=limit)
 
 
+@router.post("/start-work", response_model=TextResponse)
+def start_work(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Start work for current user - find work in progress or assign new text."""
+    text = text_crud.start_work(db=db, user_id=current_user.id)
+    
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No texts available for annotation at this time"
+        )
+    
+    return text
+
+
+@router.post("/{text_id}/submit-task", response_model=TaskSubmissionResponse)
+def submit_task(
+    text_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Submit completed task - mark text as annotated and get next task if available."""
+    # Get the text
+    text = text_crud.get(db=db, text_id=text_id)
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Text not found"
+        )
+    
+    # Check if the current user is the annotator of this text
+    if text.annotator_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only submit tasks you are assigned to"
+        )
+    
+    # Check if text is in progress status
+    if text.status != PROGRESS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Text must be in progress status to submit. Current status: {text.status}"
+        )
+    
+    # Update status to annotated
+    submitted_task = text_crud.update_status(
+        db=db, 
+        text_id=text_id, 
+        status=ANNOTATED
+    )
+    
+    # Find the next task for the user
+    next_task = text_crud.start_work(db=db, user_id=current_user.id)
+    
+    if next_task:
+        message = f"Task submitted successfully! Next task: '{next_task.title}'"
+    else:
+        message = "Task submitted successfully! No more tasks available at this time."
+    
+    return TaskSubmissionResponse(
+        submitted_task=submitted_task,
+        next_task=next_task,
+        message=message
+    )
+
+
+@router.post("/{text_id}/update-task", response_model=TextResponse)
+def update_task(
+    text_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Update a completed task - allows editing previously submitted work."""
+    # Get the text
+    text = text_crud.get(db=db, text_id=text_id)
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Text not found"
+        )
+    
+    # Check if the current user was the annotator of this text
+    if text.annotator_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only update tasks you were assigned to"
+        )
+    
+    # Check if text is in annotated or reviewed status (completed work)
+    if text.status not in [ANNOTATED, REVIEWED]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Can only update completed tasks. Current status: {text.status}"
+        )
+    
+    # Update status back to annotated (marking as updated)
+    updated_text = text_crud.update_status(
+        db=db, 
+        text_id=text_id, 
+        status=ANNOTATED
+    )
+    
+    return updated_text
+
+
 @router.get("/for-review", response_model=List[TextResponse])
 def get_texts_for_review(
     skip: int = Query(0, ge=0),
@@ -97,6 +204,25 @@ def get_text_stats(
 ):
     """Get text statistics."""
     return text_crud.get_stats(db=db)
+
+
+@router.get("/recent-activity", response_model=List[TextResponse])
+def get_recent_activity(
+    limit: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get recent texts annotated or reviewed by the current user."""
+    return text_crud.get_recent_activity(db=db, user_id=current_user.id, limit=limit)
+
+
+@router.get("/user-stats")
+def get_user_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get statistics for the current user."""
+    return text_crud.get_user_stats(db=db, user_id=current_user.id)
 
 
 @router.get("/search/", response_model=List[TextResponse])

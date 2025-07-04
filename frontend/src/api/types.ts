@@ -162,6 +162,19 @@ export interface TextWithAnnotations extends TextResponse {
   annotations: AnnotationResponse[];
 }
 
+export interface TaskSubmissionResponse {
+  submitted_task: TextResponse;
+  next_task?: TextResponse;
+  message: string;
+}
+
+export interface UserStats {
+  texts_annotated: number;
+  reviews_completed: number;
+  total_annotations: number;
+  accuracy_rate: number;
+}
+
 // API Error types
 export interface ApiError {
   detail: string;

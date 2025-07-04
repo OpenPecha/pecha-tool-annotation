@@ -6,6 +6,7 @@ import Task from "./pages/Task";
 import Dashboard from "./pages/Dashboard";
 import { AuthProvider } from "./auth/auth-context-provider";
 import { Suspense, useEffect } from "react";
+import { Toaster } from "@/components/ui/sonner";
 
 import OpenPecha from "./assets/icon.png";
 import { useAuth } from "./auth/use-auth-hook";
@@ -55,6 +56,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AppContent />
+          <Toaster />
         </BrowserRouter>
       </QueryClientProvider>
     </AuthProvider>

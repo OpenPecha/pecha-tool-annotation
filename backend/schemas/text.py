@@ -46,4 +46,11 @@ class TextResponse(TextBase):
     def validate_status(cls, v):
         if v not in VALID_STATUSES:
             raise ValueError(f'Status must be one of: {", ".join(VALID_STATUSES)}')
-        return v 
+        return v
+
+
+class TaskSubmissionResponse(BaseModel):
+    """Response for task submission - includes submitted task and next task if available"""
+    submitted_task: TextResponse
+    next_task: Optional[TextResponse] = None
+    message: str 

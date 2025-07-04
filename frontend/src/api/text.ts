@@ -8,6 +8,8 @@ import type {
   TextStats,
   SearchParams,
   TextStatus,
+  TaskSubmissionResponse,
+  UserStats,
 } from "./types";
 
 // Text API client
@@ -57,6 +59,21 @@ export const textApi = {
     return apiClient.get<TextResponse[]>("/texts/for-annotation", filters);
   },
 
+  // Start work - find work in progress or assign new text
+  startWork: async (): Promise<TextResponse> => {
+    return apiClient.post<TextResponse>("/texts/start-work");
+  },
+
+  // Submit task - mark text as annotated and get next task (for annotators)
+  submitTask: async (id: number): Promise<TaskSubmissionResponse> => {
+    return apiClient.post<TaskSubmissionResponse>(`/texts/${id}/submit-task`);
+  },
+
+  // Update completed task - for editing previously submitted work
+  updateTask: async (id: number): Promise<TextResponse> => {
+    return apiClient.post<TextResponse>(`/texts/${id}/update-task`);
+  },
+
   // Get texts for review (status: annotated)
   getTextsForReview: async (
     filters: { skip?: number; limit?: number } = {}
@@ -72,5 +89,15 @@ export const textApi = {
   // Get text statistics
   getTextStats: async (): Promise<TextStats> => {
     return apiClient.get<TextStats>("/texts/stats");
+  },
+
+  // Get recent activity for current user
+  getRecentActivity: async (limit: number = 10): Promise<TextResponse[]> => {
+    return apiClient.get<TextResponse[]>("/texts/recent-activity", { limit });
+  },
+
+  // Get user statistics
+  getUserStats: async (): Promise<UserStats> => {
+    return apiClient.get<UserStats>("/texts/user-stats");
   },
 };

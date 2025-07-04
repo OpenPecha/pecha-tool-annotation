@@ -148,5 +148,103 @@ class TextCRUD:
             "progress": progress
         }
 
+    def get_work_in_progress(self, db: Session, user_id: int) -> Optional[Text]:
+        """Get text that user is currently working on (progress status)."""
+        return db.query(Text).filter(
+            Text.annotator_id == user_id,
+            Text.status == PROGRESS
+        ).first()
+
+    def get_unassigned_text(self, db: Session) -> Optional[Text]:
+        """Get an unassigned text with initialized status."""
+        return db.query(Text).filter(
+            Text.status == INITIALIZED,
+            Text.annotator_id.is_(None)
+        ).first()
+
+    def assign_text_to_user(self, db: Session, text_id: int, user_id: int) -> Optional[Text]:
+        """Assign a text to a user and set status to progress."""
+        text = db.query(Text).filter(Text.id == text_id).first()
+        if text:
+            text.annotator_id = user_id
+            text.status = PROGRESS
+            db.add(text)
+            db.commit()
+            db.refresh(text)
+        return text
+
+    def start_work(self, db: Session, user_id: int) -> Optional[Text]:
+        """Start work for a user - find work in progress or assign new text."""
+        # First, check if user has work in progress
+        work_in_progress = self.get_work_in_progress(db, user_id)
+        if work_in_progress:
+            return work_in_progress
+        
+        # If no work in progress, find an unassigned text
+        unassigned_text = self.get_unassigned_text(db)
+        if unassigned_text:
+            return self.assign_text_to_user(db, unassigned_text.id, user_id)
+        
+        # No texts available
+        return None
+
+    def get_recent_activity(self, db: Session, user_id: int, limit: int = 10) -> List[Text]:
+        """Get recent texts annotated or reviewed by the user."""
+        # Get texts where user was annotator or reviewer, ordered by updated_at desc
+        recent_texts = db.query(Text).filter(
+            (Text.annotator_id == user_id) | (Text.reviewer_id == user_id)
+        ).filter(
+            Text.status.in_([ANNOTATED, REVIEWED])  # Only completed work
+        ).order_by(
+            Text.updated_at.desc()
+        ).limit(limit).all()
+        
+        return recent_texts
+
+    def get_user_stats(self, db: Session, user_id: int) -> dict:
+        """Get statistics for a specific user."""
+        # Count texts annotated by user (where user is annotator and status is annotated/reviewed)
+        texts_annotated = db.query(Text).filter(
+            Text.annotator_id == user_id,
+            Text.status.in_([ANNOTATED, REVIEWED])
+        ).count()
+        
+        # Count texts reviewed by user (where user is reviewer and status is reviewed)
+        reviews_completed = db.query(Text).filter(
+            Text.reviewer_id == user_id,
+            Text.status == REVIEWED
+        ).count()
+        
+        # Count total annotations created by user
+        from models.annotation import Annotation
+        total_annotations = db.query(Annotation).filter(
+            Annotation.annotator_id == user_id
+        ).count()
+        
+        # Calculate accuracy rate (for now, simple calculation based on reviewed texts)
+        # This could be enhanced with more sophisticated metrics
+        total_user_texts = db.query(Text).filter(
+            Text.annotator_id == user_id,
+            Text.status.in_([ANNOTATED, REVIEWED])
+        ).count()
+        
+        if total_user_texts > 0:
+            reviewed_by_others = db.query(Text).filter(
+                Text.annotator_id == user_id,
+                Text.status == REVIEWED,
+                Text.reviewer_id.isnot(None),
+                Text.reviewer_id != user_id
+            ).count()
+            accuracy_rate = (reviewed_by_others / total_user_texts) * 100
+        else:
+            accuracy_rate = 0
+        
+        return {
+            "texts_annotated": texts_annotated,
+            "reviews_completed": reviews_completed,
+            "total_annotations": total_annotations,
+            "accuracy_rate": round(accuracy_rate, 1)
+        }
+
 
 text_crud = TextCRUD() 

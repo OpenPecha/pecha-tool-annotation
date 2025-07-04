@@ -11,8 +11,11 @@ import ActionButtons from "@/components/ActionButtons";
 import { useParams, useNavigate } from "react-router-dom";
 import { textApi } from "@/api/text";
 import { annotationsApi } from "@/api/annotations";
-import type { AnnotationResponse, AnnotationCreate } from "@/api/types";
-import { TextStatus } from "@/api/types";
+import type {
+  AnnotationResponse,
+  AnnotationCreate,
+  TaskSubmissionResponse,
+} from "@/api/types";
 import {
   loadAnnotationConfig,
   isValidAnnotationType,
@@ -115,6 +118,8 @@ const Index = () => {
 
       // Refresh the text data to get updated annotations
       queryClient.invalidateQueries({ queryKey: ["text", textId] });
+      // Refresh user stats (affects total annotations count)
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
 
       toast({
         title: "✅ Annotation Created",
@@ -143,6 +148,8 @@ const Index = () => {
 
       // Refresh the text data
       queryClient.invalidateQueries({ queryKey: ["text", textId] });
+      // Refresh user stats (affects total annotations count)
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
 
       toast({
         title: "✅ Annotation Deleted",
@@ -160,29 +167,65 @@ const Index = () => {
     },
   });
 
-  // Mutation for updating text status
-  const updateTextStatusMutation = useMutation({
-    mutationFn: async (status: TextStatus) => {
+  // Mutation for submitting task
+  const submitTaskMutation = useMutation({
+    mutationFn: async () => {
       if (!textId) throw new Error("Text ID is required");
       const id = parseInt(textId, 10);
       if (isNaN(id)) throw new Error("Invalid text ID");
-      return textApi.updateTextStatus(id, status);
+      return textApi.submitTask(id);
     },
-    onSuccess: () => {
+    onSuccess: (response: TaskSubmissionResponse) => {
       toast({
         title: "✅ Task Completed",
-        description: "Text status updated to annotated successfully!",
+        description: response.message,
       });
-      // Navigate back to dashboard or show completion message
-      setTimeout(() => navigate("/"), 2000);
+
+      // Refresh user stats and recent activity
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
+
+      // If there's a next task, navigate to it immediately
+      if (response.next_task) {
+        setTimeout(() => navigate(`/task/${response.next_task!.id}`), 1500);
+      } else {
+        // No more tasks, navigate back to dashboard
+        setTimeout(() => navigate("/"), 2000);
+      }
     },
     onError: (error) => {
       toast({
         title: "❌ Failed to Submit Task",
         description:
-          error instanceof Error
-            ? error.message
-            : "Failed to update text status",
+          error instanceof Error ? error.message : "Failed to submit task",
+      });
+    },
+  });
+
+  // Mutation for updating completed task
+  const updateTaskMutation = useMutation({
+    mutationFn: async () => {
+      if (!textId) throw new Error("Text ID is required");
+      const id = parseInt(textId, 10);
+      if (isNaN(id)) throw new Error("Invalid text ID");
+      return textApi.updateTask(id);
+    },
+    onSuccess: () => {
+      toast({
+        title: "✅ Task Updated",
+        description: "Your changes have been saved successfully!",
+      });
+      // Refresh the text data to reflect updates
+      queryClient.invalidateQueries({ queryKey: ["text", textId] });
+      // Refresh user stats and recent activity
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "❌ Failed to Update Task",
+        description:
+          error instanceof Error ? error.message : "Failed to update task",
       });
     },
   });
@@ -284,7 +327,12 @@ const Index = () => {
     deleteAnnotationMutation.mutate(annotationIdNumber);
   };
 
-  // New submit function that updates text status
+  // Check if this is a completed task
+  const isCompletedTask =
+    textData &&
+    (textData.status === "annotated" || textData.status === "reviewed");
+
+  // New submit function that submits or updates the task
   const handleSubmitTask = () => {
     if (annotations.length === 0) {
       toast({
@@ -294,8 +342,12 @@ const Index = () => {
       return;
     }
 
-    // Update text status to annotated
-    updateTextStatusMutation.mutate(TextStatus.ANNOTATED);
+    // Use appropriate mutation based on task status
+    if (isCompletedTask) {
+      updateTaskMutation.mutate();
+    } else {
+      submitTaskMutation.mutate();
+    }
   };
 
   const handleHeaderClick = (annotation: Annotation) => {
@@ -416,7 +468,10 @@ const Index = () => {
           <ActionButtons
             annotations={annotations}
             onSubmitTask={handleSubmitTask}
-            isSubmitting={updateTextStatusMutation.isPending}
+            isSubmitting={
+              submitTaskMutation.isPending || updateTaskMutation.isPending
+            }
+            isCompletedTask={isCompletedTask}
           />
           <AnnotationSidebar
             annotations={annotationsWithoutHeader}
