@@ -1,6 +1,6 @@
-# Minimal Sample Data Format
+# Sample Data Format for Pecha Annotation Tool
 
-This directory contains minimal sample JSON files showing the **required fields only** for uploading texts and annotations to the Pecha Annotation Tool database.
+This directory contains sample JSON files showing the format for uploading texts and annotations to the Pecha Annotation Tool database.
 
 ## Required vs Optional Fields
 
@@ -74,68 +74,120 @@ These fields are automatically handled by the system and should **NOT** be inclu
 - `created_at` - Auto-generated timestamp
 - `updated_at` - Auto-generated timestamp
 
-## Minimal Sample Files
+## Sample Files
 
 ### 1. sample_text_minimal_1.json
 
-- **Content**: Tibetan mantra with basic annotations
-- **Features**: Only required fields, demonstrates Unicode text
+- **Content**: Tibetan Heart Sutra with traditional Buddhist text structure
+- **Features**: Demonstrates Unicode Tibetan text, religious text annotation
+- **Annotation Types**: title, header, author, translator
+- **Use Case**: Religious and philosophical texts
 
 ### 2. sample_text_minimal_2.json
 
-- **Content**: English climate text
-- **Features**: Only required fields, simple entity and sentiment annotations
+- **Content**: English academic paper on climate change
+- **Features**: Academic paper structure with multiple sections
+- **Annotation Types**: title, header, author, translator
+- **Use Case**: Academic and scientific documents
 
 ### 3. sample_text_minimal_3.json
 
-- **Content**: Mixed language text with optional fields
-- **Features**: Shows commonly used optional fields like `language`, `source`, `label`
+- **Content**: Mixed Tibetan-English comparative study
+- **Features**: Bilingual text with cultural and philosophical content
+- **Annotation Types**: title, header, author, translator
+- **Use Case**: Comparative studies and bilingual documents
 
-## Basic File Structure
+## Standard Annotation Types
 
-The absolute minimal structure is:
+### Structural Annotations
 
-```json
-{
-  "text": {
-    "title": "Your Text Title",
-    "content": "Your text content here..."
-  },
-  "annotations": [
-    {
-      "annotation_type": "your_type",
-      "start_position": 0,
-      "end_position": 5
-    }
-  ]
-}
+- **title** - Document titles and main headings
+- **header** - Section headers, subsections, and structural divisions
+- **author** - Author attribution and bylines
+- **translator** - Translation credits and translator attribution
+
+### Content Annotations
+
+- **entity** - Named entities, objects, concepts
+- **sentiment** - Emotional tone or opinion
+- **language** - Language identification for multilingual texts
+- **concept** - Abstract concepts or philosophical ideas
+- **mantra** - Religious or sacred text passages
+- **greeting** - Greeting expressions and formulaic phrases
+
+## Position Calculation
+
+Positions are calculated as character indices (0-based) within the text content:
+
+```text
+"Hello World"
+ 0123456789A  (A = 10)
 ```
+
+- `start_position: 0, end_position: 5` = "Hello"
+- `start_position: 6, end_position: 11` = "World"
 
 ## Validation Rules
 
 1. **Text title and content** cannot be empty
 2. **End position** must be greater than start position
-3. **Positions** must be within text bounds
+3. **Positions** must be within text content bounds
 4. **Selected text** will be auto-extracted from positions if not provided
 5. **Language** defaults to "en" if not specified
 6. **Confidence** defaults to 100 if not specified
+7. **Text titles** must be unique across the database
 
-## Common Annotation Types
+## File Structure Template
 
-- `entity` - Named entities, objects, concepts
-- `sentiment` - Emotional tone or opinion
-- `language` - Language identification
-- `structure` - Document structure elements
-- `mantra` - Religious or sacred text
-- `concept` - Abstract concepts or ideas
-- `greeting` - Greeting expressions
+```json
+{
+  "text": {
+    "title": "Your Document Title",
+    "content": "Your full text content here...",
+    "language": "en",
+    "source": "Optional source information"
+  },
+  "annotations": [
+    {
+      "annotation_type": "title",
+      "start_position": 0,
+      "end_position": 20,
+      "label": "main_title",
+      "name": "Document Title"
+    },
+    {
+      "annotation_type": "author",
+      "start_position": 25,
+      "end_position": 45,
+      "label": "author_byline",
+      "name": "Author Name"
+    },
+    {
+      "annotation_type": "header",
+      "start_position": 50,
+      "end_position": 70,
+      "label": "section_header",
+      "name": "Introduction"
+    }
+  ]
+}
+```
 
-## Usage
+## Usage Guidelines
 
-1. Create JSON files following the minimal format
+1. **Longer Content**: Use substantial text content to demonstrate realistic use cases
+2. **Meaningful Annotations**: Create annotations that serve actual analytical purposes
+3. **Cultural Sensitivity**: Respect cultural and religious contexts in sample texts
+4. **Multilingual Support**: Demonstrate Unicode support for various languages
+5. **Academic Standards**: Follow proper attribution and citation practices
+
+## Upload Process
+
+1. Create JSON files following the above format
 2. Ensure all required fields are present
 3. Upload through the admin bulk upload interface
-4. Optional fields will use default values if not provided
-5. System will validate and provide detailed error messages
+4. System validates and provides detailed error reporting
+5. Successfully uploaded texts have "initialized" status
+6. Annotations are created without changing text status
 
-This minimal format reduces file size and complexity while ensuring all necessary data is captured for the annotation system.
+This format supports comprehensive text annotation workflows while maintaining flexibility for various document types and use cases.

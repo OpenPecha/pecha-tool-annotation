@@ -6,8 +6,11 @@ from auth import get_current_active_user, require_admin, require_reviewer
 from crud.text import text_crud
 from schemas.text import TextCreate, TextUpdate, TextResponse, TaskSubmissionResponse
 from schemas.combined import TextWithAnnotations
+from schemas.user_rejected_text import RejectedTextWithDetails
 from models.user import User
 from models.text import VALID_STATUSES, INITIALIZED, ANNOTATED, REVIEWED, SKIPPED, PROGRESS
+from sqlalchemy import func
+from models.user_rejected_text import UserRejectedText
 
 router = APIRouter(prefix="/texts", tags=["Texts"])
 
@@ -94,6 +97,154 @@ def start_work(
         )
     
     return text
+
+
+@router.post("/skip-text", response_model=TextResponse)
+def skip_text(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Skip current text by adding it to your rejected list and get next available text."""
+    next_text = text_crud.skip_text(db=db, user_id=current_user.id)
+    
+    if not next_text:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No more texts available for annotation at this time"
+        )
+    
+    return next_text
+
+
+@router.get("/my-rejected-texts", response_model=List[RejectedTextWithDetails])
+def get_my_rejected_texts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get all texts that the current user has rejected/skipped."""
+    from crud.user_rejected_text import user_rejected_text_crud
+    from schemas.user_rejected_text import RejectedTextWithDetails
+    
+    rejected_texts = user_rejected_text_crud.get_user_rejected_texts(db=db, user_id=current_user.id)
+    
+    # Convert to response format with text details
+    result = []
+    for rejection in rejected_texts:
+        text = text_crud.get(db=db, text_id=rejection.text_id)
+        if text:
+            result.append(RejectedTextWithDetails(
+                id=rejection.id,
+                text_id=text.id,
+                text_title=text.title,
+                text_language=text.language,
+                rejected_at=rejection.rejected_at
+            ))
+    
+    return result
+
+
+@router.get("/admin/text-statistics")
+def get_admin_text_statistics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Get comprehensive text statistics for admins."""
+    from crud.user_rejected_text import user_rejected_text_crud
+    
+    # Get basic text statistics
+    stats = text_crud.get_stats(db)
+    
+    # Get rejection statistics
+    total_rejections = db.query(UserRejectedText).count()
+    unique_rejected_texts = db.query(UserRejectedText.text_id).distinct().count()
+    
+    # Calculate texts truly available (initialized and not rejected by all users)
+    total_users = db.query(User).filter(User.is_active == True).count()
+    heavily_rejected_texts = db.query(UserRejectedText.text_id).group_by(UserRejectedText.text_id).having(
+        func.count(UserRejectedText.user_id) >= max(1, total_users * 0.5)  # Rejected by 50% or more users
+    ).count()
+    
+    return {
+        **stats,
+        "total_rejections": total_rejections,
+        "unique_rejected_texts": unique_rejected_texts,
+        "heavily_rejected_texts": heavily_rejected_texts,
+        "total_active_users": total_users,
+        "available_for_new_users": stats["initialized"] - heavily_rejected_texts if stats["initialized"] > heavily_rejected_texts else 0
+    }
+
+
+@router.post("/{text_id}/cancel-work", status_code=status.HTTP_200_OK)
+def cancel_work(
+    text_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cancel work on a text - make it available for others to work on."""
+    # Get the text
+    text = text_crud.get(db=db, text_id=text_id)
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Text not found"
+        )
+    
+    # Update status and remove annotator assignment
+    text_crud.cancel_work(db=db, text_id=text_id, user_id=current_user.id)
+    
+    return {"message": "Work cancelled successfully"}
+
+
+@router.post("/{text_id}/revert-work", status_code=status.HTTP_200_OK)
+def revert_work(
+    text_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Revert user work - remove all user annotations and make text available for others."""
+    from crud.annotation import annotation_crud
+    
+    # Get the text
+    text = text_crud.get(db=db, text_id=text_id)
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Text not found"
+        )
+    
+    # Check if the current user was the annotator of this text
+    if text.annotator_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only revert work on texts you were assigned to"
+        )
+    
+    # Check if text is in completed status (annotated or reviewed)
+    if text.status not in [ANNOTATED, REVIEWED]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Can only revert completed work. Current status: {text.status}"
+        )
+    
+    # Delete all user annotations for this text
+    deleted_count = annotation_crud.delete_user_annotations(
+        db=db, 
+        text_id=text_id, 
+        annotator_id=current_user.id
+    )
+    
+    return {
+        "message": f"Work reverted successfully. Removed {deleted_count} annotations."
+    }
+
+
+@router.get("/my-work-in-progress", response_model=List[TextResponse])
+def get_my_work_in_progress(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get all texts that the current user is currently working on."""
+    return text_crud.get_user_work_in_progress(db=db, user_id=current_user.id)
 
 
 @router.post("/{text_id}/submit-task", response_model=TaskSubmissionResponse)

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -16,6 +16,8 @@ import { textApi } from "@/api/text";
 import { Loader2 } from "lucide-react";
 import BulkUploadModal from "@/components/BulkUploadModal";
 import type { BulkUploadResponse } from "@/api/bulk-upload";
+import { AdminStatisticsCharts } from "@/components/AdminStatisticsCharts";
+import { UserManagement } from "@/components/UserManagement";
 
 // Icons for the dashboard cards
 const StartWorkIcon = () => (
@@ -85,8 +87,12 @@ const BulkUploadIcon = () => (
 const Dashboard = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const [isLoadingText, setIsLoadingText] = useState(false);
+  const queryClient = useQueryClient();
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
+  const [activeAdminTab, setActiveAdminTab] = useState<"statistics" | "users">(
+    "statistics"
+  );
+  const [isLoadingText, setIsLoadingText] = useState(false);
 
   // Mutation to start work - find work in progress or assign new text
   const startWorkMutation = useMutation({
@@ -161,6 +167,14 @@ const Dashboard = () => {
     refetchOnWindowFocus: false,
   });
 
+  // Fetch admin text statistics (only for admins)
+  const { data: adminStats, isLoading: isLoadingAdminStats } = useQuery({
+    queryKey: ["admin-text-statistics"],
+    queryFn: () => textApi.getAdminTextStatistics(),
+    refetchOnWindowFocus: false,
+    enabled: currentUser?.role === "admin", // Only fetch for admins
+  });
+
   // Helper function to format date
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -198,68 +212,231 @@ const Dashboard = () => {
     }
     setShowBulkUploadModal(false);
   };
+
+  // Fetch user's work in progress
+  const { data: workInProgress = [] } = useQuery({
+    queryKey: ["my-work-in-progress"],
+    queryFn: () => textApi.getMyWorkInProgress(),
+    refetchOnWindowFocus: false,
+  });
+
+  // Mutation to cancel work (delete user annotations and skip text)
+  const cancelWorkMutation = useMutation({
+    mutationFn: async () => {
+      // Get current work in progress to get the text ID
+      const workInProgress = await textApi.getMyWorkInProgress();
+      if (workInProgress.length === 0) {
+        throw new Error("No work in progress found");
+      }
+
+      const currentTextId = workInProgress[0].id;
+
+      // Cancel work: delete user annotations and skip text
+      return textApi.cancelWorkWithRevertAndSkip(currentTextId);
+    },
+    onSuccess: () => {
+      toast.success("✅ Work Cancelled & Skipped", {
+        description:
+          "Your annotations were deleted and text was skipped. It won't be shown to you again.",
+      });
+      // Refresh queries
+      queryClient.invalidateQueries({ queryKey: ["my-work-in-progress"] });
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-text-statistics"] });
+    },
+    onError: (error) => {
+      toast.error("❌ Failed to Cancel Work", {
+        description:
+          error instanceof Error ? error.message : "Failed to cancel work",
+      });
+    },
+  });
+
+  const handleCancelWork = () => {
+    cancelWorkMutation.mutate();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
             Welcome back, {currentUser?.name || "User"}!
           </h1>
           <p className="text-gray-600">
-            Choose an option below to start working on your Pecha annotation
-            tasks.
+            Here's your annotation progress and available tasks.
           </p>
         </div>
 
-        {/* Main Action Cards */}
+        {/* Admin Panel - Only show for admins */}
+        {currentUser?.role === "admin" && (
+          <Card className="mb-8 bg-gradient-to-r from-slate-50 to-blue-50 border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-xl text-slate-800">
+                ⚙️ Admin Panel
+              </CardTitle>
+              <CardDescription className="text-slate-600">
+                System administration and management tools
+              </CardDescription>
+              {/* Tab Navigation */}
+              <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg mt-4">
+                <button
+                  onClick={() => setActiveAdminTab("statistics")}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                    activeAdminTab === "statistics"
+                      ? "bg-white text-blue-700 shadow-sm"
+                      : "text-slate-600 hover:text-slate-800"
+                  }`}
+                >
+                  📊 Statistics
+                </button>
+                <button
+                  onClick={() => setActiveAdminTab("users")}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                    activeAdminTab === "users"
+                      ? "bg-white text-purple-700 shadow-sm"
+                      : "text-slate-600 hover:text-slate-800"
+                  }`}
+                >
+                  👥 Users
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Statistics Tab */}
+              {activeAdminTab === "statistics" && (
+                <div>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                      📊 Text Statistics & Analytics
+                    </h3>
+                    <p className="text-sm text-blue-600">
+                      System-wide text status and user activity overview
+                    </p>
+                  </div>
+                  {isLoadingAdminStats ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                      <span className="ml-2 text-blue-600">
+                        Loading statistics...
+                      </span>
+                    </div>
+                  ) : adminStats ? (
+                    <AdminStatisticsCharts statistics={adminStats} />
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">
+                      Failed to load statistics
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* User Management Tab */}
+              {activeAdminTab === "users" && (
+                <div>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-purple-800 mb-2">
+                      👥 User Management
+                    </h3>
+                    <p className="text-sm text-purple-600">
+                      Manage system users, roles, and permissions
+                    </p>
+                  </div>
+                  <UserManagement />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* User Statistics Cards */}
         <div
           className="grid gap-6 mb-8"
           style={{
             gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
           }}
         >
-          {/* Start Working Card - Show for annotators, users without role, or admins */}
+          {/* Combined Start Working / Current Work Card - Show for annotators, users without role, or admins */}
           {(!currentUser?.role ||
             currentUser.role === "annotator" ||
             currentUser.role === "admin") && (
             <Card
-              className={`hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200 ${
-                isLoadingText ? "opacity-75" : ""
-              }`}
+              className={`hover:shadow-lg transition-all duration-300 border-2 ${
+                workInProgress.length > 0
+                  ? "border-orange-200 bg-orange-50"
+                  : "hover:border-blue-200"
+              } ${isLoadingText ? "opacity-75" : ""}`}
             >
               <CardHeader className="text-center pb-4">
                 <div className="flex justify-center mb-4">
                   <StartWorkIcon />
                 </div>
-                <CardTitle className="text-2xl">Start Working</CardTitle>
+                <CardTitle className="text-2xl">
+                  {workInProgress.length > 0 ? "Current Work" : "Start Working"}
+                </CardTitle>
                 <CardDescription className="text-base">
-                  Begin annotating new texts or continue working on existing
-                  annotations
+                  {workInProgress.length > 0
+                    ? "Continue working on your text in progress"
+                    : "Begin annotating new texts or continue working on existing annotations"}
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-center">
-                <Button
-                  size="lg"
-                  className="w-full"
-                  onClick={handleStartWork}
-                  disabled={isLoadingText}
-                >
-                  {isLoadingText ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Finding Text...
-                    </>
-                  ) : (
-                    "Start Annotating"
-                  )}
-                </Button>
-                <p className="text-sm text-gray-500 mt-3">
-                  {isLoadingText
-                    ? "Looking for available texts to annotate..."
-                    : "Create new annotations, mark headers, identify persons and objects"}
-                </p>
+                {workInProgress.length > 0 ? (
+                  // Show current work details
+                  <div className="space-y-4">
+                    {workInProgress.map((text) => (
+                      <div key={text.id} className="text-left">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {text.title}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Status: {text.status} • Started:{" "}
+                              {formatDate(text.updated_at || text.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            size="lg"
+                            className="flex-1"
+                            onClick={() => navigate(`/task/${text.id}`)}
+                          >
+                            Continue
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  // Show start working interface
+                  <>
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      onClick={handleStartWork}
+                      disabled={isLoadingText}
+                    >
+                      {isLoadingText ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Finding Text...
+                        </>
+                      ) : (
+                        "Start Annotating"
+                      )}
+                    </Button>
+                    <p className="text-sm text-gray-500 mt-3">
+                      {isLoadingText
+                        ? "Looking for available texts to annotate..."
+                        : "Create new annotations, mark headers, identify persons and objects"}
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           )}
@@ -350,8 +527,7 @@ const Dashboard = () => {
                   return (
                     <div
                       key={text.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                      onClick={() => handleActivityClick(text.id)}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <div
@@ -371,9 +547,35 @@ const Dashboard = () => {
                           </p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm">
-                        {activityType === "annotation" ? "Edit" : "Review"}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleActivityClick(text.id);
+                          }}
+                        >
+                          {activityType === "annotation" ? "Edit" : "Review"}
+                        </Button>
+                        {text.status === "progress" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelWork();
+                            }}
+                            disabled={cancelWorkMutation.isPending}
+                            title="Delete your annotations and skip this text permanently"
+                          >
+                            {cancelWorkMutation.isPending
+                              ? "Cancelling..."
+                              : "Cancel & Skip"}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

@@ -1,12 +1,6 @@
 import { apiClient } from "./utils";
-import type {
-  UserResponse,
-  UserUpdate,
-  UserFilters,
-  SearchParams,
-} from "./types";
+import type { UserResponse, UserUpdate, UserFilters, UserStats } from "./types";
 
-// Users API client
 export const usersApi = {
   // Get current user info
   getCurrentUser: async (): Promise<UserResponse> => {
@@ -14,32 +8,49 @@ export const usersApi = {
   },
 
   // Update current user info
-  updateCurrentUser: async (data: UserUpdate): Promise<UserResponse> => {
-    return apiClient.put<UserResponse>("/users/me", data);
+  updateCurrentUser: async (userData: UserUpdate): Promise<UserResponse> => {
+    return apiClient.put<UserResponse>("/users/me", userData);
   },
 
-  // Get all users (Admin only)
-  getUsers: async (filters: UserFilters = {}): Promise<UserResponse[]> => {
-    return apiClient.get<UserResponse[]>("/users", filters);
+  // Get all users (admin only)
+  getAllUsers: async (filters?: UserFilters): Promise<UserResponse[]> => {
+    return apiClient.get<UserResponse[]>(
+      "/users/",
+      filters as Record<string, string | number | boolean | undefined>
+    );
   },
 
-  // Get single user by ID (Admin only)
-  getUser: async (id: number): Promise<UserResponse> => {
-    return apiClient.get<UserResponse>(`/users/${id}`);
+  // Get user by ID (admin only)
+  getUserById: async (userId: number): Promise<UserResponse> => {
+    return apiClient.get<UserResponse>(`/users/${userId}`);
   },
 
-  // Update user (Admin only)
-  updateUser: async (id: number, data: UserUpdate): Promise<UserResponse> => {
-    return apiClient.put<UserResponse>(`/users/${id}`, data);
+  // Update user (admin only)
+  updateUser: async (
+    userId: number,
+    userData: UserUpdate
+  ): Promise<UserResponse> => {
+    return apiClient.put<UserResponse>(`/users/${userId}`, userData);
   },
 
-  // Delete user (Admin only)
-  deleteUser: async (id: number): Promise<void> => {
-    return apiClient.delete<void>(`/users/${id}`);
+  // Delete user (admin only)
+  deleteUser: async (userId: number): Promise<void> => {
+    return apiClient.delete<void>(`/users/${userId}`);
   },
 
-  // Search users (Admin only)
-  searchUsers: async (params: SearchParams): Promise<UserResponse[]> => {
-    return apiClient.get<UserResponse[]>("/users/search", params);
+  // Search users (admin only)
+  searchUsers: async (
+    query: string,
+    filters?: UserFilters
+  ): Promise<UserResponse[]> => {
+    return apiClient.get<UserResponse[]>("/users/search/", {
+      q: query,
+      ...filters,
+    } as Record<string, string | number | boolean | undefined>);
+  },
+
+  // Get user statistics
+  getUserStats: async (): Promise<UserStats> => {
+    return apiClient.get<UserStats>("/users/stats");
   },
 };

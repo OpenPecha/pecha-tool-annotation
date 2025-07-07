@@ -87,7 +87,7 @@ export interface AnnotationUpdate {
 export interface AnnotationResponse extends AnnotationBase {
   id: number;
   text_id: number;
-  annotator_id: number;
+  annotator_id?: number; // Can be undefined for system annotations
   created_at: string;
   updated_at?: string;
 }
@@ -194,4 +194,28 @@ export interface TextStats {
   total_texts: number;
   texts_by_status: Record<TextStatus, number>;
   texts_by_language: Record<string, number>;
+}
+
+// Rejected Texts
+export interface RejectedTextWithDetails {
+  id: number;
+  text_id: number;
+  text_title: string;
+  text_language?: string;
+  rejected_at: string;
+}
+
+// Admin Text Statistics
+export interface AdminTextStatistics {
+  total: number;
+  initialized: number;
+  annotated: number;
+  reviewed: number;
+  skipped: number;
+  progress: number;
+  total_rejections: number;
+  unique_rejected_texts: number;
+  heavily_rejected_texts: number;
+  total_active_users: number;
+  available_for_new_users: number;
 }

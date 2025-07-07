@@ -9,6 +9,8 @@ from schemas.annotation import AnnotationCreate, AnnotationUpdate
 class AnnotationCRUD:
     def create(self, db: Session, obj_in: AnnotationCreate, annotator_id: int) -> Annotation:
         """Create a new annotation."""
+        from models.text import Text, PROGRESS, INITIALIZED
+        
         db_obj = Annotation(
             text_id=obj_in.text_id,
             annotator_id=annotator_id,
@@ -33,11 +35,11 @@ class AnnotationCRUD:
         db.refresh(db_obj)
         return db_obj
 
-    def create_bulk(self, db: Session, obj_in: AnnotationCreate, annotator_id: int) -> Annotation:
+    def create_bulk(self, db: Session, obj_in: AnnotationCreate, annotator_id: Optional[int]) -> Annotation:
         """Create a new annotation without changing text status (for bulk upload)."""
         db_obj = Annotation(
             text_id=obj_in.text_id,
-            annotator_id=annotator_id,
+            annotator_id=annotator_id,  # Can be None for system annotations
             annotation_type=obj_in.annotation_type,
             start_position=obj_in.start_position,
             end_position=obj_in.end_position,
@@ -128,6 +130,38 @@ class AnnotationCRUD:
             
             db.commit()
         return obj
+
+    def delete_user_annotations(self, db: Session, text_id: int, annotator_id: int) -> int:
+        """Delete all annotations by a specific user for a specific text."""
+        from models.text import Text, INITIALIZED
+        
+        # Get all user annotations for this text
+        user_annotations = db.query(Annotation).filter(
+            Annotation.text_id == text_id,
+            Annotation.annotator_id == annotator_id
+        ).all()
+        
+        # Count how many will be deleted
+        deleted_count = len(user_annotations)
+        
+        # Delete all user annotations
+        for annotation in user_annotations:
+            db.delete(annotation)
+        
+        # Check if we should revert text status
+        remaining_annotations = db.query(Annotation).filter(
+            Annotation.text_id == text_id
+        ).count() - deleted_count
+        
+        if remaining_annotations == 0:
+            text = db.query(Text).filter(Text.id == text_id).first()
+            if text:
+                text.status = INITIALIZED
+                text.annotator_id = None  # Remove annotator assignment
+                db.add(text)
+        
+        db.commit()
+        return deleted_count
 
     def get_overlapping_annotations(
         self, 

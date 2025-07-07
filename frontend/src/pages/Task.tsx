@@ -15,11 +15,14 @@ import type {
   AnnotationResponse,
   AnnotationCreate,
   TaskSubmissionResponse,
+  TextResponse,
 } from "@/api/types";
 import {
   loadAnnotationConfig,
   isValidAnnotationType,
 } from "@/config/annotation-options";
+import { SkipConfirmationDialog } from "@/components/SkipConfirmationDialog";
+import { useAuth } from "@/auth/use-auth-hook";
 
 export type Annotation = {
   id: string;
@@ -28,13 +31,15 @@ export type Annotation = {
   start: number;
   end: number;
   name?: string; // Custom name for the annotation
+  annotator_id?: number; // ID of the user who created this annotation
 };
 
 const Index = () => {
-  const { textId } = useParams();
+  const { textId } = useParams<{ textId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currentUser } = useAuth();
 
   // React Query to fetch text data
   const {
@@ -62,14 +67,17 @@ const Index = () => {
   const convertApiAnnotations = (
     apiAnnotations: AnnotationResponse[]
   ): Annotation[] => {
-    return apiAnnotations.map((ann) => ({
+    const converted = apiAnnotations.map((ann) => ({
       id: ann.id.toString(),
       type: ann.annotation_type,
       text: ann.selected_text || "",
       start: ann.start_position,
       end: ann.end_position,
       name: ann.name,
+      annotator_id: ann.annotator_id,
     }));
+
+    return converted;
   };
 
   // State for local annotations and UI
@@ -89,6 +97,9 @@ const Index = () => {
   const [tocOpen, setTocOpen] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const textAnnotatorRef = useRef<TextAnnotatorRef>(null);
+
+  // Skip confirmation dialog state
+  const [showSkipConfirmation, setShowSkipConfirmation] = useState(false);
 
   // Update local state when textData is loaded
   useEffect(() => {
@@ -113,6 +124,7 @@ const Index = () => {
         start: data.start_position,
         end: data.end_position,
         name: data.name,
+        annotator_id: data.annotator_id, // Use the annotator_id from API response
       };
       setAnnotations((prev) => [...prev, newAnnotation]);
 
@@ -198,6 +210,88 @@ const Index = () => {
         title: "❌ Failed to Submit Task",
         description:
           error instanceof Error ? error.message : "Failed to submit task",
+      });
+    },
+  });
+
+  // Mutation for skipping text
+  const skipTextMutation = useMutation({
+    mutationFn: async () => {
+      return textApi.skipText();
+    },
+    onSuccess: (nextText: TextResponse) => {
+      toast({
+        title: "⏭️ Text Skipped & Rejected",
+        description: `This text won't be shown to you again. Moving to: "${nextText.title}"`,
+      });
+
+      // Refresh user stats and recent activity
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
+
+      // Navigate to the next text
+      navigate(`/task/${nextText.id}`);
+    },
+    onError: (error) => {
+      // Extract error message from different error types
+      let errorMessage = "Failed to skip text";
+      let errorTitle = "❌ Error";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error && typeof error === "object" && "detail" in error) {
+        const apiError = error as { detail: string; status_code?: number };
+        errorMessage = apiError.detail || "Failed to skip text";
+
+        if (apiError.status_code === 404) {
+          errorTitle = "📝 No More Tasks";
+          errorMessage = "No more texts available for annotation at this time.";
+        }
+      }
+
+      if (errorTitle.includes("No More Tasks")) {
+        toast({
+          title: errorTitle,
+          description: errorMessage,
+        });
+        // Navigate to dashboard if no more tasks
+        setTimeout(() => navigate("/"), 2000);
+      } else {
+        toast({
+          title: errorTitle,
+          description: errorMessage,
+        });
+      }
+    },
+  });
+
+  // Mutation for reverting work (edit mode skip)
+  const revertWorkMutation = useMutation({
+    mutationFn: async () => {
+      if (!textId) throw new Error("Text ID is required");
+      const id = parseInt(textId, 10);
+      if (isNaN(id)) throw new Error("Invalid text ID");
+      return textApi.revertWork(id);
+    },
+    onSuccess: (response) => {
+      toast({
+        title: "✅ Work Reverted",
+        description: response.message + " Text is now available for others.",
+      });
+
+      // Refresh user stats and recent activity
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-text-statistics"] });
+
+      // Navigate back to dashboard
+      setTimeout(() => navigate("/"), 1500);
+    },
+    onError: (error) => {
+      toast({
+        title: "❌ Failed to Revert Work",
+        description:
+          error instanceof Error ? error.message : "Failed to revert work",
       });
     },
   });
@@ -350,6 +444,77 @@ const Index = () => {
     }
   };
 
+  const handleSkipText = () => {
+    setShowSkipConfirmation(true);
+  };
+
+  const handleConfirmSkip = () => {
+    setShowSkipConfirmation(false);
+    skipTextMutation.mutate();
+  };
+
+  const handleCancelSkip = () => {
+    setShowSkipConfirmation(false);
+  };
+
+  const handleRevertWork = () => {
+    if (
+      window.confirm(
+        "Are you sure you want to revert your work? This will remove all your annotations and make the text available for others to work on."
+      )
+    ) {
+      revertWorkMutation.mutate();
+    }
+  };
+
+  const handleUndoAnnotations = () => {
+    const currentUserId = currentUser?.id ? parseInt(currentUser.id, 10) : null;
+
+    if (!currentUserId) {
+      toast({
+        title: "❌ Error",
+        description: "Unable to identify current user.",
+      });
+      return;
+    }
+
+    // Filter annotations to only include those made by current user
+    // Only include annotations that have an annotator_id and it matches current user
+    const userAnnotations = annotations.filter(
+      (annotation) =>
+        annotation.annotator_id !== undefined &&
+        annotation.annotator_id === currentUserId
+    );
+
+    if (userAnnotations.length === 0) {
+      toast({
+        title: "⚠️ No User Annotations",
+        description: "You have not created any annotations to undo.",
+      });
+      return;
+    }
+
+    // Show confirmation dialog
+    if (
+      window.confirm(
+        `Are you sure you want to remove all ${userAnnotations.length} annotations you created? This action cannot be undone.`
+      )
+    ) {
+      // Remove only user's annotations by calling the delete mutation for each
+      userAnnotations.forEach((annotation) => {
+        const annotationIdNumber = parseInt(annotation.id, 10);
+        if (!isNaN(annotationIdNumber)) {
+          deleteAnnotationMutation.mutate(annotationIdNumber);
+        }
+      });
+
+      toast({
+        title: "✅ Your Annotations Removed",
+        description: `All ${userAnnotations.length} of your annotations have been removed.`,
+      });
+    }
+  };
+
   const handleHeaderClick = (annotation: Annotation) => {
     if (textAnnotatorRef.current) {
       textAnnotatorRef.current.scrollToPosition(
@@ -362,6 +527,16 @@ const Index = () => {
   const annotationsWithoutHeader = annotations.filter(
     (ann) => ann.type !== "header"
   );
+
+  // Get current user's annotations for undo button
+  const currentUserId = currentUser?.id ? parseInt(currentUser.id, 10) : null;
+  const userAnnotations = currentUserId
+    ? annotations.filter(
+        (annotation) =>
+          annotation.annotator_id !== undefined &&
+          annotation.annotator_id === currentUserId
+      )
+    : [];
 
   // Handle loading state
   if (isLoading) {
@@ -472,6 +647,11 @@ const Index = () => {
               submitTaskMutation.isPending || updateTaskMutation.isPending
             }
             isCompletedTask={isCompletedTask}
+            onSkipText={handleSkipText}
+            isSkipping={skipTextMutation.isPending}
+            onUndoAnnotations={handleUndoAnnotations}
+            onRevertWork={handleRevertWork}
+            userAnnotationsCount={userAnnotations.length}
           />
           <AnnotationSidebar
             annotations={annotationsWithoutHeader}
@@ -481,6 +661,13 @@ const Index = () => {
           />
         </div>
       </div>
+      <SkipConfirmationDialog
+        isOpen={showSkipConfirmation}
+        onConfirm={handleConfirmSkip}
+        onCancel={handleCancelSkip}
+        textTitle={textData?.title}
+        isSkipping={skipTextMutation.isPending}
+      />
     </div>
   );
 };

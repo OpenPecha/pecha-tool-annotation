@@ -533,7 +533,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     ];
 
     return (
-      <div className="h-[calc(100vh-70px)] overflow-y-scroll overflow-x-hidden  bg-white rounded-lg shadow-lg relative ">
+      <div className="h-[calc(100vh-70px)] min-h-[200px] overflow-y-scroll overflow-x-hidden  bg-white rounded-lg shadow-lg relative ">
         {readOnly && (
           <div className="absolute top-2 right-2 z-10">
             <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium border">

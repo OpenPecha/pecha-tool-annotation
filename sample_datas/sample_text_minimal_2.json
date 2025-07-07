@@ -1,18 +1,71 @@
 {
   "text": {
-    "title": "Climate Science Summary",
-    "content": "Global warming is accelerating due to human activities. Scientists recommend immediate action to reduce emissions."
+    "title": "Climate Change and Global Warming: A Comprehensive Analysis",
+    "content": "Climate Change: Understanding Our Planet's Greatest Challenge\n\nBy Dr. Sarah Chen, Environmental Scientist\nTranslated from the original research by Prof. Maria Rodriguez\n\nIntroduction\n\nClimate change represents one of the most pressing challenges of our time. Global temperatures have risen by approximately 1.1°C since pre-industrial times, with the past decade being the warmest on record. This warming trend is primarily attributed to human activities, particularly the emission of greenhouse gases from fossil fuel combustion.\n\nThe Science Behind Climate Change\n\nThe greenhouse effect is a natural phenomenon that makes Earth habitable. However, human activities have intensified this effect through increased concentrations of carbon dioxide, methane, and other greenhouse gases in the atmosphere. These gases trap heat from the sun, leading to a gradual warming of our planet.\n\nConsequences and Impacts\n\nThe impacts of climate change are already visible worldwide. Rising sea levels threaten coastal communities, while extreme weather events become more frequent and severe. Agricultural systems face unprecedented challenges, with crop yields declining in many regions due to changing precipitation patterns and rising temperatures.\n\nLooking Forward\n\nImmediate action is required to limit global warming to 1.5°C above pre-industrial levels. This will require unprecedented cooperation between nations, significant investments in renewable energy technologies, and fundamental changes in how we produce and consume energy.\n\nConclusion\n\nThe challenge of climate change demands urgent, coordinated global action. While the task ahead is daunting, history has shown that humanity can rise to meet existential challenges when we work together toward common goals."
   },
   "annotations": [
     {
-      "annotation_type": "entity",
+      "annotation_type": "title",
       "start_position": 0,
-      "end_position": 14
+      "end_position": 72,
+      "label": "main_title",
+      "name": "Document Title"
     },
     {
-      "annotation_type": "sentiment",
-      "start_position": 18,
-      "end_position": 30
+      "annotation_type": "header",
+      "start_position": 74,
+      "end_position": 130,
+      "label": "subtitle",
+      "name": "Subtitle Header"
+    },
+    {
+      "annotation_type": "author",
+      "start_position": 135,
+      "end_position": 168,
+      "label": "original_author",
+      "name": "Primary Author"
+    },
+    {
+      "annotation_type": "translator",
+      "start_position": 169,
+      "end_position": 232,
+      "label": "translation_credit",
+      "name": "Translation Attribution"
+    },
+    {
+      "annotation_type": "header",
+      "start_position": 234,
+      "end_position": 246,
+      "label": "section_header",
+      "name": "Introduction Section"
+    },
+    {
+      "annotation_type": "header",
+      "start_position": 537,
+      "end_position": 567,
+      "label": "section_header",
+      "name": "Science Section"
+    },
+    {
+      "annotation_type": "header",
+      "start_position": 894,
+      "end_position": 917,
+      "label": "section_header",
+      "name": "Impacts Section"
+    },
+    {
+      "annotation_type": "header",
+      "start_position": 1265,
+      "end_position": 1280,
+      "label": "section_header",
+      "name": "Future Outlook"
+    },
+    {
+      "annotation_type": "header",
+      "start_position": 1623,
+      "end_position": 1633,
+      "label": "section_header",
+      "name": "Conclusion Section"
     }
   ]
 }

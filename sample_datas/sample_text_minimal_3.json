@@ -1,22 +1,64 @@
 {
   "text": {
-    "title": "Mixed Language Text",
-    "content": "Welcome! བཀྲ་ཤིས་བདེ་ལེགས། This is a test of mixed languages.",
-    "language": "mixed",
-    "source": "Conference Materials"
+    "title": "Buddhist Philosophy: East Meets West - A Comparative Study",
+    "content": "Buddhist Philosophy in the Modern World: A Cross-Cultural Analysis\n\nBy Dr. Tenzin Norbu\nTranslated from Tibetan by Dr. Jennifer Walsh\n\nབྱང་ཆུབ་སེམས་ཀྱི་བདག་ཉིད་ཅན། Introduction to Buddhist Thought\n\nBuddhism, one of the world's major philosophical and religious traditions, offers profound insights into the nature of existence, consciousness, and human suffering. སེམས་ཅན་ཐམས་ཅད་ཀྱི་དོན་དུ། The Four Noble Truths form the cornerstone of Buddhist teaching, providing a framework for understanding the human condition.\n\nThe First Noble Truth: དུག་བསྔལ་གྱི་བདེན་པ། (The Truth of Suffering)\n\nLife inherently contains suffering, dissatisfaction, and impermanence. This is not a pessimistic view but rather a realistic acknowledgment of the human condition. བདེ་བ་དང་སྡུག་བསྔལ་གཉིས་ཀ་ལ་ཞེན་པ་མེད་པར་བསྒོམ་པ། Understanding suffering is the first step toward liberation.\n\nThe Second Noble Truth: ཀུན་འབྱུང་གི་བདེན་པ། (The Truth of the Cause of Suffering)\n\nSuffering arises from attachment, craving, and ignorance. འདོད་ཆགས་དང་ཞེ་སྡང་གི་དུག་གསུམ། These three poisons of the mind create the cycle of suffering that binds us to samsara.\n\nContemporary Applications\n\nModern psychology has found remarkable parallels with Buddhist psychology, particularly in the areas of mindfulness, cognitive therapy, and the understanding of mental health. རིག་པ་དང་ཤེས་རབ་ཀྱི་ཚད་མ། Western scientific methods are now validating ancient Buddhist insights about the mind and consciousness.\n\nConclusion: བདེ་བ་ཆེན་པོའི་གོ་འཕང་།\n\nThe integration of Eastern wisdom and Western scientific methodology offers unprecedented opportunities for human flourishing and understanding. སྟོན་པ་སངས་རྒྱས་ཀྱི་བཀའ་འདི་ནི་དུས་རྟག་ཏུ་ཕན་པ་ཡིན། The Buddha's teachings remain as relevant today as they were 2,500 years ago."
   },
   "annotations": [
     {
-      "annotation_type": "language",
-      "start_position": 9,
-      "end_position": 18,
-      "label": "tibetan"
+      "annotation_type": "title",
+      "start_position": 0,
+      "end_position": 83,
+      "label": "main_title",
+      "name": "Document Title"
     },
     {
-      "annotation_type": "greeting",
-      "start_position": 0,
-      "end_position": 8,
-      "label": "english"
+      "annotation_type": "author",
+      "start_position": 88,
+      "end_position": 106,
+      "label": "original_author",
+      "name": "Primary Author"
+    },
+    {
+      "annotation_type": "translator",
+      "start_position": 107,
+      "end_position": 149,
+      "label": "english_translator",
+      "name": "English Translation"
+    },
+    {
+      "annotation_type": "header",
+      "start_position": 151,
+      "end_position": 199,
+      "label": "section_introduction",
+      "name": "Introduction Header"
+    },
+    {
+      "annotation_type": "header",
+      "start_position": 472,
+      "end_position": 530,
+      "label": "first_noble_truth",
+      "name": "First Noble Truth Section"
+    },
+    {
+      "annotation_type": "header",
+      "start_position": 761,
+      "end_position": 825,
+      "label": "second_noble_truth",
+      "name": "Second Noble Truth Section"
+    },
+    {
+      "annotation_type": "header",
+      "start_position": 1030,
+      "end_position": 1055,
+      "label": "modern_applications",
+      "name": "Contemporary Applications"
+    },
+    {
+      "annotation_type": "header",
+      "start_position": 1341,
+      "end_position": 1372,
+      "label": "conclusion_header",
+      "name": "Conclusion Section"
     }
   ]
 }

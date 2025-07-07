@@ -64,6 +64,6 @@ class AnnotationResponse(AnnotationBase):
     
     id: int
     text_id: int
-    annotator_id: int
+    annotator_id: Optional[int] = None  # Can be null for system annotations
     created_at: datetime
     updated_at: Optional[datetime] = None 

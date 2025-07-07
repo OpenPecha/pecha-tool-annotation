@@ -10,6 +10,8 @@ import type {
   TextStatus,
   TaskSubmissionResponse,
   UserStats,
+  RejectedTextWithDetails,
+  AdminTextStatistics,
 } from "./types";
 
 // Text API client
@@ -64,6 +66,36 @@ export const textApi = {
     return apiClient.post<TextResponse>("/texts/start-work");
   },
 
+  // Skip current text and get next available text
+  skipText: async (): Promise<TextResponse> => {
+    return apiClient.post<TextResponse>("/texts/skip-text");
+  },
+
+  // Get texts that the current user has rejected/skipped
+  getMyRejectedTexts: async (): Promise<RejectedTextWithDetails[]> => {
+    return apiClient.get<RejectedTextWithDetails[]>("/texts/my-rejected-texts");
+  },
+
+  // Get comprehensive text statistics for admins
+  getAdminTextStatistics: async (): Promise<AdminTextStatistics> => {
+    return apiClient.get<AdminTextStatistics>("/texts/admin/text-statistics");
+  },
+
+  // Cancel work on a specific text
+  cancelWork: async (id: number): Promise<{ message: string }> => {
+    return apiClient.post<{ message: string }>(`/texts/${id}/cancel-work`);
+  },
+
+  // Revert user work and make text available for others (edit mode skip)
+  revertWork: async (id: number): Promise<{ message: string }> => {
+    return apiClient.post<{ message: string }>(`/texts/${id}/revert-work`);
+  },
+
+  // Get all texts that the current user is working on
+  getMyWorkInProgress: async (): Promise<TextResponse[]> => {
+    return apiClient.get<TextResponse[]>("/texts/my-work-in-progress");
+  },
+
   // Submit task - mark text as annotated and get next task (for annotators)
   submitTask: async (id: number): Promise<TaskSubmissionResponse> => {
     return apiClient.post<TaskSubmissionResponse>(`/texts/${id}/submit-task`);
@@ -99,5 +131,21 @@ export const textApi = {
   // Get user statistics
   getUserStats: async (): Promise<UserStats> => {
     return apiClient.get<UserStats>("/texts/user-stats");
+  },
+
+  // Cancel work with revert and skip - combines deleting user annotations and skipping text
+  cancelWorkWithRevertAndSkip: async (
+    textId: number
+  ): Promise<{ message: string; nextText?: TextResponse }> => {
+    // First revert the user's work (delete annotations)
+    await apiClient.post<{ message: string }>(`/texts/${textId}/revert-work`);
+
+    // Then skip the text (add to rejected list and get next text)
+    const nextText = await apiClient.post<TextResponse>("/texts/skip-text");
+
+    return {
+      message: "Work cancelled, annotations deleted, and text skipped",
+      nextText,
+    };
   },
 };

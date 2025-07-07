@@ -166,6 +166,22 @@ class TextCRUD:
             Text.annotator_id.is_(None)
         ).first()
 
+    def get_unassigned_text_for_user(self, db: Session, user_id: int) -> Optional[Text]:
+        """Get an unassigned text with initialized status that user hasn't rejected."""
+        from models.user_rejected_text import UserRejectedText
+        
+        # Get text IDs that user has rejected
+        rejected_text_ids = db.query(UserRejectedText.text_id).filter(
+            UserRejectedText.user_id == user_id
+        ).subquery()
+        
+        # Find available text not in rejected list
+        return db.query(Text).filter(
+            Text.status == INITIALIZED,
+            Text.annotator_id.is_(None),
+            ~Text.id.in_(rejected_text_ids)
+        ).first()
+
     def assign_text_to_user(self, db: Session, text_id: int, user_id: int) -> Optional[Text]:
         """Assign a text to a user and set status to progress."""
         text = db.query(Text).filter(Text.id == text_id).first()
@@ -184,8 +200,8 @@ class TextCRUD:
         if work_in_progress:
             return work_in_progress
         
-        # If no work in progress, find an unassigned text
-        unassigned_text = self.get_unassigned_text(db)
+        # If no work in progress, find an unassigned text (excluding rejected ones)
+        unassigned_text = self.get_unassigned_text_for_user(db, user_id)
         if unassigned_text:
             return self.assign_text_to_user(db, unassigned_text.id, user_id)
         
@@ -249,6 +265,57 @@ class TextCRUD:
             "total_annotations": total_annotations,
             "accuracy_rate": round(accuracy_rate, 1)
         }
+
+    def skip_text(self, db: Session, user_id: int) -> Optional[Text]:
+        """Skip current text by adding it to rejected list and get next available text."""
+        from crud.user_rejected_text import user_rejected_text_crud
+        
+        # Find the current text in progress for the user
+        current_text = self.get_work_in_progress(db, user_id)
+        if not current_text:
+            return None
+        
+        # Add current text to user's rejected list
+        user_rejected_text_crud.create(db, user_id, current_text.id)
+        
+        # Reset the current text to make it available for others
+        current_text.annotator_id = None
+        current_text.status = INITIALIZED
+        db.add(current_text)
+        db.commit()
+        
+        # Find and assign the next available text (excluding rejected ones)
+        next_text = self.get_unassigned_text_for_user(db, user_id)
+        if next_text:
+            return self.assign_text_to_user(db, next_text.id, user_id)
+        
+        return None
+
+    def cancel_work(self, db: Session, user_id: int, text_id: int) -> bool:
+        """Cancel current work on a text - make it available for others."""
+        text = db.query(Text).filter(
+            Text.id == text_id,
+            Text.annotator_id == user_id,
+            Text.status == PROGRESS
+        ).first()
+        
+        if not text:
+            return False
+        
+        # Reset text to make it available for others
+        text.annotator_id = None
+        text.status = INITIALIZED
+        db.add(text)
+        db.commit()
+        
+        return True
+
+    def get_user_work_in_progress(self, db: Session, user_id: int) -> List[Text]:
+        """Get all texts that user is currently working on (progress status)."""
+        return db.query(Text).filter(
+            Text.annotator_id == user_id,
+            Text.status == PROGRESS
+        ).all()
 
 
 text_crud = TextCRUD() 

@@ -1,17 +1,27 @@
 import { Button } from "./ui/button";
 import type { Annotation } from "@/pages/Task";
-import { Send, SkipForward, StopCircle } from "lucide-react";
+import { Send, SkipForward, StopCircle, Undo2, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function ActionButtons({
   annotations,
   onSubmitTask,
+  onSkipText,
+  onUndoAnnotations,
+  onRevertWork,
+  userAnnotationsCount = 0,
   isSubmitting = false,
+  isSkipping = false,
   isCompletedTask = false,
 }: {
   readonly annotations: Annotation[];
   readonly onSubmitTask: () => void;
+  readonly onSkipText?: () => void;
+  readonly onUndoAnnotations?: () => void;
+  readonly onRevertWork?: () => void;
+  readonly userAnnotationsCount?: number;
   readonly isSubmitting?: boolean;
+  readonly isSkipping?: boolean;
   readonly isCompletedTask?: boolean;
 }) {
   const navigate = useNavigate();
@@ -21,7 +31,7 @@ function ActionButtons({
       <Button
         onClick={onSubmitTask}
         className="bg-green-600 flex-1 hover:bg-green-700 text-white cursor-pointer"
-        disabled={annotations.length === 0 || isSubmitting}
+        disabled={annotations.length === 0 || isSubmitting || isSkipping}
         size={"lg"}
       >
         <Send className="w-4 h-4 mr-2" />
@@ -34,16 +44,47 @@ function ActionButtons({
           : "Submit Task"}
       </Button>
 
-      <Button
-        onClick={() => {
-          navigate("/");
-        }}
-        className="bg-red-600 hover:bg-red-800 text-white cursor-pointer"
-        size={"lg"}
-      >
-        <StopCircle className="w-4 h-4 mr-2" />
-        Cancel
-      </Button>
+      {/* Skip button - only show for new tasks, not completed ones */}
+      {!isCompletedTask && onSkipText && (
+        <Button
+          onClick={onSkipText}
+          className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
+          disabled={isSubmitting || isSkipping}
+          size={"lg"}
+          title="Skip this text - it won't be shown to you again"
+        >
+          <SkipForward className="w-4 h-4 mr-2" />
+          {isSkipping ? "Skipping..." : "Skip & Reject"}
+        </Button>
+      )}
+
+      {/* Revert Work button - only show for completed tasks (edit mode) */}
+      {isCompletedTask && onRevertWork && (
+        <Button
+          onClick={onRevertWork}
+          className="bg-yellow-600 hover:bg-yellow-700 text-white cursor-pointer"
+          disabled={isSubmitting || isSkipping}
+          size={"lg"}
+          title="Revert your work and make text available for others"
+        >
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Revert Work
+        </Button>
+      )}
+
+      {/* Undo button - remove all user annotations */}
+      {onUndoAnnotations && userAnnotationsCount > 0 && (
+        <Button
+          onClick={onUndoAnnotations}
+          className="bg-gray-600 hover:bg-gray-700 text-white cursor-pointer"
+          disabled={isSubmitting || isSkipping}
+          size={"lg"}
+          title={`Remove all ${userAnnotationsCount} annotations you've added`}
+        >
+          <Undo2 className="w-4 h-4 mr-2" />
+          Reset ({userAnnotationsCount})
+        </Button>
+      )}
     </div>
   );
 }

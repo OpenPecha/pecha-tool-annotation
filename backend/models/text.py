@@ -33,3 +33,4 @@ class Text(Base):
     annotations = relationship("Annotation", back_populates="text", cascade="all, delete-orphan")
     reviewer = relationship("User", back_populates="reviewed_texts", foreign_keys=[reviewer_id]) 
     annotator = relationship("User", back_populates="annotated_texts", foreign_keys=[annotator_id])
+    rejected_by_users = relationship("UserRejectedText", back_populates="text", cascade="all, delete-orphan")

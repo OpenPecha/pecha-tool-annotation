@@ -68,7 +68,7 @@ def create_annotations_from_data(
     db: Session, 
     text_id: int, 
     annotations_data: List[BulkAnnotationData], 
-    annotator_id: int
+    annotator_id: Optional[int]
 ) -> List[Annotation]:
     """Create annotation records from BulkAnnotationData list (bulk upload - doesn't change text status)"""
     created_annotations = []
@@ -89,7 +89,7 @@ def create_annotations_from_data(
         annotation = annotation_crud.create_bulk(
             db=db, 
             obj_in=annotation_create, 
-            annotator_id=annotator_id
+            annotator_id=annotator_id  # This can now be None for system annotations
         )
         created_annotations.append(annotation)
     
@@ -136,12 +136,12 @@ def process_single_file(
         # Create text record
         text = create_text_from_data(db, file_data.text)
         
-        # Create annotation records
+        # Create annotation records with None as annotator_id (system annotations)
         annotations = create_annotations_from_data(
             db, 
             text.id, 
             file_data.annotations, 
-            annotator_id
+            annotator_id=None  # Bulk uploaded annotations are system annotations
         )
         
         # Commit the transaction

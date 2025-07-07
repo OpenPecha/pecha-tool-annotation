@@ -9,7 +9,7 @@ class Annotation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     text_id = Column(Integer, ForeignKey("texts.id", ondelete="CASCADE"), nullable=False, index=True)
-    annotator_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    annotator_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)  # Allow null for system annotations
     annotation_type = Column(String, nullable=False, index=True)  # e.g., "entity", "sentiment", "category"
     start_position = Column(Integer, nullable=False)  # Start character position in text
     end_position = Column(Integer, nullable=False)    # End character position in text
