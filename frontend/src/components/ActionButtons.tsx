@@ -1,6 +1,7 @@
 import { Button } from "./ui/button";
 import type { Annotation } from "@/pages/Task";
 import { Send, SkipForward, StopCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function ActionButtons({
   annotations,
@@ -13,6 +14,8 @@ function ActionButtons({
   readonly isSubmitting?: boolean;
   readonly isCompletedTask?: boolean;
 }) {
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-1 gap-2">
       <Button
@@ -30,20 +33,10 @@ function ActionButtons({
           ? "Update Task"
           : "Submit Task"}
       </Button>
+
       <Button
         onClick={() => {
-          /* TODO: Implement skip functionality */
-        }}
-        className="bg-yellow-600 flex-1 hover:bg-yellow-700 text-white cursor-pointer"
-        disabled={annotations.length === 0}
-        size={"lg"}
-      >
-        <SkipForward className="w-4 h-4 mr-2" />
-        Skip Work
-      </Button>
-      <Button
-        onClick={() => {
-          /* TODO: Implement trash/cancel functionality */
+          navigate("/");
         }}
         className="bg-red-600 hover:bg-red-800 text-white cursor-pointer"
         size={"lg"}

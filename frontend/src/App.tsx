@@ -10,6 +10,8 @@ import { Toaster } from "@/components/ui/sonner";
 
 import OpenPecha from "./assets/icon.png";
 import { useAuth } from "./auth/use-auth-hook";
+import Callback from "./pages/Callback";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -44,7 +46,8 @@ function AppContent() {
         }
       />
 
-      {/* <Route path="/login" element={<Login />} /> */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/callback" element={<Callback />} />
       <Route path="/task/:textId" element={<Task />} />
     </Routes>
   );
