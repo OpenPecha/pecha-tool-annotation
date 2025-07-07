@@ -1,0 +1,138 @@
+{
+  "text": {
+    "title": "Multilingual Cultural Exchange",
+    "content": "Welcome to our international conference! བོད་ཡིག་ནི་ང་ཚོའི་ཐུན་མོང་གི་སྐད་ཡིག་ཞིག་ཡིན། This presentation will cover སྲིད་བྱུས་ and policy implementations across different regions. Participants from Tibet, India, and དབུས་ཁུལ་ will share their experiences. We believe that འཛམ་གླིང་ peace and understanding can be achieved through རིག་གནས་ cultural preservation.",
+    "source": "International Conference Proceedings",
+    "language": "mixed",
+    "status": "initialized"
+  },
+  "annotations": [
+    {
+      "annotation_type": "language",
+      "start_position": 0,
+      "end_position": 42,
+      "selected_text": "Welcome to our international conference!",
+      "label": "english",
+      "name": "English Introduction",
+      "meta": {
+        "language_code": "en",
+        "script": "latin",
+        "confidence_score": 0.99
+      },
+      "confidence": 99
+    },
+    {
+      "annotation_type": "language",
+      "start_position": 43,
+      "end_position": 81,
+      "selected_text": "བོད་ཡིག་ནི་ང་ཚོའི་ཐུན་མོང་གི་སྐད་ཡིག་ཞིག་ཡིན།",
+      "label": "tibetan",
+      "name": "Tibetan Statement",
+      "meta": {
+        "language_code": "bo",
+        "script": "tibetan",
+        "translation": "Tibetan is our common language",
+        "confidence_score": 0.98
+      },
+      "confidence": 98
+    },
+    {
+      "annotation_type": "entity",
+      "start_position": 122,
+      "end_position": 130,
+      "selected_text": "སྲིད་བྱུས་",
+      "label": "concept",
+      "name": "Politics/Policy",
+      "meta": {
+        "entity_type": "political_concept",
+        "language": "tibetan",
+        "translation": "politics/policy",
+        "domain": "governance"
+      },
+      "confidence": 90
+    },
+    {
+      "annotation_type": "entity",
+      "start_position": 180,
+      "end_position": 185,
+      "selected_text": "Tibet",
+      "label": "location",
+      "name": "Geographic Region",
+      "meta": {
+        "entity_type": "geographic_location",
+        "country": "China",
+        "region": "Tibetan Plateau",
+        "language": "english"
+      },
+      "confidence": 100
+    },
+    {
+      "annotation_type": "entity",
+      "start_position": 197,
+      "end_position": 205,
+      "selected_text": "དབུས་ཁུལ་",
+      "label": "location",
+      "name": "Central Region",
+      "meta": {
+        "entity_type": "geographic_location",
+        "language": "tibetan",
+        "translation": "central region",
+        "refers_to": "Central Tibet"
+      },
+      "confidence": 95
+    },
+    {
+      "annotation_type": "language",
+      "start_position": 248,
+      "end_position": 256,
+      "selected_text": "འཛམ་གླིང་",
+      "label": "tibetan",
+      "name": "World/Global",
+      "meta": {
+        "language_code": "bo",
+        "translation": "world",
+        "context": "global_concept"
+      },
+      "confidence": 97
+    },
+    {
+      "annotation_type": "entity",
+      "start_position": 295,
+      "end_position": 302,
+      "selected_text": "རིག་གནས་",
+      "label": "concept",
+      "name": "Culture/Civilization",
+      "meta": {
+        "entity_type": "cultural_concept",
+        "language": "tibetan",
+        "translation": "culture/civilization",
+        "domain": "anthropology"
+      },
+      "confidence": 92
+    },
+    {
+      "annotation_type": "code_switching",
+      "start_position": 43,
+      "end_position": 164,
+      "selected_text": "བོད་ཡིག་ནི་ང་ཚོའི་ཐུན་མོང་གི་སྐད་ཡིག་ཞིག་ཡིན། This presentation will cover སྲིད་བྱུས་ and policy implementations",
+      "label": "english_tibetan_switch",
+      "name": "Language Code-Switching",
+      "meta": {
+        "switch_type": "intra_sentential",
+        "languages": ["tibetan", "english"],
+        "pattern": "tibetan_sentence_english_continuation"
+      },
+      "confidence": 88
+    }
+  ],
+  "metadata": {
+    "description": "Mixed English-Tibetan text demonstrating multilingual annotation including language detection and code-switching",
+    "annotation_guidelines": "Identify language boundaries, cultural concepts, geographic entities, and code-switching patterns",
+    "languages": ["english", "tibetan"],
+    "special_features": [
+      "code_switching",
+      "cultural_concepts",
+      "geographic_references"
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "text": {
+    "title": "Climate Change Research Summary",
+    "content": "Recent studies have shown alarming trends in global temperature rise. The Arctic ice sheets are melting at unprecedented rates, threatening coastal communities worldwide. However, renewable energy adoption has accelerated dramatically, offering hope for sustainable solutions. Scientists emphasize the urgent need for immediate action to prevent catastrophic climate impacts.",
+    "source": "Environmental Science Journal",
+    "language": "en",
+    "status": "initialized"
+  },
+  "annotations": [
+    {
+      "annotation_type": "sentiment",
+      "start_position": 28,
+      "end_position": 43,
+      "selected_text": "alarming trends",
+      "label": "negative",
+      "name": "Concerning Trend",
+      "meta": {
+        "sentiment_score": -0.7,
+        "intensity": "high",
+        "emotion": "concern"
+      },
+      "confidence": 85
+    },
+    {
+      "annotation_type": "entity",
+      "start_position": 47,
+      "end_position": 68,
+      "selected_text": "global temperature rise",
+      "label": "environmental_phenomenon",
+      "name": "Climate Indicator",
+      "meta": {
+        "entity_type": "climate_metric",
+        "domain": "environmental_science",
+        "measurable": true
+      },
+      "confidence": 95
+    },
+    {
+      "annotation_type": "entity",
+      "start_position": 74,
+      "end_position": 90,
+      "selected_text": "Arctic ice sheets",
+      "label": "geographic_feature",
+      "name": "Arctic Ice Sheets",
+      "meta": {
+        "entity_type": "natural_feature",
+        "location": "Arctic",
+        "climate_relevance": "critical"
+      },
+      "confidence": 100
+    },
+    {
+      "annotation_type": "sentiment",
+      "start_position": 194,
+      "end_position": 266,
+      "selected_text": "renewable energy adoption has accelerated dramatically, offering hope",
+      "label": "positive",
+      "name": "Hopeful Development",
+      "meta": {
+        "sentiment_score": 0.6,
+        "intensity": "medium",
+        "emotion": "optimism"
+      },
+      "confidence": 80
+    },
+    {
+      "annotation_type": "entity",
+      "start_position": 194,
+      "end_position": 216,
+      "selected_text": "renewable energy adoption",
+      "label": "technology_trend",
+      "name": "Clean Energy Transition",
+      "meta": {
+        "entity_type": "technological_development",
+        "domain": "energy_sector",
+        "impact": "positive"
+      },
+      "confidence": 90
+    },
+    {
+      "annotation_type": "urgency",
+      "start_position": 307,
+      "end_position": 341,
+      "selected_text": "urgent need for immediate action",
+      "label": "high_urgency",
+      "name": "Call to Action",
+      "meta": {
+        "urgency_level": "critical",
+        "time_sensitivity": "immediate",
+        "action_required": true
+      },
+      "confidence": 95
+    }
+  ],
+  "metadata": {
+    "description": "Environmental science text with sentiment analysis and entity recognition",
+    "annotation_guidelines": "Identify climate-related entities, sentiment towards environmental issues, and urgency indicators",
+    "domain": "environmental_science"
+  }
+}
