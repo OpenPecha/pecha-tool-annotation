@@ -28,6 +28,10 @@ class TextCRUD:
         """Get text with its annotations."""
         return db.query(Text).filter(Text.id == text_id).first()
 
+    def get_by_title(self, db: Session, title: str) -> Optional[Text]:
+        """Get text by title."""
+        return db.query(Text).filter(Text.title == title).first()
+
     def get_multi(
         self, 
         db: Session, 

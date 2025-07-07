@@ -19,7 +19,7 @@ class Text(Base):
     __tablename__ = "texts"
 
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False, index=True)
+    title = Column(String, unique=True,  nullable=False, index=True) 
     content = Column(SQLText, nullable=False)
     source = Column(String, nullable=True)  # Source document/file
     language = Column(String, default="en")

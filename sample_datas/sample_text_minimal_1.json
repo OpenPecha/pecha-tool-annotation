@@ -1,0 +1,18 @@
+{
+  "text": {
+    "title": "Simple Tibetan Mantra",
+    "content": "ཨོཾ་མ་ཎི་པདྨེ་ཧཱུྃ། སེམས་ཅན་ཐམས་ཅད་བདེ་བ་དང་ལྡན་པར་གྱུར་ཅིག།"
+  },
+  "annotations": [
+    {
+      "annotation_type": "mantra",
+      "start_position": 0,
+      "end_position": 13
+    },
+    {
+      "annotation_type": "concept",
+      "start_position": 15,
+      "end_position": 25
+    }
+  ]
+}

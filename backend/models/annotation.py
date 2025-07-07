@@ -8,7 +8,7 @@ class Annotation(Base):
     __tablename__ = "annotations"
 
     id = Column(Integer, primary_key=True, index=True)
-    text_id = Column(Integer, ForeignKey("texts.id"), nullable=False, index=True)
+    text_id = Column(Integer, ForeignKey("texts.id", ondelete="CASCADE"), nullable=False, index=True)
     annotator_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     annotation_type = Column(String, nullable=False, index=True)  # e.g., "entity", "sentiment", "category"
     start_position = Column(Integer, nullable=False)  # Start character position in text

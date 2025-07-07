@@ -123,6 +123,45 @@ class ApiClient {
   }
 
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
+    // Handle FormData differently - don't stringify and use different headers
+    if (data instanceof FormData) {
+      const url = `${this.baseURL}${endpoint}`;
+      const headers = getHeadersMultipart(); // Only auth headers, no content-type
+
+      const config: RequestInit = {
+        method: "POST",
+        body: data,
+        headers,
+      };
+
+      try {
+        const response = await fetch(url, config);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new ApiError(
+            errorData.detail || `HTTP error! status: ${response.status}`,
+            response.status
+          );
+        }
+
+        // Handle 204 No Content
+        if (response.status === 204) {
+          return {} as T;
+        }
+
+        return await response.json();
+      } catch (error) {
+        if (error instanceof ApiError) {
+          throw error;
+        }
+        throw new ApiError(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
+      }
+    }
+
+    // Regular JSON handling
     return this.request<T>(endpoint, {
       method: "POST",
       body: data ? JSON.stringify(data) : undefined,

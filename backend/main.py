@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from database import Base, engine
 from deps import get_db
 from models import User, Text, Annotation
-from routers import users, texts, annotations
+from routers import users, texts, annotations, bulk_upload
 
 # Load environment variables
 load_dotenv()
@@ -45,6 +45,7 @@ Base.metadata.create_all(bind=engine)
 app.include_router(users.router, prefix="/v1")
 app.include_router(texts.router, prefix="/v1")
 app.include_router(annotations.router, prefix="/v1")
+app.include_router(bulk_upload.router, prefix="/v1")
 
 
 @app.get("/")

@@ -33,6 +33,26 @@ class AnnotationCRUD:
         db.refresh(db_obj)
         return db_obj
 
+    def create_bulk(self, db: Session, obj_in: AnnotationCreate, annotator_id: int) -> Annotation:
+        """Create a new annotation without changing text status (for bulk upload)."""
+        db_obj = Annotation(
+            text_id=obj_in.text_id,
+            annotator_id=annotator_id,
+            annotation_type=obj_in.annotation_type,
+            start_position=obj_in.start_position,
+            end_position=obj_in.end_position,
+            selected_text=obj_in.selected_text,
+            label=obj_in.label,
+            name=obj_in.name,
+            meta=obj_in.meta,
+            confidence=obj_in.confidence,
+        )
+        db.add(db_obj)
+        # Note: No text status update for bulk operations
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
     def get(self, db: Session, annotation_id: int) -> Optional[Annotation]:
         """Get annotation by ID."""
         return db.query(Annotation).filter(Annotation.id == annotation_id).first()

@@ -12,7 +12,13 @@ class TextBase(BaseModel):
 
 
 class TextCreate(TextBase):
-    pass
+    status: str = Field(default="initialized", description="Text status")
+    
+    @validator('status')
+    def validate_status(cls, v):
+        if v not in VALID_STATUSES:
+            raise ValueError(f'Status must be one of: {", ".join(VALID_STATUSES)}')
+        return v
 
 
 class TextUpdate(BaseModel):
