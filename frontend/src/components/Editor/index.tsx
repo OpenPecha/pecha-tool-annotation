@@ -3,6 +3,7 @@ import React, {
   forwardRef,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
@@ -37,6 +38,10 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     },
     ref
   ) => {
+    // Use ref for text to avoid re-renders since text never changes
+    const textRef = useRef(text);
+    textRef.current = text;
+
     const {
       currentSelection,
       bubbleMenuVisible,
@@ -193,7 +198,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           const end = range.to;
 
           if (start !== end) {
-            const selectedText = text.substring(start, end);
+            const selectedText = textRef.current.substring(start, end);
             const newCurrentSelection = {
               text: selectedText,
               startIndex: start,
@@ -248,7 +253,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
 
                 // Horizontal positioning
                 let bubbleX = selectionCenterX;
-                let bubbleTransformX = "-50%";
+                const bubbleTransformX = "-50%";
                 const bubbleHalfWidth = bubbleWidth / 2;
 
                 if (bubbleX - bubbleHalfWidth < margin) {
@@ -275,7 +280,6 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         }
       },
       [
-        text,
         deletePopupVisible,
         onTextSelect,
         resetBubbleMenu,
@@ -452,9 +456,9 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     return (
       <div className="h-[calc(100vh-140px)] min-h-[200px] overflow-y-scroll overflow-x-auto bg-white rounded-lg shadow-lg relative">
         <CodeMirror
-          key={`editor-${text.length}-${annotations.length}`}
+          key={`editor-${annotations.length}`}
           ref={editorRef}
-          value={text}
+          value={textRef.current}
           height="100%"
           extensions={extensions}
           readOnly={readOnly}
@@ -485,7 +489,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         />
 
         <div className="text-sm text-gray-500 sticky w-max bottom-0 right-2 float-right border bg-white border-gray-200 rounded-md p-2">
-          {text?.length || 0} characters
+          {textRef.current?.length || 0} characters
         </div>
 
         <BubbleMenu

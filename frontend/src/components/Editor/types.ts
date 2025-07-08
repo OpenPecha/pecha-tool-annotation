@@ -2,7 +2,6 @@ import type { Annotation } from "@/pages/Task";
 
 export interface EditorProps {
   text: string;
-  setText: (text: string) => void;
   annotations: Annotation[];
   selectedText: { text: string; start: number; end: number } | null;
   onTextSelect: (

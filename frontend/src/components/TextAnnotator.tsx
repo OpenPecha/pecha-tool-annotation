@@ -5,7 +5,6 @@ import type { Annotation } from "@/pages/Task";
 
 interface TextAnnotatorProps {
   text: string;
-  setText: (text: string) => void;
   annotations: Annotation[];
   selectedText: { text: string; start: number; end: number } | null;
   onTextSelect: (
@@ -36,7 +35,6 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
   (
     {
       text,
-      setText,
       annotations,
       selectedText,
       onTextSelect,
@@ -73,7 +71,6 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
           <Editor
             ref={editorRef}
             text={text}
-            setText={setText}
             annotations={annotations}
             selectedText={selectedText}
             onTextSelect={onTextSelect}

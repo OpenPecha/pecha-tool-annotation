@@ -80,7 +80,6 @@ const Index = () => {
   };
 
   // State for local annotations and UI
-  const [text, setText] = useState("");
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [selectedText, setSelectedText] = useState<{
     text: string;
@@ -100,10 +99,12 @@ const Index = () => {
   // Skip confirmation dialog state
   const [showSkipConfirmation, setShowSkipConfirmation] = useState(false);
 
+  // Get text content directly from textData (no state needed since it never changes)
+  const text = textData?.content || "";
+
   // Update local state when textData is loaded
   useEffect(() => {
     if (textData) {
-      setText(textData.content);
       const convertedAnnotations = convertApiAnnotations(textData.annotations);
       setAnnotations(convertedAnnotations);
     }
@@ -663,7 +664,6 @@ const Index = () => {
           <TextAnnotator
             ref={textAnnotatorRef}
             text={text}
-            setText={setText}
             annotations={annotations}
             selectedText={selectedText}
             onTextSelect={setSelectedText}
