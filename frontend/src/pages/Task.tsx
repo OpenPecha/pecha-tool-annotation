@@ -105,7 +105,6 @@ const Index = () => {
     if (textData) {
       setText(textData.content);
       const convertedAnnotations = convertApiAnnotations(textData.annotations);
-
       setAnnotations(convertedAnnotations);
     }
   }, [textData]);
@@ -127,9 +126,7 @@ const Index = () => {
       };
       setAnnotations((prev) => [...prev, newAnnotation]);
 
-      // Refresh the text data to get updated annotations
-      queryClient.invalidateQueries({ queryKey: ["text", textId] });
-      // Refresh user stats (affects total annotations count)
+      // Only refresh user stats (affects total annotations count)
       queryClient.invalidateQueries({ queryKey: ["user-stats"] });
 
       toast({
@@ -157,9 +154,7 @@ const Index = () => {
         prev.filter((ann) => ann.id !== annotationId.toString())
       );
 
-      // Refresh the text data
-      queryClient.invalidateQueries({ queryKey: ["text", textId] });
-      // Refresh user stats (affects total annotations count)
+      // Only refresh user stats (affects total annotations count)
       queryClient.invalidateQueries({ queryKey: ["user-stats"] });
 
       toast({
@@ -308,9 +303,7 @@ const Index = () => {
         title: "✅ Task Updated",
         description: "Your changes have been saved successfully!",
       });
-      // Refresh the text data to reflect updates
-      queryClient.invalidateQueries({ queryKey: ["text", textId] });
-      // Refresh user stats and recent activity
+      // Refresh user stats and recent activity (no need to refresh text data)
       queryClient.invalidateQueries({ queryKey: ["user-stats"] });
       queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
     },
@@ -679,6 +672,8 @@ const Index = () => {
             onHeaderSelected={handleHeaderSelected}
             onUpdateHeaderSpan={handleUpdateHeaderSpan}
             readOnly={true}
+            isCreatingAnnotation={createAnnotationMutation.isPending}
+            isDeletingAnnotation={deleteAnnotationMutation.isPending}
           />
         </div>
 

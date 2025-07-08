@@ -1,8 +1,7 @@
 import { useRef, useImperativeHandle, forwardRef } from "react";
 import { Editor } from "./Editor";
-import type { EditorRef } from "./Editor";
+import type { EditorRef } from "./Editor/types";
 import type { Annotation } from "@/pages/Task";
-import { SearchComponent } from "./SearchComponent";
 
 interface TextAnnotatorProps {
   text: string;
@@ -25,6 +24,8 @@ interface TextAnnotatorProps {
     newEnd: number
   ) => void;
   readOnly?: boolean;
+  isCreatingAnnotation?: boolean;
+  isDeletingAnnotation?: boolean;
 }
 
 export type TextAnnotatorRef = {
@@ -44,6 +45,8 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
       onHeaderSelected,
       onUpdateHeaderSpan,
       readOnly = true,
+      isCreatingAnnotation = false,
+      isDeletingAnnotation = false,
     },
     ref
   ) => {
@@ -54,11 +57,6 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
         editorRef.current?.scrollToPosition(start, end);
       },
     }));
-
-    // Handle search result selection
-    const handleSearchResultSelect = (start: number, end: number) => {
-      editorRef.current?.scrollToPosition(start, end);
-    };
 
     return (
       <div className="flex flex-col h-full">
@@ -84,6 +82,8 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
             onHeaderSelected={onHeaderSelected}
             onUpdateHeaderSpan={onUpdateHeaderSpan}
             readOnly={readOnly}
+            isCreatingAnnotation={isCreatingAnnotation}
+            isDeletingAnnotation={isDeletingAnnotation}
           />
         </div>
       </div>
