@@ -1,24 +1,16 @@
 import React, { useState, useCallback, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Upload,
-  X,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  FileText,
-  Loader2,
-  Download,
-  Eye,
-} from "lucide-react";
+  IoCloudUpload,
+  IoClose,
+  IoCheckmarkCircle,
+  IoCloseCircle,
+  IoDocumentText,
+  IoEye,
+} from "react-icons/io5";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { toast } from "sonner";
 import { bulkUploadApi } from "@/api/bulk-upload";
 
@@ -207,16 +199,16 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
     if ("success" in result) {
       // Upload result
       return result.success ? (
-        <CheckCircle className="w-5 h-5 text-green-600" />
+        <IoCheckmarkCircle className="w-5 h-5 text-green-600" />
       ) : (
-        <XCircle className="w-5 h-5 text-red-600" />
+        <IoCloseCircle className="w-5 h-5 text-red-600" />
       );
     } else {
       // Validation result
       return result.valid ? (
-        <CheckCircle className="w-5 h-5 text-green-600" />
+        <IoCheckmarkCircle className="w-5 h-5 text-green-600" />
       ) : (
-        <XCircle className="w-5 h-5 text-red-600" />
+        <IoCloseCircle className="w-5 h-5 text-red-600" />
       );
     }
   };
@@ -235,7 +227,7 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={handleClose}>
-            <X className="w-4 h-4" />
+            <IoClose className="w-4 h-4" />
           </Button>
         </div>
 
@@ -256,7 +248,7 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <IoCloudUpload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-lg font-medium text-gray-700 mb-2">
                   Drop JSON files here or click to browse
                 </p>
@@ -292,7 +284,7 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                         className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                       >
                         <div className="flex items-center space-x-3">
-                          <FileText className="w-5 h-5 text-blue-600" />
+                          <IoDocumentText className="w-5 h-5 text-blue-600" />
                           <span className="text-sm font-medium">
                             {file.name}
                           </span>
@@ -309,7 +301,7 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                             );
                           }}
                         >
-                          <X className="w-4 h-4" />
+                          <IoClose className="w-4 h-4" />
                         </Button>
                       </div>
                     ))}
@@ -320,14 +312,14 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                       onClick={handleValidate}
                       disabled={selectedFiles.length === 0}
                     >
-                      <Eye className="w-4 h-4 mr-2" />
+                      <IoEye className="w-4 h-4 mr-2" />
                       Validate Files
                     </Button>
                     <Button
                       onClick={handleUpload}
                       disabled={selectedFiles.length === 0}
                     >
-                      <Upload className="w-4 h-4 mr-2" />
+                      <IoCloudUpload className="w-4 h-4 mr-2" />
                       Upload Files
                     </Button>
                   </div>
@@ -344,7 +336,7 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                   Validation Results
                 </h3>
                 <Button variant="ghost" onClick={handleReset}>
-                  <X className="w-4 h-4 mr-2" />
+                  <IoClose className="w-4 h-4 mr-2" />
                   Reset
                 </Button>
               </div>
@@ -424,7 +416,7 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                     validationResults.filter((r) => r.valid).length === 0
                   }
                 >
-                  <Upload className="w-4 h-4 mr-2" />
+                  <IoCloudUpload className="w-4 h-4 mr-2" />
                   Upload Valid Files
                 </Button>
                 <Button variant="outline" onClick={handleReset}>
@@ -438,7 +430,7 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
           {currentStep === "upload" && (
             <div className="space-y-6">
               <div className="text-center py-8">
-                <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+                <AiOutlineLoading3Quarters className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
                 <p className="text-lg font-medium text-gray-700">
                   {validateMutation.isPending
                     ? "Validating files..."

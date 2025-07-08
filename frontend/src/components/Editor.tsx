@@ -12,7 +12,7 @@ import { EditorView, Decoration } from "@codemirror/view";
 import { EditorSelection, StateField, StateEffect } from "@codemirror/state";
 import type { DecorationSet } from "@codemirror/view";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { IoClose } from "react-icons/io5";
 import type { Annotation } from "@/pages/Task";
 import {
   loadAnnotationConfig,
@@ -171,11 +171,19 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       }
     }, [annotations, editorReady]);
 
-    // Handle annotation deletion clicks
+    // Handle annotation deletion clicks and outside clicks
     useEffect(() => {
       const handleClick = (event: MouseEvent) => {
         const target = event.target as HTMLElement;
         const annotationElement = target.closest("[data-annotation-id]");
+        const deletePopupElement = target.closest(".delete-popup");
+
+        // Close delete popup if clicking outside of it and not on an annotation
+        if (deletePopupVisible && !deletePopupElement && !annotationElement) {
+          setDeletePopupVisible(false);
+          setAnnotationToDelete(null);
+          return;
+        }
 
         // Only handle annotation clicks for deletion
         if (annotationElement) {
@@ -184,43 +192,55 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           const annotation = annotations.find((ann) => ann.id === annotationId);
 
           if (annotation) {
-            const rect = annotationElement.getBoundingClientRect();
+            // Check if there's currently a multi-character selection
+            let hasMultiCharSelection = false;
+            if (currentSelection && currentSelection.text.length > 1) {
+              hasMultiCharSelection = true;
+            }
 
-            // Get the editor element's position relative to the viewport
-            const editorElement = annotationElement.closest(".cm-editor");
-            const editorRect = editorElement?.getBoundingClientRect();
+            // Only show delete popup if there's no multi-character selection
+            if (!hasMultiCharSelection) {
+              const rect = annotationElement.getBoundingClientRect();
 
-            if (editorRect) {
-              // Calculate position relative to the editor element
-              const popupWidth = 256; // min-w-64 = 256px
-              const popupHeight = 120; // Approximate popup height
-              const margin = 10; // Margin from editor edges
+              // Get the editor element's position relative to the viewport
+              const editorElement = annotationElement.closest(".cm-editor");
+              const editorRect = editorElement?.getBoundingClientRect();
 
-              let popupX = rect.left + rect.width / 2 - editorRect.left;
-              let popupY = rect.bottom + 5 - editorRect.top;
+              if (editorRect) {
+                // Calculate position relative to the editor element
+                const popupWidth = 256; // min-w-64 = 256px
+                const popupHeight = 120; // Approximate popup height
+                const margin = 10; // Margin from editor edges
 
-              // Ensure popup stays within horizontal bounds
-              const popupHalfWidth = popupWidth / 2;
-              if (popupX - popupHalfWidth < margin) {
-                popupX = popupHalfWidth + margin;
-              } else if (popupX + popupHalfWidth > editorRect.width - margin) {
-                popupX = editorRect.width - popupHalfWidth - margin;
+                let popupX = rect.left + rect.width / 2 - editorRect.left;
+                let popupY = rect.bottom + 5 - editorRect.top;
+
+                // Ensure popup stays within horizontal bounds
+                const popupHalfWidth = popupWidth / 2;
+                if (popupX - popupHalfWidth < margin) {
+                  popupX = popupHalfWidth + margin;
+                } else if (
+                  popupX + popupHalfWidth >
+                  editorRect.width - margin
+                ) {
+                  popupX = editorRect.width - popupHalfWidth - margin;
+                }
+
+                // Ensure popup stays within vertical bounds
+                if (popupY < margin) {
+                  popupY = margin;
+                } else if (popupY + popupHeight > editorRect.height - margin) {
+                  popupY = editorRect.height - popupHeight - margin;
+                }
+
+                setDeletePopupPosition({
+                  x: popupX,
+                  y: popupY,
+                });
+                setAnnotationToDelete(annotation);
+                setDeletePopupVisible(true);
+                setBubbleMenuVisible(false);
               }
-
-              // Ensure popup stays within vertical bounds
-              if (popupY < margin) {
-                popupY = margin;
-              } else if (popupY + popupHeight > editorRect.height - margin) {
-                popupY = editorRect.height - popupHeight - margin;
-              }
-
-              setDeletePopupPosition({
-                x: popupX,
-                y: popupY,
-              });
-              setAnnotationToDelete(annotation);
-              setDeletePopupVisible(true);
-              setBubbleMenuVisible(false);
             }
           }
         }
@@ -237,7 +257,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           editorElement.removeEventListener("click", handleClick, true);
         }
       };
-    }, [annotations]);
+    }, [annotations, deletePopupVisible, currentSelection]);
 
     // Add keyboard event listener for closing popups
     useEffect(() => {
@@ -283,6 +303,12 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     };
 
     const handleSelectionComplete = (selection: EditorSelection) => {
+      // Close delete popup when selection changes
+      if (deletePopupVisible) {
+        setDeletePopupVisible(false);
+        setAnnotationToDelete(null);
+      }
+
       if (selection && selection.ranges && selection.ranges.length > 0) {
         const range = selection.ranges[0];
         const start = range.from;
@@ -406,6 +432,11 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           setBubbleMenuVisible(false);
           setCurrentSelection(null);
           onTextSelect(null);
+          // Also close delete popup when selection is cleared
+          if (deletePopupVisible) {
+            setDeletePopupVisible(false);
+            setAnnotationToDelete(null);
+          }
         }
       }
     };
@@ -437,6 +468,11 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       setSelectedHeaderId("");
       setCurrentSelection(null);
       onTextSelect(null);
+      // Also close delete popup when canceling annotation
+      if (deletePopupVisible) {
+        setDeletePopupVisible(false);
+        setAnnotationToDelete(null);
+      }
     };
 
     const updateHeaderSpan = () => {
@@ -624,7 +660,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               size="sm"
               className="absolute top-2 right-2 h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
             >
-              <X className="w-4 h-4" />
+              <IoClose className="w-4 h-4" />
             </Button>
 
             <div className="mb-3 pr-8">
@@ -722,7 +758,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         {/* Delete Annotation Popup */}
         {deletePopupVisible && annotationToDelete && (
           <div
-            className="absolute bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-64"
+            className="delete-popup absolute bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-64"
             style={{
               left: `${deletePopupPosition.x}px`,
               top: `${deletePopupPosition.y}px`,

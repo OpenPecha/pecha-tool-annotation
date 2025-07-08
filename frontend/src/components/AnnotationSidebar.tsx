@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, ChevronRight, MessageSquare } from "lucide-react";
+import { IoTrash, IoChevronForward, IoChatbox } from "react-icons/io5";
 import type { Annotation } from "@/pages/Task";
 
 interface AnnotationSidebarProps {
@@ -58,14 +58,14 @@ export const AnnotationSidebar = ({
                 title={isOpen ? "Close Annotations" : "Open Annotations"}
               >
                 {isOpen ? (
-                  <ChevronRight className="h-4 w-4 text-gray-600" />
+                  <IoChevronForward className="h-4 w-4 text-gray-600" />
                 ) : (
-                  <MessageSquare className="h-5 w-5 text-blue-600" />
+                  <IoChatbox className="h-5 w-5 text-blue-600" />
                 )}
               </Button>
               {isOpen && (
                 <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-blue-600" />
+                  <IoChatbox className="w-5 h-5 text-blue-600" />
                   Annotations ({annotations.length})
                 </CardTitle>
               )}
@@ -100,10 +100,10 @@ export const AnnotationSidebar = ({
                           onClick={() => onRemoveAnnotation(annotation.id)}
                           className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <IoTrash className="h-3 w-3" />
                         </Button>
                       </div>
-                      <p className="text-sm text-gray-900 font-medium mb-1 break-words">
+                      <p className="text-sm font-monlam leading-[normal] text-gray-900 font-medium mb-1 break-words">
                         "{annotation.text}"
                       </p>
                       <p className="text-xs text-gray-500">

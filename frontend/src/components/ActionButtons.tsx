@@ -1,6 +1,11 @@
 import { Button } from "./ui/button";
 import type { Annotation } from "@/pages/Task";
-import { Send, SkipForward, Undo2, RotateCcw } from "lucide-react";
+import {
+  IoSend,
+  IoPlaySkipForward,
+  IoArrowUndo,
+  IoRefresh,
+} from "react-icons/io5";
 
 function ActionButtons({
   annotations,
@@ -31,7 +36,7 @@ function ActionButtons({
         disabled={annotations.length === 0 || isSubmitting || isSkipping}
         size={"lg"}
       >
-        <Send className="w-4 h-4 mr-2" />
+        <IoSend className="w-4 h-4 mr-2" />
         {isSubmitting
           ? isCompletedTask
             ? "Updating..."
@@ -50,7 +55,7 @@ function ActionButtons({
           size={"lg"}
           title="Skip this text - it won't be shown to you again"
         >
-          <SkipForward className="w-4 h-4 mr-2" />
+          <IoPlaySkipForward className="w-4 h-4 mr-2" />
           {isSkipping ? "Skipping..." : "Skip"}
         </Button>
       )}
@@ -64,7 +69,7 @@ function ActionButtons({
           size={"lg"}
           title="Revert your work and make text available for others"
         >
-          <RotateCcw className="w-4 h-4 mr-2" />
+          <IoRefresh className="w-4 h-4 mr-2" />
           Revert Work
         </Button>
       )}
@@ -78,7 +83,7 @@ function ActionButtons({
           size={"lg"}
           title={`Remove all ${userAnnotationsCount} annotations you've added`}
         >
-          <Undo2 className="w-4 h-4 mr-2" />
+          <IoArrowUndo className="w-4 h-4 mr-2" />
           Reset ({userAnnotationsCount})
         </Button>
       )}

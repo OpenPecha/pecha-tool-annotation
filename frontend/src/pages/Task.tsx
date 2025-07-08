@@ -5,7 +5,6 @@ import type { TextAnnotatorRef } from "@/components/TextAnnotator";
 import { AnnotationSidebar } from "@/components/AnnotationSidebar";
 import { TableOfContents } from "@/components/TableOfContents";
 import { useToast } from "@/hooks/use-toast";
-import { text_temp } from "@/data/text.ts";
 import Navbar from "@/components/Navbar";
 import ActionButtons from "@/components/ActionButtons";
 import { useParams, useNavigate } from "react-router-dom";
@@ -81,7 +80,7 @@ const Index = () => {
   };
 
   // State for local annotations and UI
-  const [text, setText] = useState(text_temp);
+  const [text, setText] = useState("");
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [selectedText, setSelectedText] = useState<{
     text: string;
@@ -587,7 +586,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         <Navbar />
-        <div className="flex items-center justify-center h-96">
+        <div className="flex items-center justify-center h-96 pt-16">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading text...</p>
@@ -602,7 +601,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         <Navbar />
-        <div className="flex items-center justify-center h-96">
+        <div className="flex items-center justify-center h-96 pt-16">
           <div className="text-center">
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -628,7 +627,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         <Navbar />
-        <div className="flex items-center justify-center h-96">
+        <div className="flex items-center justify-center h-96 pt-16">
           <div className="text-center">
             <p className="text-gray-600">No text data available</p>
           </div>
@@ -641,7 +640,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Navbar />
 
-      <div className="flex gap-6 justify-center  mx-auto relative">
+      <div className="flex gap-6  justify-center mx-auto relative pt-20">
         {/* Table of Contents - Left Sidebar */}
         <TableOfContents
           annotations={annotations}

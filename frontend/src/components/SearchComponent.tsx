@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, ChevronUp, ChevronDown } from "lucide-react";
+import { IoSearch, IoChevronUp, IoChevronDown } from "react-icons/io5";
 
 interface SearchResult {
   index: number;
@@ -150,7 +150,7 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
       <div className="flex items-center gap-3 mb-2">
         {/* Search Icon and Input */}
         <div className="flex items-center gap-2 flex-1">
-          <Search className="w-4 h-4 text-gray-500" />
+          <IoSearch className="w-4 h-4 text-gray-500" />
           <input
             ref={searchInputRef}
             type="text"
@@ -179,7 +179,7 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
                   className="h-6 w-6 p-0"
                   disabled={searchResults.length === 0}
                 >
-                  <ChevronUp className="w-3 h-3" />
+                  <IoChevronUp className="w-3 h-3" />
                 </Button>
                 <Button
                   onClick={() => navigateToResult("next")}
@@ -188,7 +188,7 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
                   className="h-6 w-6 p-0"
                   disabled={searchResults.length === 0}
                 >
-                  <ChevronDown className="w-3 h-3" />
+                  <IoChevronDown className="w-3 h-3" />
                 </Button>
               </div>
             )}

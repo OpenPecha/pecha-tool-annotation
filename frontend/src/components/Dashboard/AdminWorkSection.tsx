@@ -1,0 +1,274 @@
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { textApi } from "@/api/text";
+import { toast } from "sonner";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { IoDocumentText } from "react-icons/io5";
+
+// Icon components
+const StartWorkIcon = () => (
+  <svg
+    className="w-12 h-12 text-blue-500"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+    />
+  </svg>
+);
+
+const RecentActivityIcon = () => (
+  <svg
+    className="w-6 h-6 text-gray-500"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+export const AdminWorkSection: React.FC = () => {
+  const navigate = useNavigate();
+  const [isLoadingText, setIsLoadingText] = React.useState(false);
+
+  // Fetch user's work in progress
+  const { data: workInProgress = [] } = useQuery({
+    queryKey: ["my-work-in-progress"],
+    queryFn: () => textApi.getMyWorkInProgress(),
+    refetchOnWindowFocus: false,
+  });
+
+  // Fetch recent activity data from API
+  const { data: recentActivity = [], isLoading: isLoadingActivity } = useQuery({
+    queryKey: ["recent-activity"],
+    queryFn: () => textApi.getRecentActivity(10),
+    refetchOnWindowFocus: false,
+  });
+
+  // Mutation to start work - find work in progress or assign new text
+  const startWorkMutation = useMutation({
+    mutationFn: async () => {
+      return textApi.startWork();
+    },
+    onSuccess: (text) => {
+      toast.success(`✅ Work Started`, {
+        description: `Starting work on: "${text.title}"`,
+      });
+      navigate(`/task/${text.id}`);
+      setIsLoadingText(false);
+    },
+    onError: (error) => {
+      let errorMessage = "Failed to start work";
+      let errorTitle = "❌ Error";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error && typeof error === "object" && "detail" in error) {
+        const apiError = error as { detail: string; status_code?: number };
+        errorMessage = apiError.detail || "Failed to start work";
+
+        if (apiError.status_code === 404) {
+          errorTitle = "📝 No Tasks Available";
+          errorMessage =
+            "No texts available for annotation at this time. Please contact your administrator to add more texts to the system.";
+        }
+      }
+
+      if (errorTitle.includes("No Tasks Available")) {
+        toast.info(errorTitle, {
+          description: errorMessage,
+        });
+      } else {
+        toast.error(errorTitle, {
+          description: errorMessage,
+        });
+      }
+
+      setIsLoadingText(false);
+    },
+  });
+
+  const handleStartWork = () => {
+    setIsLoadingText(true);
+    startWorkMutation.mutate();
+  };
+
+  // Helper function to format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Handle clicking on recent activity item
+  const handleActivityClick = (textId: number) => {
+    navigate(`/task/${textId}`);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Start Work Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <IoDocumentText className="w-5 h-5" />
+            Work Management
+          </CardTitle>
+          <CardDescription>
+            Manage annotation tasks and work in progress
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {workInProgress.length > 0 ? (
+            // Show work in progress
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-orange-50 border-2 border-orange-200 p-6 rounded-lg">
+                <div className="text-center mb-4">
+                  <h3 className="text-xl font-semibold text-orange-800 mb-2">
+                    Work in Progress
+                  </h3>
+                  <p className="text-orange-600 text-sm">
+                    You have annotation tasks in progress
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  {workInProgress.map((text) => (
+                    <div
+                      key={text.id}
+                      className="flex items-center justify-between p-4 bg-white rounded-lg border"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {text.title}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Status: {text.status} • Started:{" "}
+                          {formatDate(text.updated_at || text.created_at)}
+                        </p>
+                      </div>
+                      <Button
+                        size="lg"
+                        onClick={() => navigate(`/task/${text.id}`)}
+                      >
+                        Continue
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Show start working
+            <div className="max-w-lg mx-auto">
+              <Card className="border-2 border-blue-200 bg-blue-50">
+                <CardHeader className="text-center">
+                  <StartWorkIcon />
+                  <CardTitle className="text-xl">Start Working</CardTitle>
+                  <CardDescription>
+                    Begin annotating texts as an admin
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    onClick={handleStartWork}
+                    disabled={isLoadingText}
+                  >
+                    {isLoadingText ? (
+                      <>
+                        <AiOutlineLoading3Quarters className="w-4 h-4 mr-2 animate-spin" />
+                        Finding Text...
+                      </>
+                    ) : (
+                      "Start Annotating"
+                    )}
+                  </Button>
+                  <p className="text-sm text-gray-500 mt-3 text-center">
+                    {isLoadingText
+                      ? "Looking for available texts to annotate..."
+                      : "Create new annotations, mark headers, identify persons and objects"}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <RecentActivityIcon />
+            Recent Activity
+          </CardTitle>
+          <CardDescription>
+            Recent system-wide annotation activity
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoadingActivity ? (
+            <div className="text-center py-8">
+              <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
+              <p className="text-gray-500">Loading recent activity...</p>
+            </div>
+          ) : recentActivity.length > 0 ? (
+            <div className="space-y-3">
+              {recentActivity.map((text) => (
+                <div
+                  key={text.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <div>
+                      <p className="font-medium text-gray-900">{text.title}</p>
+                      <p className="text-sm text-gray-500">
+                        {formatDate(text.updated_at || text.created_at)} •{" "}
+                        {text.status}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleActivityClick(text.id)}
+                  >
+                    View
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No recent activity yet.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

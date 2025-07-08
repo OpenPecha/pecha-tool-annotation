@@ -11,14 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
-  Loader2,
-  Search,
-  Users,
-  ShieldCheck,
-  Eye,
-  Edit,
-  Trash2,
-} from "lucide-react";
+  IoSearch,
+  IoPeople,
+  IoShieldCheckmark,
+  IoEye,
+  IoCreateOutline,
+  IoTrash,
+} from "react-icons/io5";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { usersApi } from "@/api/users";
 import type { UserRole } from "@/api/types";
 
@@ -150,13 +150,13 @@ export function UserManagement({ className }: UserManagementProps) {
   const getRoleIcon = (role: UserRole) => {
     switch (role) {
       case "admin":
-        return <ShieldCheck className="w-4 h-4" />;
+        return <IoShieldCheckmark className="w-4 h-4" />;
       case "reviewer":
-        return <Edit className="w-4 h-4" />;
+        return <IoCreateOutline className="w-4 h-4" />;
       case "annotator":
-        return <Users className="w-4 h-4" />;
+        return <IoPeople className="w-4 h-4" />;
       default:
-        return <Eye className="w-4 h-4" />;
+        return <IoEye className="w-4 h-4" />;
     }
   };
 
@@ -194,7 +194,7 @@ export function UserManagement({ className }: UserManagementProps) {
     <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Users className="w-5 h-5" />
+          <IoPeople className="w-5 h-5" />
           User Management
         </CardTitle>
         <CardDescription>
@@ -205,7 +205,7 @@ export function UserManagement({ className }: UserManagementProps) {
         {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <IoSearch className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search users by username or email..."
@@ -243,12 +243,12 @@ export function UserManagement({ className }: UserManagementProps) {
         {/* Users List */}
         {isLoading || isSearching ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-blue-600" />
             <span className="ml-2 text-blue-600">Loading users...</span>
           </div>
         ) : displayUsers.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <IoPeople className="w-12 h-12 mx-auto mb-4 text-gray-300" />
             <p>No users found</p>
           </div>
         ) : (
@@ -307,7 +307,7 @@ export function UserManagement({ className }: UserManagementProps) {
                     onClick={() => handleDeleteUser(user.id)}
                     disabled={deleteUserMutation.isPending}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <IoTrash className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
