@@ -63,12 +63,12 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
     return (
       <div className="flex flex-col h-full">
         {/* Search Bar - Always visible */}
-        <SearchComponent
+        {/* <SearchComponent
           text={text}
           isVisible={true}
           onClose={() => {}} // No close functionality needed
           onResultSelect={handleSearchResultSelect}
-        />
+        /> */}
 
         {/* Editor */}
         <div className="flex-1">
