@@ -19,6 +19,11 @@ interface TextAnnotatorProps {
     start: number;
     end: number;
   }) => void;
+  onUpdateHeaderSpan?: (
+    headerId: string,
+    newStart: number,
+    newEnd: number
+  ) => void;
   readOnly?: boolean;
 }
 
@@ -37,6 +42,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
       onAddAnnotation,
       onRemoveAnnotation,
       onHeaderSelected,
+      onUpdateHeaderSpan,
       readOnly = true,
     },
     ref
@@ -76,6 +82,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
             onAddAnnotation={onAddAnnotation}
             onRemoveAnnotation={onRemoveAnnotation}
             onHeaderSelected={onHeaderSelected}
+            onUpdateHeaderSpan={onUpdateHeaderSpan}
             readOnly={readOnly}
           />
         </div>

@@ -1,7 +1,6 @@
 import { Button } from "./ui/button";
 import type { Annotation } from "@/pages/Task";
-import { Send, SkipForward, StopCircle, Undo2, RotateCcw } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Send, SkipForward, Undo2, RotateCcw } from "lucide-react";
 
 function ActionButtons({
   annotations,
@@ -24,13 +23,11 @@ function ActionButtons({
   readonly isSkipping?: boolean;
   readonly isCompletedTask?: boolean;
 }) {
-  const navigate = useNavigate();
-
   return (
-    <div className="flex flex-1 gap-2">
+    <div className="flex flex-1 gap-2 flex-wrap flex-col">
       <Button
         onClick={onSubmitTask}
-        className="bg-green-600 flex-1 hover:bg-green-700 text-white cursor-pointer"
+        className="bg-green-600 h-20 hover:bg-green-700 text-white cursor-pointer"
         disabled={annotations.length === 0 || isSubmitting || isSkipping}
         size={"lg"}
       >
@@ -40,8 +37,8 @@ function ActionButtons({
             ? "Updating..."
             : "Submitting..."
           : isCompletedTask
-          ? "Update Task"
-          : "Submit Task"}
+          ? "Update"
+          : "Submit"}
       </Button>
 
       {/* Skip button - only show for new tasks, not completed ones */}
@@ -54,7 +51,7 @@ function ActionButtons({
           title="Skip this text - it won't be shown to you again"
         >
           <SkipForward className="w-4 h-4 mr-2" />
-          {isSkipping ? "Skipping..." : "Skip & Reject"}
+          {isSkipping ? "Skipping..." : "Skip"}
         </Button>
       )}
 

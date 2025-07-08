@@ -71,6 +71,11 @@ interface EditorProps {
     start: number;
     end: number;
   }) => void;
+  onUpdateHeaderSpan?: (
+    headerId: string,
+    newStart: number,
+    newEnd: number
+  ) => void;
   readOnly?: boolean;
 }
 
@@ -95,6 +100,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       onAddAnnotation,
       onRemoveAnnotation,
       onHeaderSelected,
+      onUpdateHeaderSpan,
       readOnly = true,
     },
     ref
@@ -106,8 +112,10 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     const [bubbleMenuPosition, setBubbleMenuPosition] = useState({
       x: 0,
       y: 0,
+      transformX: "-50%",
     });
     const [annotationText, setAnnotationText] = useState("");
+    const [selectedHeaderId, setSelectedHeaderId] = useState<string>("");
 
     const [deletePopupVisible, setDeletePopupVisible] = useState(false);
     const [deletePopupPosition, setDeletePopupPosition] = useState({
@@ -135,54 +143,33 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       loadConfig();
     }, []);
 
-    // Update annotations in the editor when annotations prop changes
+    // Update annotations in the editor when annotations prop changes or editor becomes ready
     useEffect(() => {
       const updateAnnotations = () => {
-        if (editorRef.current?.view) {
+        if (editorRef.current?.view && editorReady) {
           const view = editorRef.current.view;
 
-          // Clear existing annotations
+          // Clear existing annotations first
           view.dispatch({
             effects: clearAnnotationsEffect.of(null),
           });
 
           // Add all current annotations
           if (annotations.length > 0) {
-            console.log(annotations);
-
             annotations.forEach((annotation) => {
               view.dispatch({
                 effects: addAnnotationEffect.of(annotation),
               });
             });
           }
-        } else {
-          console.log("Editor: View not ready yet");
         }
       };
 
-      // Small delay to ensure CodeMirror is fully initialized
-      const timer = setTimeout(updateAnnotations, 100);
-      return () => clearTimeout(timer);
-    }, [annotations]);
-
-    // Apply annotations when editor becomes ready
-    useEffect(() => {
-      if (editorReady && annotations.length > 0) {
-        const timer = setTimeout(() => {
-          if (editorRef.current?.view) {
-            const view = editorRef.current.view;
-            annotations.forEach((annotation) => {
-              console.log(annotation);
-              view.dispatch({
-                effects: addAnnotationEffect.of(annotation),
-              });
-            });
-          }
-        }, 100);
-        return () => clearTimeout(timer);
+      // Apply annotations when both editor is ready and we have the view
+      if (editorReady && editorRef.current?.view) {
+        updateAnnotations();
       }
-    }, [editorReady, annotations]);
+    }, [annotations, editorReady]);
 
     // Handle annotation deletion clicks
     useEffect(() => {
@@ -340,8 +327,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                 // Get editor dimensions
                 const editorWidth = editorRect.width;
                 const editorHeight = editorRect.height;
-                const bubbleWidth = 320; // Approximate bubble menu width
-                const bubbleHeight = 200; // Approximate bubble menu height
+                const bubbleWidth = 380; // Approximate bubble menu width
+                const bubbleHeight = 250; // Approximate bubble menu height (increased for new content)
                 const margin = 10; // Margin from editor edges
 
                 // Determine if bubble should be above or below
@@ -370,22 +357,46 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                   bubbleY = editorHeight - bubbleHeight - margin;
                 }
 
-                // Calculate horizontal position and ensure it stays within bounds
-                let bubbleX = selectionCenterX;
+                // Calculate horizontal position - prioritize right side positioning
+                let bubbleX;
+                let bubbleTransformX = "-50%"; // Default to center transform
                 const bubbleHalfWidth = bubbleWidth / 2;
 
-                // Check if bubble would go off the left edge
-                if (bubbleX - bubbleHalfWidth < margin) {
-                  bubbleX = bubbleHalfWidth + margin;
+                // First try to place it to the right of the selection
+                const rightSideX = endCoords.right - editorRect.left + 10; // 10px offset from selection
+
+                // Check if there's enough space on the right
+                if (rightSideX + bubbleWidth < editorWidth - margin) {
+                  bubbleX = rightSideX;
+                  bubbleTransformX = "0"; // No transform needed, position from left edge
                 }
-                // Check if bubble would go off the right edge
-                else if (bubbleX + bubbleHalfWidth > editorWidth - margin) {
-                  bubbleX = editorWidth - bubbleHalfWidth - margin;
+                // If not enough space on right, try left side
+                else {
+                  const leftSideX = startCoords.left - editorRect.left - 10; // 10px offset from selection
+                  if (leftSideX - bubbleWidth > margin) {
+                    bubbleX = leftSideX;
+                    bubbleTransformX = "-100%"; // Transform to position from right edge
+                  }
+                  // If neither side works, center it and adjust bounds
+                  else {
+                    bubbleX = selectionCenterX;
+                    bubbleTransformX = "-50%"; // Center transform
+
+                    // Check if bubble would go off the left edge
+                    if (bubbleX - bubbleHalfWidth < margin) {
+                      bubbleX = bubbleHalfWidth + margin;
+                    }
+                    // Check if bubble would go off the right edge
+                    else if (bubbleX + bubbleHalfWidth > editorWidth - margin) {
+                      bubbleX = editorWidth - bubbleHalfWidth - margin;
+                    }
+                  }
                 }
 
                 setBubbleMenuPosition({
                   x: bubbleX,
                   y: bubbleY,
+                  transformX: bubbleTransformX,
                 });
                 setBubbleMenuVisible(true);
               }
@@ -423,6 +434,24 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     const cancelAnnotation = () => {
       setBubbleMenuVisible(false);
       setAnnotationText("");
+      setSelectedHeaderId("");
+      setCurrentSelection(null);
+      onTextSelect(null);
+    };
+
+    const updateHeaderSpan = () => {
+      if (!currentSelection || !selectedHeaderId || !onUpdateHeaderSpan) return;
+
+      onUpdateHeaderSpan(
+        selectedHeaderId,
+        currentSelection.startIndex,
+        currentSelection.endIndex
+      );
+
+      // Reset state
+      setBubbleMenuVisible(false);
+      setAnnotationText("");
+      setSelectedHeaderId("");
       setCurrentSelection(null);
       onTextSelect(null);
     };
@@ -531,27 +560,37 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         },
       }),
     ];
-
     return (
-      <div className="h-[calc(100vh-70px)] min-h-[200px] overflow-y-scroll overflow-x-hidden  bg-white rounded-lg shadow-lg relative ">
-        {readOnly && (
-          <div className="absolute top-2 right-2 z-10">
-            <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium border">
-              Read Only
-            </span>
-          </div>
-        )}
-
+      <div className="h-[calc(100vh-140px)] min-h-[200px] overflow-y-scroll overflow-x-auto  bg-white rounded-lg shadow-lg relative ">
         <CodeMirror
+          key={`editor-${text.length}-${annotations.length}`}
           ref={editorRef}
           value={text}
           height="100%"
           extensions={extensions}
           onChange={handleChange}
           readOnly={readOnly}
-          onCreateEditor={() => {
+          onCreateEditor={(view) => {
             // Set editor as ready when view is created
             setEditorReady(true);
+
+            // Force re-application of annotations after editor is created
+            // This handles hot reload scenarios
+            setTimeout(() => {
+              if (annotations.length > 0) {
+                // Clear any existing annotations first
+                view.dispatch({
+                  effects: clearAnnotationsEffect.of(null),
+                });
+
+                // Re-apply all annotations
+                annotations.forEach((annotation) => {
+                  view.dispatch({
+                    effects: addAnnotationEffect.of(annotation),
+                  });
+                });
+              }
+            }, 50);
           }}
           basicSetup={{
             lineNumbers: true,
@@ -570,11 +609,12 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         {/* Bubble Menu */}
         {bubbleMenuVisible && currentSelection && (
           <div
-            className="absolute bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50  "
+            className="absolute bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50 min-w-[380px]"
             style={{
               left: `${bubbleMenuPosition.x}px`,
               top: `${bubbleMenuPosition.y}px`,
-              transform: "translateX(-50%)",
+              transform: `translateX(${bubbleMenuPosition.transformX})`,
+              maxWidth: "90vw", // Prevent modal from being too wide on small screens
             }}
           >
             {/* Close button */}
@@ -624,6 +664,42 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                   </Button>
                 ))}
               </div>
+
+              {/* Update existing header section */}
+              {annotations.filter((ann) => ann.type === "header").length >
+                0 && (
+                <div className="mb-3 p-3 bg-gray-50 rounded-lg border">
+                  <p className="text-xs text-gray-500 mb-2">
+                    Or update existing header:
+                  </p>
+                  <div className="flex gap-2">
+                    <select
+                      value={selectedHeaderId}
+                      onChange={(e) => setSelectedHeaderId(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select a header...</option>
+                      {annotations
+                        .filter((ann) => ann.type === "header")
+                        .map((header) => (
+                          <option key={header.id} value={header.id}>
+                            {header.name && header.name.length > 30
+                              ? header.name.substring(0, 30) + "..."
+                              : header.name || header.text}
+                          </option>
+                        ))}
+                    </select>
+                    <Button
+                      onClick={updateHeaderSpan}
+                      disabled={!selectedHeaderId}
+                      size="sm"
+                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors duration-200"
+                    >
+                      Update
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>

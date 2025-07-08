@@ -196,12 +196,13 @@ def delete_annotation(
         )
     
     # Check if user is the annotator or admin
-    if annotation.annotator_id != current_user.id and current_user.role.value != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
-    
+    if annotation.annotator_id:
+        if annotation.annotator_id != current_user.id and current_user.role.value != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+        
     annotation_crud.delete(db=db, annotation_id=annotation_id)
 
 

@@ -21,10 +21,12 @@ export const AnnotationSidebar = ({
     switch (type) {
       case "header":
         return "bg-purple-100 text-purple-800 border-purple-200";
-      case "person":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "object":
+      case "author":
         return "bg-blue-100 text-blue-800 border-blue-200";
+      case "translator":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "title":
+        return "bg-green-100 text-green-800 border-green-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -81,7 +83,7 @@ export const AnnotationSidebar = ({
                   annotations.map((annotation) => (
                     <div
                       key={annotation.id}
-                      className="p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 bg-white"
+                      className="p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 bg-white group"
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <Badge
@@ -96,7 +98,7 @@ export const AnnotationSidebar = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => onRemoveAnnotation(annotation.id)}
-                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>

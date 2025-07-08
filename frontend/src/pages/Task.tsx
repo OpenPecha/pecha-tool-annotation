@@ -407,6 +407,50 @@ const Index = () => {
     setPendingHeader(null);
   };
 
+  const handleUpdateHeaderSpan = (
+    headerId: string,
+    newStart: number,
+    newEnd: number
+  ) => {
+    // Find the existing header annotation
+    const existingHeader = annotations.find(
+      (annotation) => annotation.id === headerId && annotation.type === "header"
+    );
+
+    if (!existingHeader) {
+      toast({
+        title: "❌ Header Not Found",
+        description: "Could not find the header to update.",
+      });
+      return;
+    }
+
+    // Get the new text span
+    const newText = text.substring(newStart, newEnd);
+
+    // Update the header annotation
+    const updatedAnnotation = {
+      ...existingHeader,
+      start: newStart,
+      end: newEnd,
+      text: newText,
+    };
+
+    // Update the annotations array
+    setAnnotations((prev) =>
+      prev.map((annotation) =>
+        annotation.id === headerId ? updatedAnnotation : annotation
+      )
+    );
+
+    toast({
+      title: "✅ Header Updated",
+      description: `Header "${
+        existingHeader.name || existingHeader.text
+      }" span has been updated.`,
+    });
+  };
+
   const removeAnnotation = (id: string) => {
     const annotationIdNumber = parseInt(id, 10);
     if (isNaN(annotationIdNumber)) {
@@ -634,7 +678,8 @@ const Index = () => {
             onAddAnnotation={addAnnotation}
             onRemoveAnnotation={removeAnnotation}
             onHeaderSelected={handleHeaderSelected}
-            readOnly={isCompletedTask}
+            onUpdateHeaderSpan={handleUpdateHeaderSpan}
+            readOnly={true}
           />
         </div>
 
