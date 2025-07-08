@@ -18,6 +18,11 @@ export const useAnnotationEffects = (
       if (editorRef.current?.view && editorReady) {
         const view = editorRef.current.view;
 
+        // Save current scroll position
+        const scrollElement = view.scrollDOM;
+        const scrollTop = scrollElement.scrollTop;
+        const scrollLeft = scrollElement.scrollLeft;
+
         // Clear existing annotations first
         view.dispatch({
           effects: clearAnnotationsEffect.of(null),
@@ -31,6 +36,12 @@ export const useAnnotationEffects = (
             });
           });
         }
+
+        // Restore scroll position after a short delay to allow DOM updates
+        requestAnimationFrame(() => {
+          scrollElement.scrollTop = scrollTop;
+          scrollElement.scrollLeft = scrollLeft;
+        });
       }
     };
 

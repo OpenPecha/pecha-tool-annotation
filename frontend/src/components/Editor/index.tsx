@@ -42,6 +42,11 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     const textRef = useRef(text);
     textRef.current = text;
 
+    // Track scroll position to preserve it during updates
+    const scrollPositionRef = useRef<{ scrollTop: number; scrollLeft: number }>(
+      { scrollTop: 0, scrollLeft: 0 }
+    );
+
     const {
       currentSelection,
       bubbleMenuVisible,
@@ -66,6 +71,28 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     } = useEditorState();
 
     const editorRef = useAnnotationEffects(annotations, editorReady);
+
+    // Function to save current scroll position
+    const saveScrollPosition = useCallback(() => {
+      if (editorRef.current?.view) {
+        const scrollElement = editorRef.current.view.scrollDOM;
+        scrollPositionRef.current = {
+          scrollTop: scrollElement.scrollTop,
+          scrollLeft: scrollElement.scrollLeft,
+        };
+      }
+    }, []);
+
+    // Function to restore scroll position
+    const restoreScrollPosition = useCallback(() => {
+      if (editorRef.current?.view) {
+        const scrollElement = editorRef.current.view.scrollDOM;
+        requestAnimationFrame(() => {
+          scrollElement.scrollTop = scrollPositionRef.current.scrollTop;
+          scrollElement.scrollLeft = scrollPositionRef.current.scrollLeft;
+        });
+      }
+    }, []);
 
     useImperativeHandle(ref, () => ({
       scrollToPosition: (start: number, end: number) => {
@@ -294,6 +321,9 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       (type: string) => {
         if (!currentSelection) return;
 
+        // Save scroll position before adding annotation
+        saveScrollPosition();
+
         if (type === "header" && onHeaderSelected) {
           onHeaderSelected({
             text: currentSelection.text,
@@ -306,6 +336,11 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
 
         resetBubbleMenu();
         onTextSelect(null);
+
+        // Restore scroll position after a short delay to allow DOM updates
+        setTimeout(() => {
+          restoreScrollPosition();
+        }, 50);
       },
       [
         currentSelection,
@@ -313,6 +348,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         onAddAnnotation,
         resetBubbleMenu,
         onTextSelect,
+        saveScrollPosition,
+        restoreScrollPosition,
       ]
     );
 
@@ -337,10 +374,24 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
 
     const handleDeleteAnnotation = useCallback(() => {
       if (annotationToDelete) {
+        // Save scroll position before deletion
+        saveScrollPosition();
+
         onRemoveAnnotation(annotationToDelete.id);
         resetDeletePopup();
+
+        // Restore scroll position after deletion
+        setTimeout(() => {
+          restoreScrollPosition();
+        }, 50);
       }
-    }, [annotationToDelete, onRemoveAnnotation, resetDeletePopup]);
+    }, [
+      annotationToDelete,
+      onRemoveAnnotation,
+      resetDeletePopup,
+      saveScrollPosition,
+      restoreScrollPosition,
+    ]);
 
     const extensions = [
       markdown({ base: markdownLanguage, codeLanguages: languages }),
@@ -380,8 +431,9 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           overflow: "hidden",
         },
         ".cm-scroller": {
-          overflow: "hidden !important",
+          overflow: "auto",
           height: "100%",
+          scrollBehavior: "smooth",
         },
         ".cm-focused": {
           outline: "none",
@@ -436,15 +488,15 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               border-radius: 2px; 
               padding: 1px 2px; 
               position: relative; 
-              transition: all 0.3s ease;
+              transition: all 0.15s ease;
             }`
             )
             .join("\n");
 
           const optimisticStyles = `
             .annotation-optimistic {
-              animation: annotationFlash 0.6s ease-out;
-              opacity: 0.8;
+              animation: annotationFlash 0.4s ease-out;
+              opacity: 0.85;
             }
             
             @keyframes annotationFlash {
@@ -453,8 +505,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                 box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
               }
               50% {
-                transform: scale(1.05);
-                box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+                transform: scale(1.03);
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
               }
               100% {
                 transform: scale(1);
@@ -477,10 +529,34 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       applyAnnotationStyles();
     }, []);
 
+    // Preserve scroll position when annotations change
+    useEffect(() => {
+      if (editorReady && editorRef.current?.view) {
+        const view = editorRef.current.view;
+        const scrollElement = view.scrollDOM;
+
+        // Save current scroll position before any potential re-render
+        const currentScrollTop = scrollElement.scrollTop;
+        const currentScrollLeft = scrollElement.scrollLeft;
+
+        // Schedule scroll position restoration after current render cycle
+        const timeoutId = setTimeout(() => {
+          if (
+            scrollElement.scrollTop !== currentScrollTop ||
+            scrollElement.scrollLeft !== currentScrollLeft
+          ) {
+            scrollElement.scrollTop = currentScrollTop;
+            scrollElement.scrollLeft = currentScrollLeft;
+          }
+        }, 0);
+
+        return () => clearTimeout(timeoutId);
+      }
+    }, [annotations.length, editorReady]); // Only when annotation count changes
+
     return (
-      <div className="h-[calc(100vh-140px)] min-h-[200px] overflow-y-scroll overflow-x-auto bg-white rounded-lg shadow-lg relative">
+      <div className="h-[calc(100vh-140px)] min-h-[200px] overflow-hidden bg-white rounded-lg shadow-lg relative">
         <CodeMirror
-          key={`editor-${annotations.length}`}
           ref={editorRef}
           value={textRef.current}
           height="100%"
