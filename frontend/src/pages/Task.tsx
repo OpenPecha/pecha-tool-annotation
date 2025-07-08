@@ -115,18 +115,6 @@ const Index = () => {
       return annotationsApi.createAnnotation(annotationData);
     },
     onSuccess: (data) => {
-      // Add the new annotation to local state
-      const newAnnotation: Annotation = {
-        id: data.id.toString(),
-        type: data.annotation_type,
-        text: data.selected_text || "",
-        start: data.start_position,
-        end: data.end_position,
-        name: data.name,
-        annotator_id: data.annotator_id, // Use the annotator_id from API response
-      };
-      setAnnotations((prev) => [...prev, newAnnotation]);
-
       // Only refresh user stats (affects total annotations count)
       queryClient.invalidateQueries({ queryKey: ["user-stats"] });
 
@@ -149,12 +137,7 @@ const Index = () => {
     mutationFn: async (annotationId: number) => {
       return annotationsApi.deleteAnnotation(annotationId);
     },
-    onSuccess: (_, annotationId) => {
-      // Remove annotation from local state
-      setAnnotations((prev) =>
-        prev.filter((ann) => ann.id !== annotationId.toString())
-      );
-
+    onSuccess: () => {
       // Only refresh user stats (affects total annotations count)
       queryClient.invalidateQueries({ queryKey: ["user-stats"] });
 
@@ -339,6 +322,31 @@ const Index = () => {
       return;
     }
 
+    // Generate temporary ID for optimistic update
+    const tempId = `temp-${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+
+    // Create optimistic annotation for immediate UI feedback
+    const optimisticAnnotation: Annotation = {
+      id: tempId,
+      type: type,
+      text: selectedText.text,
+      start: selectedText.start,
+      end: selectedText.end,
+      name: name,
+      annotator_id: currentUser?.id ? parseInt(currentUser.id, 10) : undefined,
+    };
+
+    // Add annotation optimistically to local state for immediate visual feedback
+    setAnnotations((prev) => [...prev, optimisticAnnotation]);
+
+    // Show immediate feedback
+    toast({
+      title: "📝 Creating annotation...",
+      description: `Adding ${type} annotation`,
+    });
+
     // Create annotation data for API
     const annotationData: AnnotationCreate = {
       text_id: textIdNumber,
@@ -352,8 +360,31 @@ const Index = () => {
       meta: {},
     };
 
-    // Save to database immediately
-    createAnnotationMutation.mutate(annotationData);
+    // Save to database
+    createAnnotationMutation.mutate(annotationData, {
+      onSuccess: (data) => {
+        // Replace the optimistic annotation with the real one
+        setAnnotations((prev) =>
+          prev.map((ann) =>
+            ann.id === tempId
+              ? {
+                  id: data.id.toString(),
+                  type: data.annotation_type,
+                  text: data.selected_text || "",
+                  start: data.start_position,
+                  end: data.end_position,
+                  name: data.name,
+                  annotator_id: data.annotator_id,
+                }
+              : ann
+          )
+        );
+      },
+      onError: () => {
+        // Remove the optimistic annotation on error
+        setAnnotations((prev) => prev.filter((ann) => ann.id !== tempId));
+      },
+    });
     setSelectedText(null);
   };
 
@@ -378,6 +409,31 @@ const Index = () => {
       return;
     }
 
+    // Generate temporary ID for optimistic update
+    const tempId = `temp-header-${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+
+    // Create optimistic annotation for immediate UI feedback
+    const optimisticAnnotation: Annotation = {
+      id: tempId,
+      type: "header",
+      text: pendingHeader.text,
+      start: pendingHeader.start,
+      end: pendingHeader.end,
+      name: name,
+      annotator_id: currentUser?.id ? parseInt(currentUser.id, 10) : undefined,
+    };
+
+    // Add annotation optimistically to local state for immediate visual feedback
+    setAnnotations((prev) => [...prev, optimisticAnnotation]);
+
+    // Show immediate feedback
+    toast({
+      title: "📝 Creating header...",
+      description: `Adding header "${name}"`,
+    });
+
     // Create header annotation with custom name
     const annotationData: AnnotationCreate = {
       text_id: textIdNumber,
@@ -392,7 +448,30 @@ const Index = () => {
     };
 
     // Save to database
-    createAnnotationMutation.mutate(annotationData);
+    createAnnotationMutation.mutate(annotationData, {
+      onSuccess: (data) => {
+        // Replace the optimistic annotation with the real one
+        setAnnotations((prev) =>
+          prev.map((ann) =>
+            ann.id === tempId
+              ? {
+                  id: data.id.toString(),
+                  type: data.annotation_type,
+                  text: data.selected_text || "",
+                  start: data.start_position,
+                  end: data.end_position,
+                  name: data.name,
+                  annotator_id: data.annotator_id,
+                }
+              : ann
+          )
+        );
+      },
+      onError: () => {
+        // Remove the optimistic annotation on error
+        setAnnotations((prev) => prev.filter((ann) => ann.id !== tempId));
+      },
+    });
     setPendingHeader(null);
   };
 
@@ -454,8 +533,21 @@ const Index = () => {
       return;
     }
 
-    // Delete from database immediately
-    deleteAnnotationMutation.mutate(annotationIdNumber);
+    // Store the annotation for potential rollback
+    const annotationToRemove = annotations.find((ann) => ann.id === id);
+
+    // Remove annotation optimistically from local state for immediate visual feedback
+    setAnnotations((prev) => prev.filter((ann) => ann.id !== id));
+
+    // Delete from database
+    deleteAnnotationMutation.mutate(annotationIdNumber, {
+      onError: () => {
+        // Restore the annotation on error
+        if (annotationToRemove) {
+          setAnnotations((prev) => [...prev, annotationToRemove]);
+        }
+      },
+    });
   };
 
   // Check if this is a completed task

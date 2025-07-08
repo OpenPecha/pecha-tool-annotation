@@ -18,8 +18,11 @@ export const annotationField = StateField.define<DecorationSet>({
     for (const effect of tr.effects) {
       if (effect.is(addAnnotationEffect)) {
         const annotation = effect.value;
+        const isOptimistic = annotation.id.startsWith("temp-");
         const decoration = Decoration.mark({
-          class: `annotation-${annotation.type}`,
+          class: `annotation-${annotation.type} ${
+            isOptimistic ? "annotation-optimistic" : ""
+          }`,
           attributes: {
             title: `${annotation.type}: ${annotation.text}`,
             "data-annotation-id": annotation.id,

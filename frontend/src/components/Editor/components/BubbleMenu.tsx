@@ -70,20 +70,29 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
             : currentSelection.text}
           "
         </p>
-        <p className="text-xs text-gray-500 mb-3">
-          {isCreatingAnnotation
-            ? "Creating annotation..."
-            : "Choose annotation type:"}
-        </p>
+        {isCreatingAnnotation ? (
+          <div className="text-xs text-blue-600 mb-3 flex items-center gap-2">
+            <AiOutlineLoading3Quarters className="w-3 h-3 animate-spin" />
+            <span className="font-medium">Creating annotation...</span>
+          </div>
+        ) : (
+          <p className="text-xs text-gray-500 mb-3">Choose annotation type:</p>
+        )}
 
-        <div className="flex flex-wrap gap-2 mb-3">
+        <div
+          className={`flex flex-wrap gap-2 mb-3 transition-all duration-300 ${
+            isCreatingAnnotation ? "opacity-75 scale-95" : ""
+          }`}
+        >
           {annotationConfig?.options.map((option: AnnotationOption) => (
             <Button
               key={option.id}
               onClick={() => onAddAnnotation(option.id)}
               disabled={isCreatingAnnotation}
               size="sm"
-              className="px-4 py-2 text-white rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-4 py-2 text-white rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                isCreatingAnnotation ? "animate-pulse" : "hover:scale-105"
+              }`}
               style={{
                 backgroundColor: option.borderColor,
                 color: option.color,

@@ -427,7 +427,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         try {
           const annotationConfig = await loadAnnotationConfig();
           const style = document.createElement("style");
-          const styles = annotationConfig.options
+          const baseStyles = annotationConfig.options
             .map(
               (option) =>
                 `.annotation-${option.id} { 
@@ -436,10 +436,34 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               border-radius: 2px; 
               padding: 1px 2px; 
               position: relative; 
+              transition: all 0.3s ease;
             }`
             )
             .join("\n");
-          style.textContent = styles;
+
+          const optimisticStyles = `
+            .annotation-optimistic {
+              animation: annotationFlash 0.6s ease-out;
+              opacity: 0.8;
+            }
+            
+            @keyframes annotationFlash {
+              0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+              }
+              50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+              }
+              100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+              }
+            }
+          `;
+
+          style.textContent = baseStyles + optimisticStyles;
           document.head.appendChild(style);
 
           return () => {
