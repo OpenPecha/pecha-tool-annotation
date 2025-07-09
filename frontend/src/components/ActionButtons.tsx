@@ -7,6 +7,8 @@ import {
   IoRefresh,
 } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
+import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
+import { useAuth } from "@/auth/use-auth-hook";
 
 function ActionButtons({
   annotations,
@@ -30,7 +32,92 @@ function ActionButtons({
   readonly isCompletedTask?: boolean;
 }) {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const {
+    trackTaskSubmitted,
+    trackTaskSkipped,
+    trackTaskReverted,
+    trackButtonClicked,
+  } = useUmamiTracking();
+
+  const handleSkip = () => {
+    if (onSkipText) {
+      trackTaskSkipped(
+        window.location.pathname.split("/").pop() || "unknown",
+        "user_skip",
+        {
+          ...getUserContext(currentUser),
+          annotations_count: annotations.length,
+        }
+      );
+
+      trackButtonClicked("skip", "skip-button", {
+        ...getUserContext(currentUser),
+        metadata: {
+          annotations_count: annotations.length,
+        },
+      });
+
+      onSkipText();
+    }
+  };
+
+  const handleRevert = () => {
+    if (onRevertWork) {
+      trackTaskReverted(
+        window.location.pathname.split("/").pop() || "unknown",
+        annotations.length,
+        {
+          ...getUserContext(currentUser),
+          task_type: "revert",
+        }
+      );
+
+      trackButtonClicked("revert", "revert-button", {
+        ...getUserContext(currentUser),
+        metadata: {
+          annotations_count: annotations.length,
+        },
+      });
+
+      onRevertWork();
+    }
+  };
+
+  const handleUndo = () => {
+    if (onUndoAnnotations) {
+      trackButtonClicked("undo", "undo-button", {
+        ...getUserContext(currentUser),
+        metadata: {
+          annotations_count: userAnnotationsCount,
+        },
+      });
+
+      onUndoAnnotations();
+    }
+  };
+
   const handleSubmit = () => {
+    // Track task submission
+    trackTaskSubmitted(
+      window.location.pathname.split("/").pop() || "unknown",
+      annotations.length,
+      Date.now(), // Simple timestamp - in real implementation you'd track start time
+      {
+        ...getUserContext(currentUser),
+        task_type: isCompletedTask ? "update" : "submit",
+        completion_status: isCompletedTask ? "updated" : "completed",
+      }
+    );
+
+    trackButtonClicked("submit", "submit-button", {
+      ...getUserContext(currentUser),
+      metadata: {
+        is_completed_task: isCompletedTask,
+        annotations_count: annotations.length,
+      },
+    });
+
     onSubmitTask();
     if (isCompletedTask) {
       navigate("/");
@@ -43,6 +130,10 @@ function ActionButtons({
         className="bg-green-600 h-20 hover:bg-green-700 text-white cursor-pointer"
         disabled={annotations.length === 0 || isSubmitting || isSkipping}
         size={"lg"}
+        data-wireboard-event="click"
+        data-wireboard-event-publisher="c62fdf36-9c41-4a5a-8464-d051cad20f5f"
+        data-wireboard-event-click-category="annotation tool"
+        data-wireboard-event-click-action="annotated"
       >
         <IoSend className="w-4 h-4 mr-2" />
         {isSubmitting
@@ -57,7 +148,7 @@ function ActionButtons({
       {/* Skip button - only show for new tasks, not completed ones */}
       {!isCompletedTask && onSkipText && (
         <Button
-          onClick={onSkipText}
+          onClick={handleSkip}
           className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
           disabled={isSubmitting || isSkipping}
           size={"lg"}
@@ -71,7 +162,7 @@ function ActionButtons({
       {/* Revert Work button - only show for completed tasks (edit mode) */}
       {isCompletedTask && onRevertWork && (
         <Button
-          onClick={onRevertWork}
+          onClick={handleRevert}
           className="bg-yellow-600 hover:bg-yellow-700 text-white cursor-pointer"
           disabled={isSubmitting || isSkipping}
           size={"lg"}
@@ -85,7 +176,7 @@ function ActionButtons({
       {/* Undo button - remove all user annotations */}
       {onUndoAnnotations && userAnnotationsCount > 0 && (
         <Button
-          onClick={onUndoAnnotations}
+          onClick={handleUndo}
           className="bg-gray-600 hover:bg-gray-700 text-white cursor-pointer"
           disabled={isSubmitting || isSkipping}
           size={"lg"}

@@ -8,6 +8,8 @@ import {
   type AnnotationConfig,
   type AnnotationOption,
 } from "@/config/annotation-options";
+import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
+import { useAuth } from "@/auth/use-auth-hook";
 
 export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   visible,
@@ -25,6 +27,8 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
 }) => {
   const [annotationConfig, setAnnotationConfig] =
     useState<AnnotationConfig | null>(null);
+  const { currentUser } = useAuth();
+  const { trackAnnotationCreated, trackButtonClicked } = useUmamiTracking();
 
   // Load annotation configuration on component mount
   useEffect(() => {
@@ -41,6 +45,41 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
 
   if (!visible || !currentSelection) return null;
 
+  const handleAddAnnotation = (optionId: string) => {
+    if (currentSelection) {
+      // Track annotation creation
+      trackAnnotationCreated(
+        optionId,
+        window.location.pathname.split("/").pop() || "unknown",
+        currentSelection.text.length,
+        {
+          ...getUserContext(currentUser),
+          annotation_id: `temp-${Date.now()}`,
+        }
+      );
+    }
+    onAddAnnotation(optionId);
+  };
+
+  const handleCancel = () => {
+    // Track bubble menu close
+
+    onCancel();
+  };
+
+  const handleUpdateHeader = () => {
+    if (selectedHeaderId) {
+      trackButtonClicked("update-header", "update-header-button", {
+        ...getUserContext(currentUser),
+        metadata: {
+          header_id: selectedHeaderId,
+          selection_length: currentSelection?.text.length || 0,
+        },
+      });
+    }
+    onUpdateHeaderSpan();
+  };
+
   return (
     <div
       className="absolute bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50 min-w-[380px]"
@@ -53,7 +92,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     >
       {/* Close button */}
       <Button
-        onClick={onCancel}
+        onClick={handleCancel}
         disabled={isCreatingAnnotation}
         variant="ghost"
         size="sm"
@@ -87,7 +126,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
           {annotationConfig?.options.map((option: AnnotationOption) => (
             <Button
               key={option.id}
-              onClick={() => onAddAnnotation(option.id)}
+              onClick={() => handleAddAnnotation(option.id)}
               disabled={isCreatingAnnotation}
               size="sm"
               className={`px-4 py-2 text-white rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -143,7 +182,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
                   ))}
               </select>
               <Button
-                onClick={onUpdateHeaderSpan}
+                onClick={handleUpdateHeader}
                 disabled={!selectedHeaderId || isCreatingAnnotation}
                 size="sm"
                 className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"

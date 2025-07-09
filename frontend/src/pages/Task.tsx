@@ -22,6 +22,7 @@ import {
 } from "@/config/annotation-options";
 import { SkipConfirmationDialog } from "@/components/SkipConfirmationDialog";
 import { useAuth } from "@/auth/use-auth-hook";
+import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 
 export type Annotation = {
   id: string;
@@ -39,6 +40,7 @@ const Index = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
+  const { trackPageVisit } = useUmamiTracking();
 
   // React Query to fetch text data
   const {
@@ -109,6 +111,23 @@ const Index = () => {
       setAnnotations(convertedAnnotations);
     }
   }, [textData]);
+
+  // Track page visit when component mounts
+  useEffect(() => {
+    if (textId) {
+      trackPageVisit(
+        `/task/${textId}`,
+        document.referrer ? new URL(document.referrer).pathname : undefined,
+        {
+          ...getUserContext(currentUser),
+          text_id: textId,
+          metadata: {
+            annotations_count: annotations.length,
+          },
+        }
+      );
+    }
+  }, [textId, trackPageVisit, currentUser, annotations.length]);
   // Mutation for creating annotations
   const createAnnotationMutation = useMutation({
     mutationFn: async (annotationData: AnnotationCreate) => {

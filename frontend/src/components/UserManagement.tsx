@@ -21,6 +21,8 @@ import {
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { usersApi } from "@/api/users";
 import type { UserRole } from "@/api/types";
+import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
+import { useAuth } from "@/auth/use-auth-hook";
 
 interface UserManagementProps {
   className?: string;
@@ -33,6 +35,13 @@ export function UserManagement({ className }: UserManagementProps) {
     "all" | "active" | "inactive"
   >("all");
   const queryClient = useQueryClient();
+  const { currentUser } = useAuth();
+  const {
+    trackUserRoleChanged,
+    trackUserStatusChanged,
+    trackUserDeleted,
+    trackSearchPerformed,
+  } = useUmamiTracking();
 
   // Fetch users
   const {
@@ -129,11 +138,36 @@ export function UserManagement({ className }: UserManagementProps) {
     },
   });
 
-  const handleRoleChange = (userId: number, newRole: UserRole) => {
+  const handleRoleChange = (
+    userId: number,
+    newRole: UserRole,
+    oldRole: UserRole
+  ) => {
+    // Track user role change
+    trackUserRoleChanged(userId.toString(), oldRole, newRole, {
+      ...getUserContext(currentUser),
+      metadata: {
+        target_user_id: userId.toString(),
+      },
+    });
+
     updateUserMutation.mutate({ userId, role: newRole });
   };
 
   const handleStatusToggle = (userId: number, currentStatus: boolean) => {
+    // Track user status change
+    trackUserStatusChanged(
+      userId.toString(),
+      currentStatus ? "active" : "inactive",
+      currentStatus ? "inactive" : "active",
+      {
+        ...getUserContext(currentUser),
+        metadata: {
+          target_user_id: userId.toString(),
+        },
+      }
+    );
+
     toggleUserStatusMutation.mutate({ userId, isActive: !currentStatus });
   };
 
@@ -143,7 +177,32 @@ export function UserManagement({ className }: UserManagementProps) {
         "Are you sure you want to delete this user? This action cannot be undone."
       )
     ) {
+      // Track user deletion
+      trackUserDeleted(userId.toString(), {
+        ...getUserContext(currentUser),
+        metadata: {
+          target_user_id: userId.toString(),
+        },
+      });
+
       deleteUserMutation.mutate(userId);
+    }
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      trackSearchPerformed(
+        query,
+        0, // We don't have results count yet
+        "users",
+        {
+          ...getUserContext(currentUser),
+          metadata: {
+            search_type: "user_search",
+          },
+        }
+      );
     }
   };
 
@@ -210,7 +269,7 @@ export function UserManagement({ className }: UserManagementProps) {
               type="text"
               placeholder="Search users by username or email..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -283,7 +342,11 @@ export function UserManagement({ className }: UserManagementProps) {
                   <select
                     value={user.role}
                     onChange={(e) =>
-                      handleRoleChange(user.id, e.target.value as UserRole)
+                      handleRoleChange(
+                        user.id,
+                        e.target.value as UserRole,
+                        user.role
+                      )
                     }
                     disabled={updateUserMutation.isPending}
                     className="w-32 pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
