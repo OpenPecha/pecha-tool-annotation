@@ -486,6 +486,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                 `.annotation-${option.id} { 
               background-color: ${option.backgroundColor}; 
               border-bottom: 2px solid ${option.borderColor}; 
+              border-right: 2px solid ${option.borderColor};
+              margin-inline: 10px;
               border-radius: 2px; 
               padding: 1px 2px; 
               position: relative; 
