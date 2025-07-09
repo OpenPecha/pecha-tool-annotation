@@ -259,18 +259,19 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                 const bubbleHeight = 250;
                 const margin = 10;
 
-                // Determine positioning
+                // Determine positioning with more spacing
                 const spaceBelow = editorHeight - selectionBottom;
                 const spaceAbove = selectionTop;
+                const bubbleSpacing = 20; // Increased spacing from selection
 
                 let bubbleY =
-                  spaceBelow >= bubbleHeight + margin
-                    ? selectionBottom + 10
-                    : spaceAbove >= bubbleHeight + margin
-                    ? selectionTop - bubbleHeight - 10
+                  spaceBelow >= bubbleHeight + margin + bubbleSpacing
+                    ? selectionBottom + bubbleSpacing
+                    : spaceAbove >= bubbleHeight + margin + bubbleSpacing
+                    ? selectionTop - bubbleHeight - bubbleSpacing
                     : spaceBelow > spaceAbove
-                    ? selectionBottom + 10
-                    : selectionTop - bubbleHeight - 10;
+                    ? selectionBottom + bubbleSpacing
+                    : selectionTop - bubbleHeight - bubbleSpacing;
 
                 // Ensure bounds
                 if (bubbleY < margin) bubbleY = margin;

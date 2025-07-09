@@ -14,6 +14,15 @@ import { toast } from "sonner";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { IoDocumentText } from "react-icons/io5";
 
+// Helper function to format date
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
 // Icon components
 const StartWorkIcon = () => (
   <svg
@@ -113,20 +122,6 @@ export const AdminWorkSection: React.FC = () => {
     startWorkMutation.mutate();
   };
 
-  // Helper function to format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  // Handle clicking on recent activity item
-  const handleActivityClick = (textId: number) => {
-    navigate(`/task/${textId}`);
-  };
-
   return (
     <div className="space-y-6">
       {/* Start Work Card */}
@@ -170,6 +165,7 @@ export const AdminWorkSection: React.FC = () => {
                       </div>
                       <Button
                         size="lg"
+                        className="cursor-pointer"
                         onClick={() => navigate(`/task/${text.id}`)}
                       >
                         Continue
@@ -230,36 +226,16 @@ export const AdminWorkSection: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingActivity ? (
+          {isLoadingActivity && (
             <div className="text-center py-8">
               <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
               <p className="text-gray-500">Loading recent activity...</p>
             </div>
-          ) : recentActivity.length > 0 ? (
+          )}
+          {recentActivity.length > 0 ? (
             <div className="space-y-3">
               {recentActivity.map((text) => (
-                <div
-                  key={text.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                    <div>
-                      <p className="font-medium text-gray-900">{text.title}</p>
-                      <p className="text-sm text-gray-500">
-                        {formatDate(text.updated_at || text.created_at)} •{" "}
-                        {text.status}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleActivityClick(text.id)}
-                  >
-                    View
-                  </Button>
-                </div>
+                <RecentActivityItem key={text.id} text={text} />
               ))}
             </div>
           ) : (
@@ -272,3 +248,37 @@ export const AdminWorkSection: React.FC = () => {
     </div>
   );
 };
+
+function RecentActivityItem({ text }: { text: any }) {
+  const navigate = useNavigate();
+  // Handle clicking on recent activity item
+
+  const handleActivityClick = (textId: number) => {
+    navigate(`/task/${textId}`);
+  };
+
+  return (
+    <div
+      key={text.id}
+      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+        <div>
+          <p className="font-medium text-gray-900">{text.title}</p>
+          <p className="text-sm text-gray-500">
+            {formatDate(text.updated_at || text.created_at)} • {text.status}
+          </p>
+        </div>
+      </div>
+      <Button
+        variant="ghost"
+        className=" cursor-pointer"
+        size="sm"
+        onClick={() => handleActivityClick(text.id)}
+      >
+        View
+      </Button>
+    </div>
+  );
+}

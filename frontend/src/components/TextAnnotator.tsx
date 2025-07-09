@@ -2,6 +2,7 @@ import { useRef, useImperativeHandle, forwardRef } from "react";
 import { Editor } from "./Editor";
 import type { EditorRef } from "./Editor/types";
 import type { Annotation } from "@/pages/Task";
+import { SearchComponent } from "./SearchComponent";
 
 interface TextAnnotatorProps {
   text: string;
@@ -56,15 +57,19 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
       },
     }));
 
+    const handleSearchResultSelect = (start: number, end: number) => {
+      editorRef.current?.scrollToPosition(start, end);
+    };
+
     return (
       <div className="flex flex-col h-full">
         {/* Search Bar - Always visible */}
-        {/* <SearchComponent
+        <SearchComponent
           text={text}
           isVisible={true}
           onClose={() => {}} // No close functionality needed
           onResultSelect={handleSearchResultSelect}
-        /> */}
+        />
 
         {/* Editor */}
         <div className="flex-1">

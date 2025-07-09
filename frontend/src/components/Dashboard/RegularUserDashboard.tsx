@@ -16,6 +16,14 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import BulkUploadModal from "../BulkUploadModal";
 import type { BulkUploadResponse } from "@/api/bulk-upload";
 
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
 // Icon components
 const StartWorkIcon = () => (
   <svg
@@ -84,7 +92,6 @@ const BulkUploadIcon = () => (
 export const RegularUserDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const queryClient = useQueryClient();
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [isLoadingText, setIsLoadingText] = useState(false);
 
@@ -138,35 +145,6 @@ export const RegularUserDashboard: React.FC = () => {
     refetchOnWindowFocus: false,
   });
 
-  // Mutation to cancel work (delete user annotations and skip text)
-  const cancelWorkMutation = useMutation({
-    mutationFn: async () => {
-      const workInProgress = await textApi.getMyWorkInProgress();
-      if (workInProgress.length === 0) {
-        throw new Error("No work in progress found");
-      }
-
-      const currentTextId = workInProgress[0].id;
-      return textApi.cancelWorkWithRevertAndSkip(currentTextId);
-    },
-    onSuccess: () => {
-      toast.success("✅ Work Cancelled & Skipped", {
-        description:
-          "Your annotations were deleted and text was skipped. It won't be shown to you again.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["my-work-in-progress"] });
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-text-statistics"] });
-    },
-    onError: (error) => {
-      toast.error("❌ Failed to Cancel Work", {
-        description:
-          error instanceof Error ? error.message : "Failed to cancel work",
-      });
-    },
-  });
-
   // Fetch recent activity data from API
   const { data: recentActivity = [], isLoading: isLoadingActivity } = useQuery({
     queryKey: ["recent-activity"],
@@ -198,30 +176,12 @@ export const RegularUserDashboard: React.FC = () => {
     setShowBulkUploadModal(false);
   };
 
-  const handleCancelWork = () => {
-    cancelWorkMutation.mutate();
-  };
-
-  // Helper function to format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   // Helper function to determine activity type
   const getActivityType = (text: { reviewer_id?: number }) => {
     if (text.reviewer_id === currentUser?.id) {
       return "review";
     }
     return "annotation";
-  };
-
-  // Handle clicking on recent activity item
-  const handleActivityClick = (textId: number) => {
-    navigate(`/task/${textId}`);
   };
 
   return (
@@ -240,7 +200,7 @@ export const RegularUserDashboard: React.FC = () => {
         {/* Main Action Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Start Work Card */}
-          <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-blue-200">
+          <Card className="hover:shadow-lg  transition-all duration-300 cursor-pointer border-2 hover:border-blue-200">
             <CardHeader className="text-center pb-4">
               <div className="flex justify-center mb-4">
                 <StartWorkIcon />
@@ -275,7 +235,7 @@ export const RegularUserDashboard: React.FC = () => {
                   <div className="flex gap-2 justify-center">
                     <Button
                       size="lg"
-                      className="flex-1"
+                      className="flex-1 cursor-pointer"
                       onClick={() => navigate(`/task/${workInProgress[0].id}`)}
                     >
                       Continue
@@ -372,7 +332,7 @@ export const RegularUserDashboard: React.FC = () => {
         </div>
 
         {/* Recent Activity Section */}
-        <Card className="max-w-4xl mx-auto">
+        <Card className="w-full mx-auto">
           <CardHeader>
             <div className="flex items-center gap-2">
               <RecentActivityIcon />
@@ -383,68 +343,22 @@ export const RegularUserDashboard: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoadingActivity ? (
+            {isLoadingActivity && (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
                 <p className="text-gray-500">Loading recent activity...</p>
               </div>
-            ) : recentActivity.length > 0 ? (
+            )}
+            {recentActivity.length > 0 ? (
               <div className="space-y-3">
                 {recentActivity.map((text) => {
                   const activityType = getActivityType(text);
                   return (
-                    <div
+                    <RecentActivityItem
                       key={text.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-3 h-3 rounded-full ${
-                            activityType === "annotation"
-                              ? "bg-blue-500"
-                              : "bg-green-500"
-                          }`}
-                        ></div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {text.title}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {formatDate(text.updated_at || text.created_at)} •{" "}
-                            {text.status}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleActivityClick(text.id);
-                          }}
-                        >
-                          {activityType === "annotation" ? "Edit" : "Review"}
-                        </Button>
-                        {text.status === "progress" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCancelWork();
-                            }}
-                            disabled={cancelWorkMutation.isPending}
-                            title="Delete your annotations and skip this text permanently"
-                          >
-                            {cancelWorkMutation.isPending
-                              ? "Cancelling..."
-                              : "Cancel & Skip"}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                      text={text}
+                      activityType={activityType}
+                    />
                   );
                 })}
               </div>
@@ -469,3 +383,100 @@ export const RegularUserDashboard: React.FC = () => {
     </div>
   );
 };
+
+function RecentActivityItem({
+  text,
+  activityType,
+}: {
+  readonly text: any;
+  readonly activityType: any;
+}) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Handle clicking on recent activity item
+  const handleActivityClick = (textId: number) => {
+    navigate(`/task/${textId}`);
+  };
+
+  // Mutation to cancel work (delete user annotations and skip text)
+  const cancelWorkMutation = useMutation({
+    mutationFn: async () => {
+      const workInProgress = await textApi.getMyWorkInProgress();
+      if (workInProgress.length === 0) {
+        throw new Error("No work in progress found");
+      }
+
+      const currentTextId = workInProgress[0].id;
+      return textApi.cancelWorkWithRevertAndSkip(currentTextId);
+    },
+    onSuccess: () => {
+      toast.success("✅ Work Cancelled & Skipped", {
+        description:
+          "Your annotations were deleted and text was skipped. It won't be shown to you again.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["my-work-in-progress"] });
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-text-statistics"] });
+    },
+    onError: (error) => {
+      toast.error("❌ Failed to Cancel Work", {
+        description:
+          error instanceof Error ? error.message : "Failed to cancel work",
+      });
+    },
+  });
+
+  const handleCancelWork = () => {
+    cancelWorkMutation.mutate();
+  };
+  return (
+    <div
+      key={text.id}
+      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className={`w-3 h-3 rounded-full ${
+            activityType === "annotation" ? "bg-blue-500" : "bg-green-500"
+          }`}
+        ></div>
+        <div>
+          <p className="font-medium text-gray-900">{text.title}</p>
+          <p className="text-sm text-gray-500">
+            {formatDate(text.updated_at || text.created_at)} • {text.status}
+          </p>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button
+          variant="ghost"
+          className="cursor-pointer"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleActivityClick(text.id);
+          }}
+        >
+          {activityType === "annotation" ? "Edit" : "Review"}
+        </Button>
+        {text.status === "progress" && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCancelWork();
+            }}
+            disabled={cancelWorkMutation.isPending}
+            title="Delete your annotations and skip this text permanently"
+          >
+            {cancelWorkMutation.isPending ? "Cancelling..." : "Cancel & Skip"}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}

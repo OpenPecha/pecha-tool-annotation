@@ -6,6 +6,7 @@ import {
   IoArrowUndo,
   IoRefresh,
 } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
 
 function ActionButtons({
   annotations,
@@ -28,10 +29,17 @@ function ActionButtons({
   readonly isSkipping?: boolean;
   readonly isCompletedTask?: boolean;
 }) {
+  const navigate = useNavigate();
+  const handleSubmit = () => {
+    onSubmitTask();
+    if (isCompletedTask) {
+      navigate("/");
+    }
+  };
   return (
     <div className="flex flex-1 gap-2 flex-wrap flex-col">
       <Button
-        onClick={onSubmitTask}
+        onClick={handleSubmit}
         className="bg-green-600 h-20 hover:bg-green-700 text-white cursor-pointer"
         disabled={annotations.length === 0 || isSubmitting || isSkipping}
         size={"lg"}
