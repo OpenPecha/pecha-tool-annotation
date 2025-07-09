@@ -18,7 +18,11 @@ const Login = lazy(() => import("./pages/Login"));
 const Callback = lazy(() => import("./pages/Callback"));
 
 const queryClient = new QueryClient();
-injectUmami();
+
+if (import.meta.env.VITE_ENVIRONMENT === "production") {
+  injectUmami();
+}
+
 function Layout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, login, isLoading, getToken } = useAuth();
 
