@@ -109,6 +109,70 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       },
     }));
 
+    // Handle annotation label clicks
+    useEffect(() => {
+      const handleAnnotationLabelClick = (event: CustomEvent) => {
+        const annotation = event.detail.annotation;
+        if (annotation) {
+          // Handle annotation label click (same as clicking on annotation mark)
+          const editorElement = editorRef.current?.view?.dom;
+          const editorRect = editorElement?.getBoundingClientRect();
+
+          if (editorRect) {
+            const popupWidth = 256;
+            const popupHeight = 120;
+            const margin = 10;
+
+            // Position popup near the label click
+            const rect = (event.target as HTMLElement).getBoundingClientRect();
+            let popupX = rect.left + rect.width / 2 - editorRect.left;
+            let popupY = rect.bottom + 5 - editorRect.top;
+
+            // Ensure popup stays within bounds
+            const popupHalfWidth = popupWidth / 2;
+            if (popupX - popupHalfWidth < margin) {
+              popupX = popupHalfWidth + margin;
+            } else if (popupX + popupHalfWidth > editorRect.width - margin) {
+              popupX = editorRect.width - popupHalfWidth - margin;
+            }
+
+            if (popupY < margin) {
+              popupY = margin;
+            } else if (popupY + popupHeight > editorRect.height - margin) {
+              popupY = editorRect.height - popupHeight - margin;
+            }
+
+            setDeletePopupPosition({ x: popupX, y: popupY });
+            setAnnotationToDelete(annotation);
+            setDeletePopupVisible(true);
+            setBubbleMenuVisible(false);
+          }
+        }
+      };
+
+      const editorElement = editorRef.current?.view?.dom;
+      if (editorElement) {
+        editorElement.addEventListener(
+          "annotation-label-click",
+          handleAnnotationLabelClick as EventListener
+        );
+      }
+
+      return () => {
+        if (editorElement) {
+          editorElement.removeEventListener(
+            "annotation-label-click",
+            handleAnnotationLabelClick as EventListener
+          );
+        }
+      };
+    }, [
+      setDeletePopupPosition,
+      setAnnotationToDelete,
+      setDeletePopupVisible,
+      setBubbleMenuVisible,
+    ]);
+
     // Handle annotation deletion clicks and outside clicks
     useEffect(() => {
       const handleClick = (event: MouseEvent) => {
@@ -487,9 +551,9 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               background-color: ${option.backgroundColor}; 
               border-bottom: 2px solid ${option.borderColor}; 
               border-right: 2px solid ${option.borderColor};
-              margin-inline: 10px;
+              padding-inline: 10px;
+              border-radius: 10px;
               border-radius: 2px; 
-              padding: 1px 2px; 
               position: relative; 
               transition: all 0.15s ease;
             }`
