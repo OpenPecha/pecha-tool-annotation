@@ -159,11 +159,6 @@ export const useUmamiTracking = () => {
         });
         window.umami.track(eventType, convertedProperties);
       }
-
-      // Fallback to console in development
-      if (process.env.NODE_ENV === "development") {
-        console.log("🔍 Umami Track:", eventType, defaultProperties);
-      }
     },
     []
   );
