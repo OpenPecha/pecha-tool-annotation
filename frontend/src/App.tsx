@@ -13,6 +13,7 @@ import {
 import { injectUmami } from "./analytics";
 // Lazy load page components
 const Task = lazy(() => import("./pages/Task"));
+const Review = lazy(() => import("./pages/Review"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Login = lazy(() => import("./pages/Login"));
 const Callback = lazy(() => import("./pages/Callback"));
@@ -103,6 +104,16 @@ function AppContent() {
           <Suspense fallback={<AppLoading message="Loading Task..." />}>
             <Task />
           </Suspense>
+        }
+      />
+      <Route
+        path="/review/:textId"
+        element={
+          <Layout>
+            <Suspense fallback={<AppLoading message="Loading Review..." />}>
+              <Review />
+            </Suspense>
+          </Layout>
         }
       />
     </Routes>

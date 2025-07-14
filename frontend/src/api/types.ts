@@ -90,6 +90,7 @@ export interface AnnotationResponse extends AnnotationBase {
   annotator_id?: number; // Can be undefined for system annotations
   created_at: string;
   updated_at?: string;
+  is_agreed?: boolean; // Whether annotation has been agreed upon by a reviewer
 }
 
 export interface AnnotationFilters extends PaginationParams {

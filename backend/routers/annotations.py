@@ -155,6 +155,13 @@ def update_annotation(
             detail="Not enough permissions"
         )
     
+    # Check if annotation has been agreed upon by any reviewer
+    if annotation_crud.is_annotation_agreed(db=db, annotation_id=annotation_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot modify annotation that has been agreed upon by a reviewer"
+        )
+    
     # Validate positions if they are being updated
     if annotation_in.start_position is not None or annotation_in.end_position is not None:
         start_pos = annotation_in.start_position or annotation.start_position
@@ -202,6 +209,13 @@ def delete_annotation(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions"
             )
+    
+    # Check if annotation has been agreed upon by any reviewer
+    if annotation_crud.is_annotation_agreed(db=db, annotation_id=annotation_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete annotation that has been agreed upon by a reviewer"
+        )
         
     annotation_crud.delete(db=db, annotation_id=annotation_id)
 

@@ -22,6 +22,7 @@ export interface EditorProps {
   readOnly?: boolean;
   isCreatingAnnotation?: boolean;
   isDeletingAnnotation?: boolean;
+  highlightedAnnotationId?: string | null;
 }
 
 export type EditorRef = {

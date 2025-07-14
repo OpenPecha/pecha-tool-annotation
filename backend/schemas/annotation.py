@@ -66,4 +66,5 @@ class AnnotationResponse(AnnotationBase):
     text_id: int
     annotator_id: Optional[int] = None  # Can be null for system annotations
     created_at: datetime
-    updated_at: Optional[datetime] = None 
+    updated_at: Optional[datetime] = None
+    is_agreed: Optional[bool] = False  # Whether annotation has been agreed upon by a reviewer 

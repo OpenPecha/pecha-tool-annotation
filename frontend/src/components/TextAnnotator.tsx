@@ -26,6 +26,7 @@ interface TextAnnotatorProps {
   readOnly?: boolean;
   isCreatingAnnotation?: boolean;
   isDeletingAnnotation?: boolean;
+  highlightedAnnotationId?: string | null;
 }
 
 export type TextAnnotatorRef = {
@@ -46,6 +47,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
       readOnly = true,
       isCreatingAnnotation = false,
       isDeletingAnnotation = false,
+      highlightedAnnotationId,
     },
     ref
   ) => {
@@ -86,6 +88,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
             readOnly={readOnly}
             isCreatingAnnotation={isCreatingAnnotation}
             isDeletingAnnotation={isDeletingAnnotation}
+            highlightedAnnotationId={highlightedAnnotationId}
           />
         </div>
       </div>

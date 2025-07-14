@@ -1,7 +1,7 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from models.text import Text, INITIALIZED, ANNOTATED, REVIEWED, SKIPPED, PROGRESS, VALID_STATUSES
+from models.text import Text, INITIALIZED, ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION, SKIPPED, PROGRESS, VALID_STATUSES
 from models.annotation import Annotation
 from schemas.text import TextCreate, TextUpdate
 
@@ -127,12 +127,21 @@ class TextCRUD:
         return db.query(Text).filter(Text.status == status).offset(skip).limit(limit).all()
 
     def get_texts_for_annotation(self, db: Session, skip: int = 0, limit: int = 100) -> List[Text]:
-        """Get texts available for annotation (initialized status)."""
-        return db.query(Text).filter(Text.status == INITIALIZED).offset(skip).limit(limit).all()
+        """Get texts available for annotation (initialized status or needs revision)."""
+        from models.text import REVIEWED_NEEDS_REVISION
+        return db.query(Text).filter(
+            Text.status.in_([INITIALIZED, REVIEWED_NEEDS_REVISION])
+        ).offset(skip).limit(limit).all()
 
-    def get_texts_for_review(self, db: Session, skip: int = 0, limit: int = 100) -> List[Text]:
-        """Get texts ready for review (annotated status)."""
-        return db.query(Text).filter(Text.status == ANNOTATED).offset(skip).limit(limit).all()
+    def get_texts_for_review(self, db: Session, skip: int = 0, limit: int = 100, reviewer_id: Optional[int] = None) -> List[Text]:
+        """Get texts ready for review (annotated status), excluding texts annotated by the current reviewer."""
+        query = db.query(Text).filter(Text.status == ANNOTATED)
+        
+        # Exclude texts annotated by the current reviewer to prevent self-review
+        if reviewer_id:
+            query = query.filter(Text.annotator_id != reviewer_id)
+        
+        return query.offset(skip).limit(limit).all()
 
     def get_stats(self, db: Session) -> dict:
         """Get text statistics."""
@@ -140,6 +149,7 @@ class TextCRUD:
         initialized = db.query(Text).filter(Text.status == INITIALIZED).count()
         annotated = db.query(Text).filter(Text.status == ANNOTATED).count()
         reviewed = db.query(Text).filter(Text.status == REVIEWED).count()
+        reviewed_needs_revision = db.query(Text).filter(Text.status == REVIEWED_NEEDS_REVISION).count()
         skipped = db.query(Text).filter(Text.status == SKIPPED).count()
         progress = db.query(Text).filter(Text.status == PROGRESS).count()
         
@@ -148,6 +158,7 @@ class TextCRUD:
             "initialized": initialized,
             "annotated": annotated,
             "reviewed": reviewed,
+            "reviewed_needs_revision": reviewed_needs_revision,
             "skipped": skipped,
             "progress": progress
         }
@@ -214,7 +225,7 @@ class TextCRUD:
         recent_texts = db.query(Text).filter(
             (Text.annotator_id == user_id) | (Text.reviewer_id == user_id)
         ).filter(
-            Text.status.in_([ANNOTATED, REVIEWED])  # Only completed work
+            Text.status.in_([ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION])  # Only completed work
         ).order_by(
             Text.updated_at.desc()
         ).limit(limit).all()
@@ -223,10 +234,10 @@ class TextCRUD:
 
     def get_user_stats(self, db: Session, user_id: int) -> dict:
         """Get statistics for a specific user."""
-        # Count texts annotated by user (where user is annotator and status is annotated/reviewed)
+        # Count texts annotated by user (where user is annotator and status is annotated/reviewed/reviewed_needs_revision)
         texts_annotated = db.query(Text).filter(
             Text.annotator_id == user_id,
-            Text.status.in_([ANNOTATED, REVIEWED])
+            Text.status.in_([ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION])
         ).count()
         
         # Count texts reviewed by user (where user is reviewer and status is reviewed)
@@ -245,7 +256,7 @@ class TextCRUD:
         # This could be enhanced with more sophisticated metrics
         total_user_texts = db.query(Text).filter(
             Text.annotator_id == user_id,
-            Text.status.in_([ANNOTATED, REVIEWED])
+            Text.status.in_([ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION])
         ).count()
         
         if total_user_texts > 0:
@@ -316,6 +327,26 @@ class TextCRUD:
             Text.annotator_id == user_id,
             Text.status == PROGRESS
         ).all()
+
+    def get_texts_by_annotator_with_reviews(
+        self, db: Session, annotator_id: int, skip: int = 0, limit: int = 100
+    ) -> List[Text]:
+        """Get texts annotated by a specific user that have been reviewed."""
+        from models.text import REVIEWED, REVIEWED_NEEDS_REVISION
+        
+        return db.query(Text).filter(
+            Text.annotator_id == annotator_id,
+            Text.status.in_([REVIEWED, REVIEWED_NEEDS_REVISION])
+        ).offset(skip).limit(limit).all()
+
+    def get_texts_by_annotator_and_status(
+        self, db: Session, annotator_id: int, status: str, skip: int = 0, limit: int = 100
+    ) -> List[Text]:
+        """Get texts by annotator and specific status."""
+        return db.query(Text).filter(
+            Text.annotator_id == annotator_id,
+            Text.status == status
+        ).offset(skip).limit(limit).all()
 
 
 text_crud = TextCRUD() 

@@ -1,0 +1,722 @@
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  reviewApi,
+  type ReviewDecision,
+  type ReviewSubmission,
+  type ReviewSessionResponse,
+} from "@/api/reviews";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { TableOfContents } from "@/components/TableOfContents";
+import Navbar from "@/components/Navbar";
+import { toast } from "sonner";
+import {
+  IoCheckmarkCircle as CheckCircle,
+  IoCloseCircle as XCircle,
+  IoChatbubbleEllipses as MessageCircle,
+  IoEye as Eye,
+  IoTimeOutline as Clock,
+  IoWarning as AlertCircle,
+  IoArrowForward as ArrowRight,
+  IoCheckmark as Check,
+  IoTime as Timer,
+} from "react-icons/io5";
+import { AiOutlineLoading3Quarters as Loader2 } from "react-icons/ai";
+
+// Type for annotations compatible with TableOfContents
+export type Annotation = {
+  id: string;
+  type: string;
+  text: string;
+  start: number;
+  end: number;
+  name?: string;
+  annotator_id?: number;
+};
+
+const Review = () => {
+  const { textId } = useParams<{ textId: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [reviewDecisions, setReviewDecisions] = useState<
+    Map<number, ReviewDecision>
+  >(new Map());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tocOpen, setTocOpen] = useState(true);
+  const [savingComments, setSavingComments] = useState<Set<number>>(new Set());
+  const [savedComments, setSavedComments] = useState<Set<number>>(new Set());
+  const [pendingSave, setPendingSave] = useState<Set<number>>(new Set());
+
+  // Fetch review session data
+  const {
+    data: reviewSession,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["review-session", textId],
+    queryFn: () => {
+      if (!textId) throw new Error("Text ID is required");
+      return reviewApi.startReviewSession(parseInt(textId, 10));
+    },
+    refetchOnWindowFocus: false,
+    enabled: !!textId,
+  });
+
+  // Initialize review decisions from existing reviews
+  useEffect(() => {
+    if (reviewSession) {
+      const initialDecisions = new Map<number, ReviewDecision>();
+      reviewSession.existing_reviews.forEach((review) => {
+        initialDecisions.set(review.annotation_id, {
+          annotation_id: review.annotation_id,
+          decision: review.decision,
+          comment: review.comment,
+        });
+      });
+      setReviewDecisions(initialDecisions);
+    }
+  }, [reviewSession]);
+
+  // Submit review mutation
+  const submitReviewMutation = useMutation({
+    mutationFn: async (reviewData: ReviewSubmission) => {
+      return reviewApi.submitReview(reviewData);
+    },
+    onSuccess: (response) => {
+      toast.success("Review submitted successfully!", {
+        description: response.message,
+      });
+
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ["review-session"] });
+      queryClient.invalidateQueries({ queryKey: ["texts-for-review"] });
+
+      // Navigate to next review or back to dashboard
+      if (response.next_review_text) {
+        navigate(`/review/${response.next_review_text.id}`);
+      } else {
+        navigate("/dashboard");
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to submit review", {
+        description:
+          error instanceof Error ? error.message : "Please try again",
+      });
+    },
+    onSettled: () => {
+      setIsSubmitting(false);
+    },
+  });
+
+  // Auto-save individual review decisions
+  const autoSaveReviewMutation = useMutation({
+    mutationFn: async ({
+      annotationId,
+      decision,
+      comment,
+    }: {
+      annotationId: number;
+      decision: "agree" | "disagree";
+      comment?: string;
+    }) => {
+      return reviewApi.reviewAnnotation(annotationId, decision, comment);
+    },
+    onMutate: ({ annotationId }) => {
+      setSavingComments((prev) => new Set(prev).add(annotationId));
+      setSavedComments((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(annotationId);
+        return newSet;
+      });
+    },
+    onSuccess: (_, { annotationId }) => {
+      setSavingComments((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(annotationId);
+        return newSet;
+      });
+      setSavedComments((prev) => new Set(prev).add(annotationId));
+
+      // Remove the "saved" indicator after 2 seconds
+      setTimeout(() => {
+        setSavedComments((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(annotationId);
+          return newSet;
+        });
+      }, 2000);
+    },
+    onError: (_, { annotationId }) => {
+      setSavingComments((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(annotationId);
+        return newSet;
+      });
+    },
+  });
+
+  // Ref to persist timeouts across renders
+  const timeoutsRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+      timeoutsRef.current.clear();
+    };
+  }, []);
+
+  // Debounced auto-save function
+  const debouncedAutoSave = useCallback(
+    (
+      annotationId: number,
+      decision: "agree" | "disagree",
+      comment?: string
+    ) => {
+      // Clear existing timeout for this annotation
+      const existingTimeout = timeoutsRef.current.get(annotationId);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+
+      // Show pending save indicator
+      setPendingSave((prev) => new Set(prev).add(annotationId));
+
+      // Set new timeout
+      const timeout = setTimeout(() => {
+        setPendingSave((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(annotationId);
+          return newSet;
+        });
+        autoSaveReviewMutation.mutate({ annotationId, decision, comment });
+        timeoutsRef.current.delete(annotationId);
+      }, 1000); // Auto-save after 1 second of inactivity
+
+      timeoutsRef.current.set(annotationId, timeout);
+    },
+    [autoSaveReviewMutation]
+  );
+
+  const handleReviewDecision = (
+    annotationId: number,
+    decision: "agree" | "disagree",
+    comment?: string
+  ) => {
+    setReviewDecisions(
+      (prev) =>
+        new Map(
+          prev.set(annotationId, {
+            annotation_id: annotationId,
+            decision,
+            comment,
+          })
+        )
+    );
+
+    // Remove from saved status
+    setSavedComments((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(annotationId);
+      return newSet;
+    });
+
+    // Remove from pending save status (will be re-added by debounce)
+    setPendingSave((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(annotationId);
+      return newSet;
+    });
+
+    // Auto-save the decision and comment
+    debouncedAutoSave(annotationId, decision, comment);
+  };
+
+  const handleSubmitReview = async () => {
+    if (!reviewSession) return;
+
+    const decisions = Array.from(reviewDecisions.values());
+
+    if (decisions.length !== reviewSession.review_status.total_annotations) {
+      toast.error("Please review all annotations before submitting");
+      return;
+    }
+
+    // Validate that all disagreed annotations have comments
+    const disagreedWithoutComments = decisions.filter(
+      (decision) =>
+        decision.decision === "disagree" && !decision.comment?.trim()
+    );
+
+    if (disagreedWithoutComments.length > 0) {
+      toast.error("Please provide comments for all disagreed annotations");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const reviewData: ReviewSubmission = {
+      text_id: reviewSession.text_id,
+      decisions,
+    };
+
+    submitReviewMutation.mutate(reviewData);
+  };
+
+  // Convert review session annotations to format expected by TableOfContents
+  const convertToTocAnnotations = (
+    annotations: ReviewSessionResponse["annotations"]
+  ): Annotation[] => {
+    return annotations.map((annotation) => ({
+      id: annotation.id.toString(),
+      type: annotation.annotation_type,
+      text: annotation.selected_text,
+      start: annotation.start_position,
+      end: annotation.end_position,
+      name: annotation.name,
+      annotator_id: annotation.annotator_id,
+    }));
+  };
+
+  // Handle header click in TOC - scroll to annotation in text
+  const handleHeaderClick = (annotation: Annotation) => {
+    const element = document.getElementById(`annotation-${annotation.id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  // Handle annotation removal from TOC (disabled in review mode)
+  const handleRemoveAnnotation = (id: string) => {
+    // In review mode, we don't allow removing annotations
+    // This function is required by TableOfContents but we'll make it a no-op
+    console.log("Annotation removal not allowed in review mode:", id);
+  };
+
+  const renderAnnotationInText = (
+    text: string,
+    annotations: ReviewSessionResponse["annotations"]
+  ) => {
+    if (!annotations.length) return <p className="text-gray-700">{text}</p>;
+
+    // Sort annotations by start position
+    const sortedAnnotations = [...annotations].sort(
+      (a, b) => a.start_position - b.start_position
+    );
+
+    let lastIndex = 0;
+    const elements: React.ReactNode[] = [];
+
+    sortedAnnotations.forEach((annotation, index) => {
+      // Add text before this annotation
+      if (lastIndex < annotation.start_position) {
+        elements.push(
+          <span key={`text-${index}`}>
+            {text.slice(lastIndex, annotation.start_position)}
+          </span>
+        );
+      }
+
+      // Add the annotation
+      const reviewDecision = reviewDecisions.get(annotation.id);
+      const isReviewed = reviewDecision !== undefined;
+      const isAgreed = reviewDecision?.decision === "agree";
+
+      elements.push(
+        <span
+          key={`annotation-${annotation.id}`}
+          className={`
+            px-1 py-0.5 rounded text-sm font-medium cursor-pointer
+            ${
+              isReviewed
+                ? isAgreed
+                  ? "bg-green-100 text-green-800 border border-green-200"
+                  : "bg-red-100 text-red-800 border border-red-200"
+                : "bg-yellow-100 text-yellow-800 border border-yellow-200"
+            }
+          `}
+          onClick={() => {
+            const element = document.getElementById(
+              `annotation-${annotation.id}`
+            );
+            element?.scrollIntoView({ behavior: "smooth" });
+          }}
+          title={`${annotation.annotation_type}: ${annotation.selected_text}`}
+        >
+          {annotation.selected_text}
+        </span>
+      );
+
+      lastIndex = annotation.end_position;
+    });
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      elements.push(<span key="text-end">{text.slice(lastIndex)}</span>);
+    }
+
+    return <p className="text-gray-700 leading-relaxed">{elements}</p>;
+  };
+
+  const getAnnotationTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      person: "bg-blue-100 text-blue-800",
+      place: "bg-green-100 text-green-800",
+      event: "bg-purple-100 text-purple-800",
+      object: "bg-orange-100 text-orange-800",
+      header: "bg-gray-100 text-gray-800",
+      default: "bg-gray-100 text-gray-800",
+    };
+    return colors[type] || colors.default;
+  };
+
+  if (isLoading) {
+    return (
+      <div>
+        <Navbar />
+        <div className="flex items-center justify-center h-96 pt-20">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <span className="ml-2">Loading review session...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !reviewSession) {
+    return (
+      <div>
+        <Navbar />
+        <div className="container mx-auto px-4 py-8 pt-20">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Error Loading Review
+            </h2>
+            <p className="text-gray-600 mb-4">
+              {error instanceof Error
+                ? error.message
+                : "Failed to load review session"}
+            </p>
+            <Button onClick={() => navigate("/dashboard")}>
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const { review_status, annotations } = reviewSession;
+  const reviewedCount = reviewDecisions.size;
+  const allReviewed = reviewedCount === review_status.total_annotations;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+
+      <div className="container mx-auto px-4 py-6 pt-20">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Review Text</h1>
+              <p className="text-gray-600 mt-1">
+                Review and validate annotations for:{" "}
+                <span className="font-medium">{reviewSession.title}</span>
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Progress</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {reviewedCount}/{review_status.total_annotations}
+                </p>
+              </div>
+
+              <Button
+                onClick={handleSubmitReview}
+                disabled={!allReviewed || isSubmitting}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    Submit Review
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4 bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{
+                width: `${
+                  (reviewedCount / review_status.total_annotations) * 100
+                }%`,
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-6 justify-center mx-auto relative">
+          {/* Table of Contents - Left Sidebar */}
+          <TableOfContents
+            annotations={convertToTocAnnotations(annotations)}
+            onHeaderClick={handleHeaderClick}
+            onRemoveAnnotation={handleRemoveAnnotation}
+            isOpen={tocOpen}
+            onToggle={() => setTocOpen(!tocOpen)}
+            readOnly={true}
+          />
+
+          {/* Main Content Area */}
+          <div
+            className={`flex-1 transition-all duration-300 ease-in-out min-w-0 max-w-4xl ${
+              tocOpen ? "ml-0" : "ml-16"
+            }`}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Text Content */}
+              <div className="lg:col-span-1">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Eye className="w-5 h-5" />
+                      Text Content
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-96">
+                      {renderAnnotationInText(
+                        reviewSession.content,
+                        annotations
+                      )}
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Annotations Review Panel */}
+              <div className="lg:col-span-1">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5" />
+                      Annotations ({annotations.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-96">
+                      <div className="space-y-4">
+                        {annotations.map((annotation) => {
+                          const reviewDecision = reviewDecisions.get(
+                            annotation.id
+                          );
+                          const isReviewed = reviewDecision !== undefined;
+
+                          return (
+                            <div
+                              key={annotation.id}
+                              id={`annotation-${annotation.id}`}
+                              className="border rounded-lg p-4 bg-white"
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <Badge
+                                  className={getAnnotationTypeColor(
+                                    annotation.annotation_type
+                                  )}
+                                >
+                                  {annotation.annotation_type}
+                                </Badge>
+                                {isReviewed ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1">
+                                      {reviewDecision.decision === "agree" ? (
+                                        <CheckCircle className="w-4 h-4 text-green-600" />
+                                      ) : (
+                                        <XCircle className="w-4 h-4 text-red-600" />
+                                      )}
+                                      <span className="text-sm text-gray-500">
+                                        {reviewDecision.decision === "agree"
+                                          ? "Agreed"
+                                          : "Disagreed"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-4 h-4 text-yellow-600" />
+                                    <span className="text-sm text-gray-500">
+                                      Pending
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <p className="text-sm font-medium mb-2">
+                                "{annotation.selected_text}"
+                              </p>
+
+                              {annotation.name && (
+                                <p className="text-xs text-gray-500 mb-2">
+                                  Label: {annotation.name}
+                                </p>
+                              )}
+
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant={
+                                      reviewDecision?.decision === "agree"
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    onClick={() =>
+                                      handleReviewDecision(
+                                        annotation.id,
+                                        "agree"
+                                      )
+                                    }
+                                    className={`flex-1 ${
+                                      savedComments.has(annotation.id) &&
+                                      reviewDecision?.decision === "agree"
+                                        ? "ring-2 ring-green-200"
+                                        : ""
+                                    }`}
+                                    disabled={savingComments.has(annotation.id)}
+                                  >
+                                    {savingComments.has(annotation.id) &&
+                                    reviewDecision?.decision === "agree" ? (
+                                      <Timer className="w-4 h-4 mr-1 animate-spin" />
+                                    ) : (
+                                      <CheckCircle className="w-4 h-4 mr-1" />
+                                    )}
+                                    Agree
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant={
+                                      reviewDecision?.decision === "disagree"
+                                        ? "destructive"
+                                        : "outline"
+                                    }
+                                    onClick={() =>
+                                      handleReviewDecision(
+                                        annotation.id,
+                                        "disagree"
+                                      )
+                                    }
+                                    className={`flex-1 ${
+                                      savedComments.has(annotation.id) &&
+                                      reviewDecision?.decision === "disagree"
+                                        ? "ring-2 ring-green-200"
+                                        : ""
+                                    }`}
+                                    disabled={savingComments.has(annotation.id)}
+                                  >
+                                    {savingComments.has(annotation.id) &&
+                                    reviewDecision?.decision === "disagree" ? (
+                                      <Timer className="w-4 h-4 mr-1 animate-spin" />
+                                    ) : (
+                                      <XCircle className="w-4 h-4 mr-1" />
+                                    )}
+                                    Disagree
+                                  </Button>
+                                </div>
+
+                                {isReviewed && (
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                      <label className="text-sm font-medium text-gray-700">
+                                        Comment:
+                                      </label>
+                                      {reviewDecision.decision ===
+                                        "disagree" && (
+                                        <span className="text-xs text-red-600 font-medium">
+                                          better if you can explain!
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="relative">
+                                      <Textarea
+                                        placeholder={
+                                          reviewDecision.decision === "disagree"
+                                            ? "Please explain why you disagree (required)..."
+                                            : "Add a comment (optional)..."
+                                        }
+                                        value={reviewDecision.comment || ""}
+                                        onChange={(e) =>
+                                          handleReviewDecision(
+                                            annotation.id,
+                                            reviewDecision.decision,
+                                            e.target.value
+                                          )
+                                        }
+                                        className={`text-sm ${
+                                          reviewDecision.decision ===
+                                            "disagree" &&
+                                          !reviewDecision.comment?.trim()
+                                            ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                                            : ""
+                                        }`}
+                                        rows={
+                                          reviewDecision.decision === "disagree"
+                                            ? 3
+                                            : 2
+                                        }
+                                      />
+                                      {pendingSave.has(annotation.id) && (
+                                        <div className="absolute right-2 top-2">
+                                          <Timer className="w-4 h-4 text-blue-600 animate-spin" />
+                                        </div>
+                                      )}
+                                      {savedComments.has(annotation.id) && (
+                                        <div className="absolute right-2 top-2">
+                                          <Check className="w-4 h-4 text-green-600" />
+                                        </div>
+                                      )}
+                                    </div>
+                                    {reviewDecision.decision === "disagree" &&
+                                      !reviewDecision.comment?.trim() && (
+                                        <p className="text-xs text-red-600">
+                                          This field is required when
+                                          disagreeing with an annotation
+                                        </p>
+                                      )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Review;

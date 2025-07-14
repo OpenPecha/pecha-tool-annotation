@@ -23,4 +23,5 @@ class Annotation(Base):
 
     # Relationships
     text = relationship("Text", back_populates="annotations")
-    annotator = relationship("User", back_populates="annotations") 
+    annotator = relationship("User", back_populates="annotations")
+    reviews = relationship("AnnotationReview", back_populates="annotation", cascade="all, delete-orphan") 

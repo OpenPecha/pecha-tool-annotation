@@ -12,9 +12,12 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/auth/use-auth-hook";
 import { toast } from "sonner";
 import { textApi } from "@/api/text";
+import { reviewApi } from "@/api/reviews";
+import type { TextResponse } from "@/api/types";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import BulkUploadModal from "../BulkUploadModal";
 import type { BulkUploadResponse } from "@/api/bulk-upload";
+import { AnnotatorReviewedWork } from "../AnnotatorReviewedWork";
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("en-US", {
@@ -157,10 +160,29 @@ export const RegularUserDashboard: React.FC = () => {
     startWorkMutation.mutate();
   };
 
-  const handleReviewWork = () => {
-    toast.info("🚧 Coming Soon", {
-      description: "Review functionality will be implemented soon!",
-    });
+  const handleReviewWork = async () => {
+    try {
+      const textsForReview = await reviewApi.getTextsForReview({ limit: 1 });
+
+      if (textsForReview.length === 0) {
+        toast.info("📝 No Reviews Available", {
+          description: "No texts are ready for review at this time.",
+        });
+        return;
+      }
+
+      const firstText = textsForReview[0];
+      toast.success("Starting Review", {
+        description: `Starting review for: "${firstText.title}"`,
+      });
+
+      navigate(`/review/${firstText.id}`);
+    } catch (error) {
+      toast.error("Failed to start review", {
+        description:
+          error instanceof Error ? error.message : "Please try again",
+      });
+    }
   };
 
   const handleBulkUpload = () => {
@@ -331,6 +353,11 @@ export const RegularUserDashboard: React.FC = () => {
           )}
         </div>
 
+        {/* Reviewed Work Section */}
+        <div className="mb-8">
+          <AnnotatorReviewedWork />
+        </div>
+
         {/* Recent Activity Section */}
         <Card className="w-full mx-auto">
           <CardHeader>
@@ -388,8 +415,8 @@ function RecentActivityItem({
   text,
   activityType,
 }: {
-  readonly text: any;
-  readonly activityType: any;
+  readonly text: TextResponse;
+  readonly activityType: string;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();

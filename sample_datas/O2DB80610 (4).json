@@ -1,0 +1,1235 @@
+{
+    "text": {
+        "title": "BDRC Text Parts",
+        "content": "abc",
+        "language": "bo",
+        "source": "Buddhist Digital Resource Center"
+    },
+    "annotations": [
+        {
+            "annotation_type": "header",
+            "start_position": 1,
+            "end_position": 2,
+            "label": "section_header",
+            "name": "dpe skrun gsal bshad/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 3,
+            "end_position": 4,
+            "label": "section_header",
+            "name": "nyin zhag phrugs gcig la dge sbyong ji ltar bya ba'i tshul gshad pa legs bshad rin chen 'phreng ba/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 4,
+            "end_position": 5,
+            "label": "section_header",
+            "name": "dus dran bya tshul/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 5,
+            "end_position": 6,
+            "label": "section_header",
+            "name": "'gyur sngags / 'phreng sngags sogs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 5,
+            "end_position": 6,
+            "label": "section_header",
+            "name": "grub chen khyung po'i gdams pa ngag byin rlabs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 6,
+            "end_position": 7,
+            "label": "section_header",
+            "name": "bla ma'i gsol 'debs dang mtshan sngags/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 8,
+            "end_position": 9,
+            "label": "section_header",
+            "name": "skyabs 'gro/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 8,
+            "end_position": 9,
+            "label": "section_header",
+            "name": "khro bo smre brtsegs ma'i gzungs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 9,
+            "end_position": 10,
+            "label": "section_header",
+            "name": "'jam dbyangs nag po'i gzungs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 9,
+            "end_position": 10,
+            "label": "section_header",
+            "name": "rdo rje rnam 'joms ma'i gzungs thung /"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 10,
+            "end_position": 11,
+            "label": "section_header",
+            "name": "khro bo mi g.yo ba'i gzungs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 11,
+            "end_position": 12,
+            "label": "section_header",
+            "name": "lha mo 'od zer can ma'i gzungs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 11,
+            "end_position": 12,
+            "label": "section_header",
+            "name": "mchod pa'i sprin gyi gzungs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 12,
+            "end_position": 13,
+            "label": "section_header",
+            "name": "me tog phul ba'i gzungs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 12,
+            "end_position": 13,
+            "label": "section_header",
+            "name": "bsnyen dga' mo'i mar me 'bul ba'i smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 13,
+            "end_position": 14,
+            "label": "section_header",
+            "name": "mar me'i smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 14,
+            "end_position": 15,
+            "label": "section_header",
+            "name": "spyan 'dren/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 15,
+            "end_position": 16,
+            "label": "section_header",
+            "name": "phyag btsal b'i sngags/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 15,
+            "end_position": 16,
+            "label": "section_header",
+            "name": "yan lag bdun pa maN+Dal dang bcas pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 16,
+            "end_position": 17,
+            "label": "section_header",
+            "name": "tshogs zhing bsdu ba/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 16,
+            "end_position": 17,
+            "label": "section_header",
+            "name": "smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 17,
+            "end_position": 18,
+            "label": "section_header",
+            "name": "gtor ma brgya rtsa gtong tshul nag 'gros su bkod pa mchod sbyin 'phrul gyi shing rta/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 18,
+            "end_position": 19,
+            "label": "section_header",
+            "name": "chab gtor gtong tshul 'khyer bder bkod pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 19,
+            "end_position": 20,
+            "label": "section_header",
+            "name": "gtor ma brgya rtsa shin tu bsdus pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 21,
+            "end_position": 22,
+            "label": "section_header",
+            "name": "bsang mchod/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 22,
+            "end_position": 23,
+            "label": "section_header",
+            "name": "mnol bsang /"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 23,
+            "end_position": 24,
+            "label": "section_header",
+            "name": "grib bsang /(chu bzang bla ma rin po che gsung /)"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 24,
+            "end_position": 25,
+            "label": "section_header",
+            "name": "ja mchod bka' rgya ma bde chen kun bzang /"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 25,
+            "end_position": 26,
+            "label": "section_header",
+            "name": "ja mchod 'dren pa mnyam med ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 26,
+            "end_position": 27,
+            "label": "section_header",
+            "name": "nyin gung chos ston tshul/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 27,
+            "end_position": 28,
+            "label": "section_header",
+            "name": "phyag dang bskor ba stong 'gyur gyi sngags/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 28,
+            "end_position": 29,
+            "label": "section_header",
+            "name": "tshogs gsog zag pa rgyun gtor sngags/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 28,
+            "end_position": 29,
+            "label": "section_header",
+            "name": "dgong mo'i chos tshar gsur gtong tshul/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 29,
+            "end_position": 30,
+            "label": "section_header",
+            "name": "za byed rdo rje mkha' 'gro'i sbyin sreg byed tshul/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 30,
+            "end_position": 31,
+            "label": "section_header",
+            "name": "ltung bshags/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 32,
+            "end_position": 33,
+            "label": "section_header",
+            "name": "spyi bshags/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 33,
+            "end_position": 34,
+            "label": "section_header",
+            "name": "gtso rgyal ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 34,
+            "end_position": 35,
+            "label": "section_header",
+            "name": "dam tshig rdo rje'i sgom bzlas/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 35,
+            "end_position": 36,
+            "label": "section_header",
+            "name": "klong rdol bla ma rin po ches mdzad pa'i mthol bshags/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 36,
+            "end_position": 37,
+            "label": "section_header",
+            "name": "skyabs 'gro sems bskyed/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 38,
+            "end_position": 39,
+            "label": "section_header",
+            "name": "dga' ldan lha brgya ma 'dod gsol smon lam dang bcas pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 39,
+            "end_position": 40,
+            "label": "section_header",
+            "name": "paN chen thams cad mkhyen pa'i tshe rabs rjes 'dzin smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 40,
+            "end_position": 41,
+            "label": "section_header",
+            "name": "lam rim dmar khrid myur lam gyi sngon 'gro'i ngag 'don rim pa khyer bde/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 41,
+            "end_position": 42,
+            "label": "section_header",
+            "name": "lam rim shar sgom gnad don kun tshang /"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 42,
+            "end_position": 43,
+            "label": "section_header",
+            "name": "lam gyi gtso bo rnam gsum gyi rtsa ba/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 44,
+            "end_position": 45,
+            "label": "section_header",
+            "name": "rtogs brjod 'dun legs ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 45,
+            "end_position": 46,
+            "label": "section_header",
+            "name": "byang chub lam gyi rim pa'i nyams len gyi rnam gzhag mdor bsdus/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 46,
+            "end_position": 47,
+            "label": "section_header",
+            "name": "zab lam bla ma mchod pa'i cho ga bde stong dbyer med ma dang / tshogs mchod bcas/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 47,
+            "end_position": 48,
+            "label": "section_header",
+            "name": "bla mchod dang 'brel zab gsang snyan brgyud kyi dbang bzhi len tshul bdud rtsi'i rgyun bzang /"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 48,
+            "end_position": 49,
+            "label": "section_header",
+            "name": "so sor thar pa'i sdom pa gtan la dbab pa 'dul ba rgya mtsho'i snying po dang lung gzhi'i bar sdom gyi go rim thad kar bsgrigs pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 50,
+            "end_position": 51,
+            "label": "section_header",
+            "name": "byang sems kyi bslab bya'i sdom tshig"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 51,
+            "end_position": 52,
+            "label": "section_header",
+            "name": "gsang sngags kyi bslab bya'i sdom tshig"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 53,
+            "end_position": 54,
+            "label": "section_header",
+            "name": "ston pa shAkya thub pa la bstod pa skabs gsum pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 54,
+            "end_position": 55,
+            "label": "section_header",
+            "name": "rten 'brel bstod pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 55,
+            "end_position": 56,
+            "label": "section_header",
+            "name": "ston pa'i mdzad pa bcu gnyis kyi bstod pa thabs mkhas thugs rje ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 56,
+            "end_position": 57,
+            "label": "section_header",
+            "name": "rje tsong kha pa'i rnam thar gsol 'debs dpal ldan sa gsum ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 57,
+            "end_position": 58,
+            "label": "section_header",
+            "name": "rje gsang ba'i rnam thar/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 59,
+            "end_position": 60,
+            "label": "section_header",
+            "name": "jo bo'i bstod pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 61,
+            "end_position": 62,
+            "label": "section_header",
+            "name": "mkha' mnyam ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 62,
+            "end_position": 63,
+            "label": "section_header",
+            "name": "gnas brtan phyag mchod/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 63,
+            "end_position": 64,
+            "label": "section_header",
+            "name": "byams pa'i bstod chen/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 65,
+            "end_position": 66,
+            "label": "section_header",
+            "name": "'phags pa 'jam dpal gyi mtshan yang dag par brjod pa/ 'jam dbyangs bstod sprin rgya mtsho/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 67,
+            "end_position": 68,
+            "label": "section_header",
+            "name": "shes bya'i mkha' dbyings ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 68,
+            "end_position": 69,
+            "label": "section_header",
+            "name": "'jam dbyangs bstod sprin rgya mtsho/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 69,
+            "end_position": 70,
+            "label": "section_header",
+            "name": "shes rab kyi lha mchog rnam gsum gyi rgyun 'khyer mdor bsdus dngos grub kun stsol/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 70,
+            "end_position": 71,
+            "label": "section_header",
+            "name": "'jam dkar bstod pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 72,
+            "end_position": 73,
+            "label": "section_header",
+            "name": "dbyangs can ma'i bstod pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 72,
+            "end_position": 73,
+            "label": "section_header",
+            "name": "bla ma dang spyan ras gzigs dbyer med kyi rnal 'byor dngos grub kun 'byung /"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 74,
+            "end_position": 75,
+            "label": "section_header",
+            "name": "smon lam stobs bcu/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 75,
+            "end_position": 76,
+            "label": "section_header",
+            "name": "'phags pa thugs rje chen po la bstod cing gsol ba 'debs pa phan bde'i char 'bebs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 77,
+            "end_position": 78,
+            "label": "section_header",
+            "name": "drag po gsum sgril gyi sgom bzlas/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 78,
+            "end_position": 79,
+            "label": "section_header",
+            "name": "skyabs rje pha bong khas mdzad pa'i yid bzhin 'khor lo'i rgyun 'khyer 'chi med bcud spungs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 79,
+            "end_position": 80,
+            "label": "section_header",
+            "name": "sgrol dkar bstod pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 80,
+            "end_position": 81,
+            "label": "section_header",
+            "name": "rje btsun 'phags ma sgrol ma la bstod pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 82,
+            "end_position": 83,
+            "label": "section_header",
+            "name": "legs bris ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 84,
+            "end_position": 85,
+            "label": "section_header",
+            "name": "bcom ldan 'das kun rig rnam par snang mdzad kyi sgom bzlas mdor bsdus/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 85,
+            "end_position": 86,
+            "label": "section_header",
+            "name": "sgrol ma tsit ta ma Ni la brten pa'i thun mong ma yin pa'i bla ma'i rnal 'byor thar bar bgrod pa'i them skas/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 86,
+            "end_position": 87,
+            "label": "section_header",
+            "name": "gtsug tor rnam rgyal ma'i gzungs ring /"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 88,
+            "end_position": 89,
+            "label": "section_header",
+            "name": "rnam rgyal ma'i bstod pa 'chi med grub pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 90,
+            "end_position": 91,
+            "label": "section_header",
+            "name": "tshe dpag med kyi bstod pa nyi gzhon 'char ka ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 91,
+            "end_position": 92,
+            "label": "section_header",
+            "name": "bcom ldan 'das ma shes rab kyi pha rol tu phyin pa'i snying bo/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 93,
+            "end_position": 94,
+            "label": "section_header",
+            "name": "gdugs dkar mchog grub ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 94,
+            "end_position": 95,
+            "label": "section_header",
+            "name": "ye shes mkha' 'gro ma seng ge'i gdong can gyi zlog pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 95,
+            "end_position": 96,
+            "label": "section_header",
+            "name": "dpal gsang ba 'dus pa'i smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 96,
+            "end_position": 97,
+            "label": "section_header",
+            "name": "bde mchog smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 98,
+            "end_position": 99,
+            "label": "section_header",
+            "name": "'jigs byed lha bcu gsum pa'i smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 99,
+            "end_position": 100,
+            "label": "section_header",
+            "name": "'phags pa bzang bo spyod pa'i smon lam gyi rgyal po/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 101,
+            "end_position": 102,
+            "label": "section_header",
+            "name": "'phags pa byams pa'i smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 103,
+            "end_position": 104,
+            "label": "section_header",
+            "name": "byams pa'i sku gzugs ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 104,
+            "end_position": 105,
+            "label": "section_header",
+            "name": "spyod 'jug smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 105,
+            "end_position": 106,
+            "label": "section_header",
+            "name": "thog mtha' ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 106,
+            "end_position": 107,
+            "label": "section_header",
+            "name": "bde ba can du skye ba'i smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 107,
+            "end_position": 108,
+            "label": "section_header",
+            "name": "bde chen lhun grub ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 108,
+            "end_position": 109,
+            "label": "section_header",
+            "name": "bar do la ched dmigs kyi gsol 'debs shugs drag"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 109,
+            "end_position": 110,
+            "label": "section_header",
+            "name": "bar do 'phrang sgrol gyi gsol 'debs 'jigs sgrol gyi dbang bo/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 110,
+            "end_position": 111,
+            "label": "section_header",
+            "name": "kun rig smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 112,
+            "end_position": 113,
+            "label": "section_header",
+            "name": "sham b+ha la yi smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 113,
+            "end_position": 114,
+            "label": "section_header",
+            "name": "bka' pod lnga yi smon lam mkhas pa'i yid 'phrog"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 114,
+            "end_position": 115,
+            "label": "section_header",
+            "name": "rig pa'i gnas lnga'i smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 115,
+            "end_position": 116,
+            "label": "section_header",
+            "name": "blo bzang rgyal bstan ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 117,
+            "end_position": 118,
+            "label": "section_header",
+            "name": "khams gsum chos kyi rgyal po tsong kha ba chen po'i bstan pa dang mjal ba'i smon lam rjes 'dzin thugs rje'i skyabs sbyin/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 119,
+            "end_position": 120,
+            "label": "section_header",
+            "name": "yongs rdzogs lam gyi 'khrul ba 'gog pa'i smon lam zab don snying gi nor bu/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 120,
+            "end_position": 121,
+            "label": "section_header",
+            "name": "rje rin po che'i bstan pa dang mjal ba'i smon lam mdor bsdus mkhyen brtse'i 'dren ldan/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 121,
+            "end_position": 122,
+            "label": "section_header",
+            "name": "blo sbyong don bdun ma'i snying bo/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 123,
+            "end_position": 124,
+            "label": "section_header",
+            "name": "dgra bo'i gnad la dbab pa'i blo sbyong mtshon cha 'khor lo/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 124,
+            "end_position": 125,
+            "label": "section_header",
+            "name": "bka' gdams pa'i dge bshes glang ri thang pa rdo rje seng ges mdzad pa'i blo sbyong tshig brgyad ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 125,
+            "end_position": 126,
+            "label": "section_header",
+            "name": "gtong len dmigs 'brel ngag 'don dang skra bzhar gad bdar bcas bya lugs kyi dmigs pa skyong tshul tshegs chung don che/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 126,
+            "end_position": 127,
+            "label": "section_header",
+            "name": "dge slong blo bzang grags pa'i dpal gyi gnad gsum bstan pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 127,
+            "end_position": 128,
+            "label": "section_header",
+            "name": "bstan 'bar ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 129,
+            "end_position": 130,
+            "label": "section_header",
+            "name": "bsngo ba dus gsum rgyal ba ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 130,
+            "end_position": 131,
+            "label": "section_header",
+            "name": "jo bo'i mdzad pa'i bsngo ba/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 130,
+            "end_position": 131,
+            "label": "section_header",
+            "name": "klong rdol bla ma rin po ches mdzad pa'i smon lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 131,
+            "end_position": 132,
+            "label": "section_header",
+            "name": "don dam pa'i bsngo ba/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 131,
+            "end_position": 132,
+            "label": "section_header",
+            "name": "smon lam rab 'byams phyogs bcu ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 133,
+            "end_position": 134,
+            "label": "section_header",
+            "name": "phugs nor bcu'i bslab bya'i 'grel ba don sbyor gsum ldan/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 135,
+            "end_position": 136,
+            "label": "section_header",
+            "name": "'dus pa 'phags lugs kyi sgrub thabs mdor bsdus mchog gi dga' ston/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 136,
+            "end_position": 137,
+            "label": "section_header",
+            "name": "dpal gsang ba 'dus pa'i bsgom bzlas rgyun 'khyer/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 137,
+            "end_position": 138,
+            "label": "section_header",
+            "name": "dpal rdo rje 'jigs byed lha bcu gsum ma'ibdag skyed bum pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 139,
+            "end_position": 140,
+            "label": "section_header",
+            "name": "bcom ldan 'das dpal rdo rje 'jigs byed dpa' bo gcig pa'i sgrub thabs bdud las rnam rgyal gyi ngag 'don nag 'gros blo dman las dang bo ba la khyer bde bar bkod pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 141,
+            "end_position": 142,
+            "label": "section_header",
+            "name": "bstod pa rgyas pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 142,
+            "end_position": 143,
+            "label": "section_header",
+            "name": "rgyal ba bskal bzang rgya mtsho'i gsung rdo rje 'jigs byed dpa' bo gcig pa bdud las rnam rgyal gyi dkyil chog las bdag 'jug bya tshul rkyang ba nag 'gros zur du bkol ba/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 144,
+            "end_position": 145,
+            "label": "section_header",
+            "name": "bcom ldan 'das rdo rje 'jigs byed dpa' bo gcig pa'isgrub thabs shin tu mdor bsdus/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 146,
+            "end_position": 147,
+            "label": "section_header",
+            "name": "dpal rdo rje 'jugs byed kyi bdag 'jug shin tu mdor bsdus grub dbang 'jigs med bsam gtan gyi gsung ltar nag 'gros su dgod pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 148,
+            "end_position": 149,
+            "label": "section_header",
+            "name": "dpal rdo rje 'jigs byed ki tshogs mchod dga' ston 'dzum zhal/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 150,
+            "end_position": 151,
+            "label": "section_header",
+            "name": "bde mchog lha lnga'i sgrub thabs mdor bsdus/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 151,
+            "end_position": 152,
+            "label": "section_header",
+            "name": "dpal 'khor lo sdom pa dril bu lus dkyil gyi bla brgyud gsol 'debs bde chen nye lam dang / grub pa'i dbang phyug dril bu zhabs lugs kyi bcom ldan 'das 'khor lo sdom pa'i lus dkyil gyi mngon par rtogs pa bde chen rab 'phel/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 152,
+            "end_position": 153,
+            "label": "section_header",
+            "name": "grub chen dril bu zhabs lugs 'khor lo sdom pa lus dkyil gyi smon lam dang shis brjod/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 154,
+            "end_position": 155,
+            "label": "section_header",
+            "name": "'khor lo sdom pa'i tshogs mchod bde chen snying bo rab rgyas kyi ngag 'don/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 155,
+            "end_position": 156,
+            "label": "section_header",
+            "name": "grub chen dril bu zhabs lugs bcom ldan 'das 'khor lo sdom pa lus dkyil gyi bum bskyed dang bdag 'jug mdor bsdus nyes ltung dri ma 'khrud pa'i thugs rje'i ga bur chab rgyun/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 157,
+            "end_position": 158,
+            "label": "section_header",
+            "name": "dpal 'khor lo sdom pa'i dag pa gsum gyi rnal 'byor/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 158,
+            "end_position": 159,
+            "label": "section_header",
+            "name": "rje btsun rdo rje rnal 'byor ma nA ro mkha' spyod kyi sgrub thabs thun mong ma yin pa bde chen nye lam/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 160,
+            "end_position": 161,
+            "label": "section_header",
+            "name": "rje btsun rdo rje rnal 'byor ma nA ro mkha' spyod kyi nyams len rgyun 'khyer mdor bsdus/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 161,
+            "end_position": 162,
+            "label": "section_header",
+            "name": "rje btsun rdo rje rnal 'byor ma nA ro mkha' spyod dbang mo'i dkyil 'khor gyi cho ga bde chen dga' ston/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 163,
+            "end_position": 164,
+            "label": "section_header",
+            "name": "rnal 'byor rgyud yan gyi dbang thob pa rnams kyis ni/bod kyi gser chos su grags pa'i gdams pa zab mo rnams kyis kyang cha tsam bsgrun du med pa thun drug gi rnal 'byor/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 165,
+            "end_position": 166,
+            "label": "section_header",
+            "name": "dpal dus kyi 'khor lo'i bla ma'i rnal 'byor stong gzugs bdud rtsi'i bum bzang /"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 167,
+            "end_position": 168,
+            "label": "section_header",
+            "name": "dbang chen yang gsang khros pa'i las byang snying bo bcud bsdus/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 168,
+            "end_position": 169,
+            "label": "section_header",
+            "name": "bskang chog bsdus pa gser zhun ma/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 170,
+            "end_position": 171,
+            "label": "section_header",
+            "name": "chos skyong khag gi gser skyems/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 172,
+            "end_position": 173,
+            "label": "section_header",
+            "name": "theg chen gso sbyong gi sdom pa len pa'i cho ga nag 'gros su bkod pa byang chen khang bzang 'dzegs pa'i them skas/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 174,
+            "end_position": 175,
+            "label": "section_header",
+            "name": "rje thu'u bkAn chos kyi nyi ma'i gsung / 'chi ka ma'i sems can la phan thabs bya tshul gyi cho ga nyam thag dbugs 'byin/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 176,
+            "end_position": 177,
+            "label": "section_header",
+            "name": "chos spyod kyi rim pa rgyal ba'i lam bzang /"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 178,
+            "end_position": 179,
+            "label": "section_header",
+            "name": "rje bla ma tsong kha ba chen po la stong mchod 'bul ba'i cho ga kun bzang 'khri shing /"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 179,
+            "end_position": 180,
+            "label": "section_header",
+            "name": "bla ma yi dam la gsol ba 'debs pa'i rab tu byed pa/ nang gi khong skran 'don pa'i skyug sman/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 181,
+            "end_position": 182,
+            "label": "section_header",
+            "name": "'jam mgon rgyal ba gnyis pa la bstan pa'i snying bo gsal bar mdzad pa'i tshul las brtsams te bstod pa don dang ldan pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 183,
+            "end_position": 184,
+            "label": "section_header",
+            "name": "'dir dmigs brtsae ma'i las tshogs kyi nang nas char 'bebs/ sad srung /rtsa 'don pa/ bsnyen yig dga' ldan lha brgya ma'i 'pho ba sogs nye mkho kha tshar can rnams/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 185,
+            "end_position": 186,
+            "label": "section_header",
+            "name": "rje brtsun rnam par rgyal ma'i bdag mdun gyi cho ga dang 'brel ba'i stong mchod bya tshul gsal bar bkod pa 'chi med tshe yi mchog sbyin/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 186,
+            "end_position": 187,
+            "label": "section_header",
+            "name": "sgrol ma maN+Dal bzhi ba'i cho ga'i lag len dang man ngag gi gnad gsal bar bkod pa bdud rtsi'i bum bzang /"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 187,
+            "end_position": 188,
+            "label": "section_header",
+            "name": "bcom ldan 'das sman bla'i mdo chog snying bo bsdus pa yid bzhin nor bu/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 188,
+            "end_position": 189,
+            "label": "section_header",
+            "name": "gshin po'i sbyang chog thar lam gsal sgron/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 190,
+            "end_position": 191,
+            "label": "section_header",
+            "name": "mi 'khrugs pa'i sgo nas skra rus kyi cho ga"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 192,
+            "end_position": 193,
+            "label": "section_header",
+            "name": "khrus gsol maN+Dal bcas/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 193,
+            "end_position": 194,
+            "label": "section_header",
+            "name": "bgegs gtor gtong tshul/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 195,
+            "end_position": 196,
+            "label": "section_header",
+            "name": "bka' bsgo bya tshul/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 196,
+            "end_position": 197,
+            "label": "section_header",
+            "name": "rab gnas bka' bsgo bsngo ba sogs kyi cho ga bsdus pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 197,
+            "end_position": 198,
+            "label": "section_header",
+            "name": "'jim pa byin rlabs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 198,
+            "end_position": 199,
+            "label": "section_header",
+            "name": "rang gzhan gyi don du sa ts+tsha 'debs pa'i rim pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 199,
+            "end_position": 200,
+            "label": "section_header",
+            "name": "khro phu lo tsA bas mdzad pa'i sa ts+tsha lam 'khyer gyi gdams pa/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 201,
+            "end_position": 202,
+            "label": "section_header",
+            "name": "sa ts+tsha chu klung du spyan 'dren tshul/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 202,
+            "end_position": 203,
+            "label": "section_header",
+            "name": "rta g.yag ra lug sogs tshe thar gtong tshul/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 203,
+            "end_position": 204,
+            "label": "section_header",
+            "name": "rdo rje rnam par 'joms pa'i sgo nas dkar phyogs rnams la ri khrus klung khrus bcas/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 205,
+            "end_position": 206,
+            "label": "section_header",
+            "name": "'dod khams dbang phyug ma dmag zor rgyal mo'i sgrub thabs gtor chog tshogs mchod mnga' gsol bcas/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 207,
+            "end_position": 208,
+            "label": "section_header",
+            "name": "drug cu ba'i 'don bsgrigs 'khyer bde nag 'gros su bkod pa las bzhi'i 'phrin las myur 'grub/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 209,
+            "end_position": 210,
+            "label": "section_header",
+            "name": "lha bsangs rnam dag chos sku/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 211,
+            "end_position": 212,
+            "label": "section_header",
+            "name": "bsangs chung yid bzhin nor bu/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 213,
+            "end_position": 214,
+            "label": "section_header",
+            "name": "gong sa lnga ba chen pos ljags bsgrigs gnang ba'i rta thugs dkar bo/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 214,
+            "end_position": 215,
+            "label": "section_header",
+            "name": "slob dpon chen po pad+ma 'byung gnas kyis mdzad pa'i mnol gsang lha chab sngon mo/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 215,
+            "end_position": 216,
+            "label": "section_header",
+            "name": "lab rtse'e mchod chog mdor bsdus g.yas 'khyil dung sgra/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 216,
+            "end_position": 217,
+            "label": "section_header",
+            "name": "lha tho brtsig tshul dngos grub gter mdzod/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 217,
+            "end_position": 218,
+            "label": "section_header",
+            "name": "lha tho brtsig tshul dngos grub gter mdzod kyi lhan thabs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 219,
+            "end_position": 220,
+            "label": "section_header",
+            "name": "dmigs brtse ma'i sgo nas rgyal mtshan tshugs pa'i cho ga mi mthun phyogs las rgyal ba'i rgyal mtshan/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 221,
+            "end_position": 222,
+            "label": "section_header",
+            "name": "thugs chog 'khyer bde/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 222,
+            "end_position": 223,
+            "label": "section_header",
+            "name": "cha gsum gyi cho ga"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 224,
+            "end_position": 225,
+            "label": "section_header",
+            "name": "nad pa'i ched glud gtong tshul/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 225,
+            "end_position": 226,
+            "label": "section_header",
+            "name": "bsngo ba rgyas pa dge tshogs rgya mtsho'i 'jug ngogs/"
+        },
+        {
+            "annotation_type": "header",
+            "start_position": 226,
+            "end_position": 227,
+            "label": "section_header",
+            "name": "bsngo ba bsdus pa/"
+        }
+    ]
+}

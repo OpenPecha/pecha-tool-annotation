@@ -7,7 +7,7 @@ import { TableOfContents } from "@/components/TableOfContents";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import ActionButtons from "@/components/ActionButtons";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { textApi } from "@/api/text";
 import { annotationsApi } from "@/api/annotations";
 import type {
@@ -32,11 +32,13 @@ export type Annotation = {
   end: number;
   name?: string; // Custom name for the annotation
   annotator_id?: number; // ID of the user who created this annotation
+  is_agreed?: boolean; // Whether annotation has been agreed upon by a reviewer
 };
 
 const Index = () => {
   const { textId } = useParams<{ textId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
@@ -76,6 +78,7 @@ const Index = () => {
       end: ann.end_position,
       name: ann.name,
       annotator_id: ann.annotator_id,
+      is_agreed: ann.is_agreed,
     }));
 
     return converted;
@@ -101,6 +104,15 @@ const Index = () => {
   // Skip confirmation dialog state
   const [showSkipConfirmation, setShowSkipConfirmation] = useState(false);
 
+  // State for target annotation (from URL parameter)
+  const [targetAnnotationId, setTargetAnnotationId] = useState<string | null>(
+    null
+  );
+  const [hasScrolledToTarget, setHasScrolledToTarget] = useState(false);
+  const [highlightedAnnotationId, setHighlightedAnnotationId] = useState<
+    string | null
+  >(null);
+
   // Get text content directly from textData (no state needed since it never changes)
   const text = textData?.content || "";
 
@@ -111,6 +123,67 @@ const Index = () => {
       setAnnotations(convertedAnnotations);
     }
   }, [textData]);
+
+  // Parse URL parameters to get target annotation ID
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const annotationId = urlParams.get("annotationId");
+    if (annotationId) {
+      setTargetAnnotationId(annotationId);
+      setHasScrolledToTarget(false);
+    }
+  }, [location.search]);
+
+  // Scroll to target annotation when annotations are loaded
+  useEffect(() => {
+    if (targetAnnotationId && annotations.length > 0 && !hasScrolledToTarget) {
+      const targetAnnotation = annotations.find(
+        (ann) => ann.id === targetAnnotationId
+      );
+      if (targetAnnotation) {
+        // Scroll to the annotation using the text annotator ref
+        if (textAnnotatorRef.current) {
+          textAnnotatorRef.current.scrollToPosition(
+            targetAnnotation.start,
+            targetAnnotation.end
+          );
+        }
+
+        // Highlight the target annotation
+        setHighlightedAnnotationId(targetAnnotationId);
+
+        // Show toast notification
+        toast({
+          title: "📍 Navigated to Annotation",
+          description: `Found "${
+            targetAnnotation.type
+          }" annotation: "${targetAnnotation.text.substring(0, 50)}${
+            targetAnnotation.text.length > 50 ? "..." : ""
+          }"`,
+        });
+
+        // Mark as scrolled to prevent repeated scrolling
+        setHasScrolledToTarget(true);
+
+        // Clear the target annotation ID from URL after scrolling
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("annotationId");
+        window.history.replaceState({}, "", newUrl.toString());
+
+        // Clear highlighting after 3 seconds
+        setTimeout(() => {
+          setHighlightedAnnotationId(null);
+        }, 3000);
+      } else {
+        // If annotation not found, show warning
+        toast({
+          title: "⚠️ Annotation Not Found",
+          description: `Could not find annotation with ID: ${targetAnnotationId}`,
+        });
+        setTargetAnnotationId(null);
+      }
+    }
+  }, [targetAnnotationId, annotations, hasScrolledToTarget, toast]);
 
   // Track page visit when component mounts
   useEffect(() => {
@@ -543,6 +616,17 @@ const Index = () => {
   };
 
   const removeAnnotation = (id: string) => {
+    // Check if annotation is agreed upon by a reviewer
+    const annotation = annotations.find((ann) => ann.id === id);
+    if (annotation?.is_agreed) {
+      toast({
+        title: "🔒 Cannot Delete Annotation",
+        description:
+          "This annotation has been agreed upon by a reviewer and cannot be deleted.",
+      });
+      return;
+    }
+
     const annotationIdNumber = parseInt(id, 10);
     if (isNaN(annotationIdNumber)) {
       toast({
@@ -560,10 +644,19 @@ const Index = () => {
 
     // Delete from database
     deleteAnnotationMutation.mutate(annotationIdNumber, {
-      onError: () => {
+      onError: (error) => {
         // Restore the annotation on error
         if (annotationToRemove) {
           setAnnotations((prev) => [...prev, annotationToRemove]);
+        }
+
+        // Show specific error message for agreed annotations
+        if (error instanceof Error && error.message.includes("agreed upon")) {
+          toast({
+            title: "🔒 Cannot Delete Annotation",
+            description:
+              "This annotation has been agreed upon by a reviewer and cannot be deleted.",
+          });
         }
       },
     });
@@ -785,6 +878,7 @@ const Index = () => {
             readOnly={true}
             isCreatingAnnotation={createAnnotationMutation.isPending}
             isDeletingAnnotation={deleteAnnotationMutation.isPending}
+            highlightedAnnotationId={highlightedAnnotationId}
           />
         </div>
 

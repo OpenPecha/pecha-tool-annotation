@@ -8,37 +8,67 @@ class AnnotationLabelWidget extends WidgetType {
   annotation: Annotation;
   titleText: string;
   isOptimistic: boolean;
+  isHighlighted: boolean;
 
   constructor(
     annotation: Annotation,
     titleText: string,
-    isOptimistic: boolean
+    isOptimistic: boolean,
+    isHighlighted: boolean = false
   ) {
     super();
     this.annotation = annotation;
     this.titleText = titleText;
     this.isOptimistic = isOptimistic;
+    this.isHighlighted = isHighlighted;
   }
 
   toDOM() {
     const label = document.createElement("div");
     label.className = `annotation-label annotation-label-${
       this.annotation.type
-    } ${this.isOptimistic ? "annotation-label-optimistic" : ""}`;
-    label.textContent = this.titleText;
+    } ${this.isOptimistic ? "annotation-label-optimistic" : ""} ${
+      this.annotation.is_agreed ? "annotation-label-agreed" : ""
+    } ${this.isHighlighted ? "annotation-label-highlighted" : ""}`;
+
+    if (this.annotation.is_agreed) {
+      // Create lock icon and text for agreed annotations
+      const lockIcon = document.createElement("span");
+      lockIcon.innerHTML = "🔒";
+      lockIcon.style.marginRight = "4px";
+      lockIcon.style.fontSize = "10px";
+
+      const textSpan = document.createElement("span");
+      textSpan.textContent = this.titleText;
+
+      label.appendChild(lockIcon);
+      label.appendChild(textSpan);
+
+      // Add green styling for agreed annotations
+      label.style.backgroundColor = "#dcfce7";
+      label.style.color = "#15803d";
+      label.style.border = "1px solid #22c55e";
+      label.style.cursor = "default";
+    } else {
+      label.textContent = this.titleText;
+      label.style.cursor = "pointer";
+    }
+
     label.setAttribute("data-annotation-id", this.annotation.id);
     label.setAttribute("data-annotation-type", this.annotation.type);
 
-    // Add click handler for annotation selection/deletion
-    label.addEventListener("click", (e) => {
-      e.stopPropagation();
-      // Dispatch custom event for annotation interaction
-      const customEvent = new CustomEvent("annotation-label-click", {
-        detail: { annotation: this.annotation },
-        bubbles: true,
+    // Add click handler for annotation selection/deletion only for non-agreed annotations
+    if (!this.annotation.is_agreed) {
+      label.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // Dispatch custom event for annotation interaction
+        const customEvent = new CustomEvent("annotation-label-click", {
+          detail: { annotation: this.annotation },
+          bubbles: true,
+        });
+        label.dispatchEvent(customEvent);
       });
-      label.dispatchEvent(customEvent);
-    });
+    }
 
     return label;
   }
@@ -47,7 +77,8 @@ class AnnotationLabelWidget extends WidgetType {
     return (
       this.annotation.id === other.annotation.id &&
       this.titleText === other.titleText &&
-      this.isOptimistic === other.isOptimistic
+      this.isOptimistic === other.isOptimistic &&
+      this.isHighlighted === other.isHighlighted
     );
   }
 }
@@ -55,23 +86,42 @@ class AnnotationLabelWidget extends WidgetType {
 // Create state effects for managing annotations
 export const addAnnotationEffect = StateEffect.define<Annotation>();
 export const clearAnnotationsEffect = StateEffect.define();
+export const setHighlightedAnnotationEffect = StateEffect.define<
+  string | null
+>();
+
+// State structure to hold both decorations and highlighted annotation ID
+interface AnnotationFieldState {
+  decorations: DecorationSet;
+  highlightedAnnotationId: string | null;
+}
 
 // Create decoration field for annotations
-export const annotationField = StateField.define<DecorationSet>({
+export const annotationField = StateField.define<AnnotationFieldState>({
   create() {
-    return Decoration.none;
+    return {
+      decorations: Decoration.none,
+      highlightedAnnotationId: null,
+    };
   },
-  update(decorations, tr) {
-    decorations = decorations.map(tr.changes);
+  update(state, tr) {
+    let decorations = state.decorations.map(tr.changes);
+    let highlightedAnnotationId = state.highlightedAnnotationId;
 
     // Batch all decoration additions to ensure proper sorting
     const toAdd: Array<{ from: number; to: number; decoration: Decoration }> =
       [];
 
     for (const effect of tr.effects) {
-      if (effect.is(addAnnotationEffect)) {
+      if (effect.is(setHighlightedAnnotationEffect)) {
+        highlightedAnnotationId = effect.value;
+        // When highlighting changes, we need to rebuild all decorations
+        decorations = Decoration.none;
+        // The existing annotations will be re-added by the annotation effects
+      } else if (effect.is(addAnnotationEffect)) {
         const annotation = effect.value;
         const isOptimistic = annotation.id.startsWith("temp-");
+        const isHighlighted = highlightedAnnotationId === annotation.id;
         const titleText =
           typeof annotation.name === "string" && annotation.name.trim()
             ? annotation.name
@@ -81,11 +131,16 @@ export const annotationField = StateField.define<DecorationSet>({
         const markDecoration = Decoration.mark({
           class: `annotation-${annotation.type} ${
             isOptimistic ? "annotation-optimistic" : ""
+          } ${annotation.is_agreed ? "annotation-agreed" : ""} ${
+            isHighlighted ? "annotation-highlighted" : ""
           }`,
           attributes: {
-            title: titleText,
+            title: annotation.is_agreed
+              ? `🔒 ${titleText} (Agreed by reviewer)`
+              : titleText,
             "data-annotation-id": annotation.id,
             "data-annotation-type": annotation.type,
+            "data-annotation-agreed": annotation.is_agreed ? "true" : "false",
           },
         });
 
@@ -93,7 +148,8 @@ export const annotationField = StateField.define<DecorationSet>({
         const labelWidget = new AnnotationLabelWidget(
           annotation,
           titleText,
-          isOptimistic
+          isOptimistic,
+          isHighlighted
         );
         const labelDecoration = Decoration.widget({
           widget: labelWidget,
@@ -137,7 +193,10 @@ export const annotationField = StateField.define<DecorationSet>({
       });
     }
 
-    return decorations;
+    return {
+      decorations,
+      highlightedAnnotationId,
+    };
   },
-  provide: (f) => EditorView.decorations.from(f),
+  provide: (f) => EditorView.decorations.from(f, (state) => state.decorations),
 });

@@ -29,6 +29,7 @@ interface TableOfContentsProps {
   pendingHeader?: { text: string; start: number; end: number } | null;
   onHeaderNameSubmit?: (name: string) => void;
   onHeaderNameCancel?: () => void;
+  readOnly?: boolean; // Controls whether delete buttons are shown
 }
 
 export const TableOfContents = ({
@@ -40,6 +41,7 @@ export const TableOfContents = ({
   pendingHeader,
   onHeaderNameSubmit,
   onHeaderNameCancel,
+  readOnly = false,
 }: TableOfContentsProps) => {
   const [headerName, setHeaderName] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -161,12 +163,14 @@ export const TableOfContents = ({
     onHeaderClick,
     onRemoveAnnotation,
     renderChildren,
+    readOnly,
   }: {
     node: HeaderNode;
     index: number;
     onHeaderClick: (annotation: Annotation) => void;
     onRemoveAnnotation: (id: string) => void;
     renderChildren: (nodes: HeaderNode[]) => React.ReactNode;
+    readOnly?: boolean;
   }) => {
     const indentLevel = node.level;
     const hasChildren = node.children.length > 0;
@@ -242,19 +246,21 @@ export const TableOfContents = ({
               </p>
             </div>
 
-            {/* Delete button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemoveAnnotation(node.header.id);
-              }}
-              className="h-4 w-4 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-sm flex-shrink-0"
-              title="Delete header"
-            >
-              <IoTrash className="h-2.5 w-2.5" />
-            </Button>
+            {/* Delete button - only show if not read-only */}
+            {!readOnly && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveAnnotation(node.header.id);
+                }}
+                className="h-4 w-4 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-sm flex-shrink-0"
+                title="Delete header"
+              >
+                <IoTrash className="h-2.5 w-2.5" />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -276,6 +282,7 @@ export const TableOfContents = ({
         onHeaderClick={onHeaderClick}
         onRemoveAnnotation={onRemoveAnnotation}
         renderChildren={renderHeaderNodes}
+        readOnly={readOnly}
       />
     ));
   };

@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from models.annotation import Annotation
 from models.text import Text, INITIALIZED, ANNOTATED, PROGRESS
+from models.annotation_review import AnnotationReview
 from schemas.annotation import AnnotationCreate, AnnotationUpdate
 
 
@@ -57,7 +58,19 @@ class AnnotationCRUD:
 
     def get(self, db: Session, annotation_id: int) -> Optional[Annotation]:
         """Get annotation by ID."""
-        return db.query(Annotation).filter(Annotation.id == annotation_id).first()
+        annotation = db.query(Annotation).filter(Annotation.id == annotation_id).first()
+        if annotation:
+            # Add is_agreed status
+            annotation.is_agreed = self.is_annotation_agreed(db, annotation_id)
+        return annotation
+
+    def is_annotation_agreed(self, db: Session, annotation_id: int) -> bool:
+        """Check if an annotation has been agreed upon by any reviewer."""
+        agreed_review = db.query(AnnotationReview).filter(
+            AnnotationReview.annotation_id == annotation_id,
+            AnnotationReview.decision == "agree"
+        ).first()
+        return agreed_review is not None
 
     def get_multi(
         self, 
@@ -80,23 +93,47 @@ class AnnotationCRUD:
         if annotation_type:
             query = query.filter(Annotation.annotation_type == annotation_type)
         
-        return query.offset(skip).limit(limit).all()
+        annotations = query.offset(skip).limit(limit).all()
+        
+        # Add is_agreed status for each annotation
+        for annotation in annotations:
+            annotation.is_agreed = self.is_annotation_agreed(db, annotation.id)
+        
+        return annotations
 
     def get_by_text(self, db: Session, text_id: int) -> List[Annotation]:
         """Get all annotations for a specific text."""
-        return db.query(Annotation).filter(Annotation.text_id == text_id).all()
+        annotations = db.query(Annotation).filter(Annotation.text_id == text_id).all()
+        
+        # Add is_agreed status for each annotation
+        for annotation in annotations:
+            annotation.is_agreed = self.is_annotation_agreed(db, annotation.id)
+        
+        return annotations
 
     def get_by_annotator(self, db: Session, annotator_id: int, skip: int = 0, limit: int = 100) -> List[Annotation]:
         """Get annotations by a specific annotator."""
-        return db.query(Annotation).filter(
+        annotations = db.query(Annotation).filter(
             Annotation.annotator_id == annotator_id
         ).offset(skip).limit(limit).all()
+        
+        # Add is_agreed status for each annotation
+        for annotation in annotations:
+            annotation.is_agreed = self.is_annotation_agreed(db, annotation.id)
+        
+        return annotations
 
     def get_by_type(self, db: Session, annotation_type: str, skip: int = 0, limit: int = 100) -> List[Annotation]:
         """Get annotations by type."""
-        return db.query(Annotation).filter(
+        annotations = db.query(Annotation).filter(
             Annotation.annotation_type == annotation_type
         ).offset(skip).limit(limit).all()
+        
+        # Add is_agreed status for each annotation
+        for annotation in annotations:
+            annotation.is_agreed = self.is_annotation_agreed(db, annotation.id)
+        
+        return annotations
 
     def update(self, db: Session, db_obj: Annotation, obj_in: AnnotationUpdate) -> Annotation:
         """Update annotation."""
@@ -191,62 +228,68 @@ class AnnotationCRUD:
         end_pos: int,
         exclude_annotation_id: Optional[int] = None
     ) -> dict:
-        """Validate annotation positions against text content."""
+        """Validate annotation positions and return validation result."""
+        # Check if text exists
         text = db.query(Text).filter(Text.id == text_id).first()
         if not text:
             return {"valid": False, "error": "Text not found"}
         
-        if start_pos < 0 or end_pos > len(text.content):
-            return {"valid": False, "error": "Positions out of text bounds"}
+        # Check if positions are within text bounds
+        text_length = len(text.content)
+        if start_pos < 0 or end_pos < 0:
+            return {"valid": False, "error": "Positions cannot be negative"}
+        
+        if start_pos >= text_length:
+            return {"valid": False, "error": f"Start position ({start_pos}) exceeds text length ({text_length})"}
+        
+        if end_pos > text_length:
+            return {"valid": False, "error": f"End position ({end_pos}) exceeds text length ({text_length})"}
         
         if start_pos >= end_pos:
             return {"valid": False, "error": "Start position must be less than end position"}
         
-        # Check for overlapping annotations (optional - depends on requirements)
+        # Extract the selected text
+        selected_text = text.content[start_pos:end_pos]
+        
+        # Check for overlapping annotations
         overlapping = self.get_overlapping_annotations(
             db, text_id, start_pos, end_pos, exclude_annotation_id
         )
         
+        if overlapping:
+            return {
+                "valid": False, 
+                "error": f"Annotation overlaps with existing annotation(s): {[ann.id for ann in overlapping]}"
+            }
+        
         return {
-            "valid": True,
-            "selected_text": text.content[start_pos:end_pos],
-            "overlapping_annotations": len(overlapping) > 0
+            "valid": True, 
+            "selected_text": selected_text
         }
 
     def get_annotation_stats(self, db: Session, text_id: Optional[int] = None) -> dict:
         """Get annotation statistics."""
         query = db.query(Annotation)
+        
         if text_id:
             query = query.filter(Annotation.text_id == text_id)
         
-        total = query.count()
+        total_annotations = query.count()
         
-        # Get stats by type
-        type_stats = db.query(
-            Annotation.annotation_type, 
-            func.count(Annotation.id)
-        ).group_by(Annotation.annotation_type)
-        
-        if text_id:
-            type_stats = type_stats.filter(Annotation.text_id == text_id)
-        
-        type_counts = {type_name: count for type_name, count in type_stats.all()}
-        
-        # Get stats by annotator
-        annotator_stats = db.query(
-            Annotation.annotator_id, 
-            func.count(Annotation.id)
-        ).group_by(Annotation.annotator_id)
+        # Get count by annotation type
+        type_counts = db.query(
+            Annotation.annotation_type,
+            func.count(Annotation.id).label('count')
+        )
         
         if text_id:
-            annotator_stats = annotator_stats.filter(Annotation.text_id == text_id)
+            type_counts = type_counts.filter(Annotation.text_id == text_id)
         
-        annotator_counts = {annotator_id: count for annotator_id, count in annotator_stats.all()}
+        type_counts = type_counts.group_by(Annotation.annotation_type).all()
         
         return {
-            "total": total,
-            "by_type": type_counts,
-            "by_annotator": annotator_counts
+            "total_annotations": total_annotations,
+            "by_type": {item.annotation_type: item.count for item in type_counts}
         }
 
 

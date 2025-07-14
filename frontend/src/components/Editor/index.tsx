@@ -18,6 +18,7 @@ import {
   annotationField,
   addAnnotationEffect,
   clearAnnotationsEffect,
+  setHighlightedAnnotationEffect,
 } from "./extensions/annotationField";
 import { loadAnnotationConfig } from "@/config/annotation-options";
 import type { EditorProps, EditorRef } from "./types";
@@ -35,6 +36,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       readOnly = true,
       isCreatingAnnotation = false,
       isDeletingAnnotation = false,
+      highlightedAnnotationId,
     },
     ref
   ) => {
@@ -114,6 +116,11 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       const handleAnnotationLabelClick = (event: CustomEvent) => {
         const annotation = event.detail.annotation;
         if (annotation) {
+          // Don't show delete popup for agreed annotations
+          if (annotation.is_agreed) {
+            return;
+          }
+
           // Handle annotation label click (same as clicking on annotation mark)
           const editorElement = editorRef.current?.view?.dom;
           const editorRect = editorElement?.getBoundingClientRect();
@@ -193,6 +200,11 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           const annotation = annotations.find((ann) => ann.id === annotationId);
 
           if (annotation) {
+            // Don't show delete popup for agreed annotations
+            if (annotation.is_agreed) {
+              return;
+            }
+
             // Check if there's currently a multi-character selection
             let hasMultiCharSelection = false;
             if (currentSelection && currentSelection.text.length > 1) {
@@ -470,7 +482,6 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         "&": {
           fontSize: "16px",
           lineHeight: "1.5",
-          overflow: "hidden",
         },
         ".cm-content": {
           padding: "12px",
@@ -538,6 +549,18 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       }),
     ];
 
+    // Update highlighted annotation when highlightedAnnotationId changes
+    useEffect(() => {
+      if (editorReady && editorRef.current?.view) {
+        const view = editorRef.current.view;
+        view.dispatch({
+          effects: [
+            setHighlightedAnnotationEffect.of(highlightedAnnotationId || null),
+          ],
+        });
+      }
+    }, [highlightedAnnotationId, editorReady]);
+
     // Apply dynamic annotation styling
     useEffect(() => {
       const applyAnnotationStyles = async () => {
@@ -566,6 +589,50 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               opacity: 0.85;
             }
             
+            .annotation-agreed {
+              background-color: #dcfce7 !important;
+              border-color: #22c55e !important;
+              color: #15803d !important;
+              cursor: default !important;
+              position: relative;
+            }
+            
+            .annotation-agreed::after {
+              content: "🔒";
+              position: absolute;
+              right: 2px;
+              top: 50%;
+              transform: translateY(-50%);
+              font-size: 8px;
+              pointer-events: none;
+            }
+            
+            .annotation-label-agreed {
+              background-color: #dcfce7 !important;
+              border: 1px solid #22c55e !important;
+              color: #15803d !important;
+              cursor: default !important;
+              font-weight: 600;
+            }
+            
+            .annotation-highlighted {
+              animation: annotationHighlight 1s ease-out;
+              box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5) !important;
+              background-color: rgba(59, 130, 246, 0.2) !important;
+              border-color: rgba(59, 130, 246, 0.8) !important;
+              z-index: 10;
+              position: relative;
+            }
+            
+            .annotation-label-highlighted {
+              animation: annotationHighlight 1s ease-out;
+              box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5) !important;
+              background-color: rgba(59, 130, 246, 0.2) !important;
+              border-color: rgba(59, 130, 246, 0.8) !important;
+              z-index: 10;
+              position: relative;
+            }
+            
             @keyframes annotationFlash {
               0% {
                 transform: scale(1);
@@ -578,6 +645,21 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               100% {
                 transform: scale(1);
                 box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+              }
+            }
+            
+            @keyframes annotationHighlight {
+              0% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+                background-color: rgba(59, 130, 246, 0.1);
+              }
+              50% {
+                box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.3);
+                background-color: rgba(59, 130, 246, 0.3);
+              }
+              100% {
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+                background-color: rgba(59, 130, 246, 0.2);
               }
             }
           `;

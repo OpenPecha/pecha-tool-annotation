@@ -8,11 +8,12 @@ from database import Base
 INITIALIZED = "initialized"
 ANNOTATED = "annotated"
 REVIEWED = "reviewed"
+REVIEWED_NEEDS_REVISION = "reviewed_needs_revision"
 SKIPPED = "skipped"
 PROGRESS = "progress"
 
 # List of all valid statuses for validation
-VALID_STATUSES = [INITIALIZED, ANNOTATED, REVIEWED, SKIPPED, PROGRESS]
+VALID_STATUSES = [INITIALIZED, ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION, SKIPPED, PROGRESS]
 
 
 class Text(Base):

@@ -345,7 +345,7 @@ def get_texts_for_review(
     current_user: User = Depends(require_reviewer)
 ):
     """Get texts ready for review (annotated status) - Reviewer only."""
-    return text_crud.get_texts_for_review(db=db, skip=skip, limit=limit)
+    return text_crud.get_texts_for_review(db=db, skip=skip, limit=limit, reviewer_id=current_user.id)
 
 
 @router.get("/stats")
