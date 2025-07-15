@@ -13,7 +13,7 @@ import { useAuth } from "@/auth/use-auth-hook";
 import { toast } from "sonner";
 import { textApi } from "@/api/text";
 import { reviewApi } from "@/api/reviews";
-import type { TextResponse } from "@/api/types";
+import type { RecentActivityWithReviewCounts } from "@/api/types";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import BulkUploadModal from "../BulkUploadModal";
 import type { BulkUploadResponse } from "@/api/bulk-upload";
@@ -199,8 +199,8 @@ export const RegularUserDashboard: React.FC = () => {
   };
 
   // Helper function to determine activity type
-  const getActivityType = (text: { reviewer_id?: number }) => {
-    if (text.reviewer_id === currentUser?.id) {
+  const getActivityType = (activity: RecentActivityWithReviewCounts) => {
+    if (activity.text.reviewer_id === currentUser?.id) {
       return "review";
     }
     return "annotation";
@@ -221,75 +221,79 @@ export const RegularUserDashboard: React.FC = () => {
 
         {/* Main Action Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Start Work Card */}
-          <Card className="hover:shadow-lg  transition-all duration-300 cursor-pointer border-2 hover:border-blue-200">
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-center mb-4">
-                <StartWorkIcon />
-              </div>
-              <CardTitle className="text-2xl">Start Work</CardTitle>
-              <CardDescription className="text-base">
-                Begin annotating texts and creating structured content
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center">
-              {workInProgress.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h3 className="font-semibold mb-2">Work in Progress</h3>
-                    {workInProgress.map((text) => (
-                      <div
-                        key={text.id}
-                        className="bg-white p-3 rounded border"
-                      >
-                        <div className="text-left">
-                          <p className="font-medium text-gray-900">
-                            {text.title}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Status: {text.status} • Started:{" "}
-                            {formatDate(text.updated_at || text.created_at)}
-                          </p>
+          {/* Start Work Card - Hide from reviewers */}
+          {currentUser?.role !== "reviewer" && (
+            <Card className="hover:shadow-lg  transition-all duration-300 cursor-pointer border-2 hover:border-blue-200">
+              <CardHeader className="text-center pb-4">
+                <div className="flex justify-center mb-4">
+                  <StartWorkIcon />
+                </div>
+                <CardTitle className="text-2xl">Start Work</CardTitle>
+                <CardDescription className="text-base">
+                  Begin annotating texts and creating structured content
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                {workInProgress.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h3 className="font-semibold mb-2">Work in Progress</h3>
+                      {workInProgress.map((text) => (
+                        <div
+                          key={text.id}
+                          className="bg-white p-3 rounded border"
+                        >
+                          <div className="text-left">
+                            <p className="font-medium text-gray-900">
+                              {text.title}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Status: {text.status} • Started:{" "}
+                              {formatDate(text.updated_at || text.created_at)}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                    <div className="flex gap-2 justify-center">
+                      <Button
+                        size="lg"
+                        className="flex-1 cursor-pointer"
+                        onClick={() =>
+                          navigate(`/task/${workInProgress[0].id}`)
+                        }
+                      >
+                        Continue
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2 justify-center">
+                ) : (
+                  <>
                     <Button
                       size="lg"
-                      className="flex-1 cursor-pointer"
-                      onClick={() => navigate(`/task/${workInProgress[0].id}`)}
+                      className="w-full"
+                      onClick={handleStartWork}
+                      disabled={isLoadingText}
                     >
-                      Continue
+                      {isLoadingText ? (
+                        <>
+                          <AiOutlineLoading3Quarters className="w-4 h-4 mr-2 animate-spin" />
+                          Finding Text...
+                        </>
+                      ) : (
+                        "Start Annotating"
+                      )}
                     </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <Button
-                    size="lg"
-                    className="w-full"
-                    onClick={handleStartWork}
-                    disabled={isLoadingText}
-                  >
-                    {isLoadingText ? (
-                      <>
-                        <AiOutlineLoading3Quarters className="w-4 h-4 mr-2 animate-spin" />
-                        Finding Text...
-                      </>
-                    ) : (
-                      "Start Annotating"
-                    )}
-                  </Button>
-                  <p className="text-sm text-gray-500 mt-3">
-                    {isLoadingText
-                      ? "Looking for available texts to annotate..."
-                      : "Create new annotations, mark headers, identify persons and objects"}
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                    <p className="text-sm text-gray-500 mt-3">
+                      {isLoadingText
+                        ? "Looking for available texts to annotate..."
+                        : "Create new annotations, mark headers, identify persons and objects"}
+                    </p>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Review Work Card - Show for reviewers or admins */}
           {(currentUser?.role === "reviewer" ||
@@ -353,52 +357,64 @@ export const RegularUserDashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Reviewed Work Section */}
-        <div className="mb-8">
-          <AnnotatorReviewedWork />
-        </div>
+        {/* Review Progress Section - Show for reviewers and admins */}
+        {(currentUser?.role === "reviewer" ||
+          currentUser?.role === "admin") && (
+          <div className="mb-8">
+            <ReviewProgressSection />
+          </div>
+        )}
 
-        {/* Recent Activity Section */}
-        <Card className="w-full mx-auto">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <RecentActivityIcon />
-              <CardTitle>Recent Activity</CardTitle>
-            </div>
-            <CardDescription>
-              Your recent work and contributions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingActivity && (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                <p className="text-gray-500">Loading recent activity...</p>
+        {/* Reviewed Work Section - Hide from annotators */}
+        {currentUser?.role !== "annotator" && (
+          <div className="mb-8">
+            <AnnotatorReviewedWork />
+          </div>
+        )}
+
+        {/* Recent Activity Section - Hide from reviewers */}
+        {currentUser?.role !== "reviewer" && (
+          <Card className="w-full mx-auto">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <RecentActivityIcon />
+                <CardTitle>Recent Activity</CardTitle>
               </div>
-            )}
-            {recentActivity.length > 0 ? (
-              <div className="space-y-3">
-                {recentActivity.map((text) => {
-                  const activityType = getActivityType(text);
-                  return (
-                    <RecentActivityItem
-                      key={text.id}
-                      text={text}
-                      activityType={activityType}
-                    />
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No recent activity yet.</p>
-                <p className="text-sm text-gray-400 mt-1">
-                  Start working to see your activity here!
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              <CardDescription>
+                Your recent work and contributions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingActivity && (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                  <p className="text-gray-500">Loading recent activity...</p>
+                </div>
+              )}
+              {recentActivity.length > 0 ? (
+                <div className="space-y-3">
+                  {recentActivity.map((activity) => {
+                    const activityType = getActivityType(activity);
+                    return (
+                      <RecentActivityItem
+                        key={activity.text.id}
+                        activity={activity}
+                        activityType={activityType}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No recent activity yet.</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Start working to see your activity here!
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Bulk Upload Modal */}
@@ -412,10 +428,10 @@ export const RegularUserDashboard: React.FC = () => {
 };
 
 function RecentActivityItem({
-  text,
+  activity,
   activityType,
 }: {
-  readonly text: TextResponse;
+  readonly activity: RecentActivityWithReviewCounts;
   readonly activityType: string;
 }) {
   const navigate = useNavigate();
@@ -423,7 +439,12 @@ function RecentActivityItem({
 
   // Handle clicking on recent activity item
   const handleActivityClick = (textId: number) => {
-    navigate(`/task/${textId}`);
+    // Only allow editing if not all annotations are accepted
+    if (activity.all_accepted) {
+      navigate(`/task/${textId}`); // View only
+    } else {
+      navigate(`/task/${textId}`); // Edit allowed
+    }
   };
 
   // Mutation to cancel work (delete user annotations and skip text)
@@ -460,7 +481,7 @@ function RecentActivityItem({
   };
   return (
     <div
-      key={text.id}
+      key={activity.text.id}
       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
     >
       <div className="flex items-center gap-3">
@@ -469,11 +490,25 @@ function RecentActivityItem({
             activityType === "annotation" ? "bg-blue-500" : "bg-green-500"
           }`}
         ></div>
-        <div>
-          <p className="font-medium text-gray-900">{text.title}</p>
+        <div className="flex-1">
+          <p className="font-medium text-gray-900">{activity.text.title}</p>
           <p className="text-sm text-gray-500">
-            {formatDate(text.updated_at || text.created_at)} • {text.status}
+            {formatDate(activity.text.updated_at || activity.text.created_at)} •{" "}
+            {activity.text.status}
           </p>
+          {activity.total_annotations > 0 && (
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                ✓ {activity.accepted_count}
+              </span>
+              <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">
+                ✗ {activity.rejected_count}
+              </span>
+              <span className="text-xs text-gray-500">
+                {activity.total_annotations} total
+              </span>
+            </div>
+          )}
         </div>
       </div>
       <div className="flex gap-2">
@@ -483,12 +518,17 @@ function RecentActivityItem({
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            handleActivityClick(text.id);
+            handleActivityClick(activity.text.id);
           }}
+          disabled={activity.all_accepted && activityType === "annotation"}
         >
-          {activityType === "annotation" ? "Edit" : "Review"}
+          {activity.all_accepted && activityType === "annotation"
+            ? "View"
+            : activityType === "annotation"
+            ? "Edit"
+            : "Review"}
         </Button>
-        {text.status === "progress" && (
+        {activity.text.status === "progress" && (
           <Button
             variant="outline"
             size="sm"
@@ -505,5 +545,117 @@ function RecentActivityItem({
         )}
       </div>
     </div>
+  );
+}
+
+// Review Progress Section Component
+function ReviewProgressSection() {
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+  // Fetch reviewer's work in progress
+  const { data: reviewProgress = [], isLoading: isLoadingProgress } = useQuery({
+    queryKey: ["my-review-progress"],
+    queryFn: () => reviewApi.getMyReviewProgress(),
+    refetchOnWindowFocus: false,
+    enabled: currentUser?.role === "reviewer" || currentUser?.role === "admin",
+  });
+
+  if (isLoadingProgress) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>My Review Progress</CardTitle>
+          <CardDescription>
+            Texts currently assigned to you for review
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
+            <p className="text-gray-500">Loading review progress...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (reviewProgress.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>My Review Progress</CardTitle>
+          <CardDescription>
+            Texts currently assigned to you for review
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-gray-500">No texts assigned for review yet.</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Start reviewing texts to see your progress here!
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>My Review Progress</CardTitle>
+        <CardDescription>
+          Texts currently assigned to you for review ({reviewProgress.length})
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {reviewProgress.map((text) => (
+            <div
+              key={text.id}
+              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900">{text.title}</h4>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {text.reviewed_count} of {text.annotation_count}{" "}
+                      annotations reviewed
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${text.progress_percentage}%` }}
+                      />
+                    </div>
+                    <span className="text-sm text-gray-600 min-w-[3rem]">
+                      {text.progress_percentage}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 ml-4">
+                {text.is_complete && (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                    Complete
+                  </span>
+                )}
+                <Button
+                  size="sm"
+                  variant={text.is_complete ? "outline" : "default"}
+                  onClick={() => navigate(`/review/${text.id}`)}
+                >
+                  {text.is_complete ? "View" : "Continue"}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

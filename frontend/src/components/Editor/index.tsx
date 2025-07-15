@@ -12,6 +12,7 @@ import { EditorView } from "@codemirror/view";
 import { EditorSelection } from "@codemirror/state";
 import { BubbleMenu } from "./components/BubbleMenu";
 import { DeletePopup } from "./components/DeletePopup";
+import { EditPopup } from "./components/EditPopup";
 import { useEditorState } from "./hooks/useEditorState";
 import { useAnnotationEffects } from "./hooks/useAnnotationEffects";
 import {
@@ -31,6 +32,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       onTextSelect,
       onAddAnnotation,
       onRemoveAnnotation,
+      onUpdateAnnotation,
       onHeaderSelected,
       onUpdateHeaderSpan,
       readOnly = true,
@@ -54,22 +56,31 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       bubbleMenuVisible,
       bubbleMenuPosition,
       annotationText,
+      annotationLevel,
       selectedHeaderId,
       deletePopupVisible,
       deletePopupPosition,
       annotationToDelete,
+      editPopupVisible,
+      editPopupPosition,
+      annotationToEdit,
       editorReady,
       setCurrentSelection,
       setBubbleMenuVisible,
       setBubbleMenuPosition,
       setAnnotationText,
+      setAnnotationLevel,
       setSelectedHeaderId,
       setDeletePopupVisible,
       setDeletePopupPosition,
       setAnnotationToDelete,
+      setEditPopupVisible,
+      setEditPopupPosition,
+      setAnnotationToEdit,
       setEditorReady,
       resetBubbleMenu,
       resetDeletePopup,
+      resetEditPopup,
     } = useEditorState();
 
     const editorRef = useAnnotationEffects(annotations, editorReady);
@@ -149,9 +160,9 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               popupY = editorRect.height - popupHeight - margin;
             }
 
-            setDeletePopupPosition({ x: popupX, y: popupY });
-            setAnnotationToDelete(annotation);
-            setDeletePopupVisible(true);
+            setEditPopupPosition({ x: popupX, y: popupY });
+            setAnnotationToEdit(annotation);
+            setEditPopupVisible(true);
             setBubbleMenuVisible(false);
           }
         }
@@ -187,9 +198,14 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         const annotationElement = target.closest("[data-annotation-id]");
         const deletePopupElement = target.closest(".delete-popup");
 
-        // Close delete popup if clicking outside of it and not on an annotation
+        // Close popups if clicking outside of them and not on an annotation
+        const editPopupElement = target.closest(".edit-popup");
         if (deletePopupVisible && !deletePopupElement && !annotationElement) {
           resetDeletePopup();
+          return;
+        }
+        if (editPopupVisible && !editPopupElement && !annotationElement) {
+          resetEditPopup();
           return;
         }
 
@@ -242,9 +258,9 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                   popupY = editorRect.height - popupHeight - margin;
                 }
 
-                setDeletePopupPosition({ x: popupX, y: popupY });
-                setAnnotationToDelete(annotation);
-                setDeletePopupVisible(true);
+                setEditPopupPosition({ x: popupX, y: popupY });
+                setAnnotationToEdit(annotation);
+                setEditPopupVisible(true);
                 setBubbleMenuVisible(false);
               }
             }
@@ -408,7 +424,11 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
             end: currentSelection.endIndex,
           });
         } else {
-          onAddAnnotation(type);
+          onAddAnnotation(
+            type,
+            annotationText || undefined,
+            annotationLevel || undefined
+          );
         }
 
         resetBubbleMenu();
@@ -423,6 +443,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         currentSelection,
         onHeaderSelected,
         onAddAnnotation,
+        annotationText,
+        annotationLevel,
         resetBubbleMenu,
         onTextSelect,
         saveScrollPosition,
@@ -466,6 +488,64 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       annotationToDelete,
       onRemoveAnnotation,
       resetDeletePopup,
+      saveScrollPosition,
+      restoreScrollPosition,
+    ]);
+
+    const handleUpdateAnnotation = useCallback(
+      (annotationId: string, newType: string, newText?: string) => {
+        if (onUpdateAnnotation) {
+          // Use the passed update function if available
+          onUpdateAnnotation(annotationId, newType, newText);
+        } else {
+          // Fallback to remove and add if no update function provided
+          // Save scroll position before update
+          saveScrollPosition();
+
+          // Find the annotation to update
+          const annotation = annotations.find((ann) => ann.id === annotationId);
+          if (annotation) {
+            // Remove the old annotation and add the updated one
+            onRemoveAnnotation(annotationId);
+            // Add new annotation with same position but new type/text
+            onAddAnnotation(newType, newText);
+          }
+
+          // Restore scroll position after update
+          setTimeout(() => {
+            restoreScrollPosition();
+          }, 50);
+        }
+
+        resetEditPopup();
+      },
+      [
+        annotations,
+        onRemoveAnnotation,
+        onAddAnnotation,
+        resetEditPopup,
+        saveScrollPosition,
+        restoreScrollPosition,
+      ]
+    );
+
+    const handleDeleteFromEdit = useCallback(() => {
+      if (annotationToEdit) {
+        // Save scroll position before deletion
+        saveScrollPosition();
+
+        onRemoveAnnotation(annotationToEdit.id);
+        resetEditPopup();
+
+        // Restore scroll position after deletion
+        setTimeout(() => {
+          restoreScrollPosition();
+        }, 50);
+      }
+    }, [
+      annotationToEdit,
+      onRemoveAnnotation,
+      resetEditPopup,
       saveScrollPosition,
       restoreScrollPosition,
     ]);
@@ -704,7 +784,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     }, [annotations.length, editorReady]); // Only when annotation count changes
 
     return (
-      <div className="h-[calc(100vh-140px)] min-h-[200px] overflow-y-scroll bg-white rounded-lg shadow-lg relative">
+      <div className="h-full min-h-[200px] overflow-y-scroll bg-white rounded-lg shadow-lg relative">
         <CodeMirror
           ref={editorRef}
           value={textRef.current}
@@ -746,12 +826,14 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           position={bubbleMenuPosition}
           currentSelection={currentSelection}
           annotationText={annotationText}
+          annotationLevel={annotationLevel}
           selectedHeaderId={selectedHeaderId}
           annotations={annotations}
           isCreatingAnnotation={isCreatingAnnotation}
           onAddAnnotation={handleAddAnnotation}
           onCancel={resetBubbleMenu}
           onAnnotationTextChange={setAnnotationText}
+          onAnnotationLevelChange={setAnnotationLevel}
           onSelectedHeaderIdChange={setSelectedHeaderId}
           onUpdateHeaderSpan={handleUpdateHeaderSpan}
         />
@@ -763,6 +845,16 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           isDeletingAnnotation={isDeletingAnnotation}
           onDelete={handleDeleteAnnotation}
           onCancel={resetDeletePopup}
+        />
+
+        <EditPopup
+          visible={editPopupVisible}
+          position={editPopupPosition}
+          annotation={annotationToEdit}
+          isUpdatingAnnotation={isDeletingAnnotation}
+          onUpdate={handleUpdateAnnotation}
+          onDelete={handleDeleteFromEdit}
+          onCancel={resetEditPopup}
         />
       </div>
     );

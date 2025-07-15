@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, validator
 from typing import Optional, Dict, Any
 from datetime import datetime
+from models.annotation import AnnotationLevel
 
 
 class AnnotationBase(BaseModel):
@@ -10,6 +11,7 @@ class AnnotationBase(BaseModel):
     selected_text: Optional[str] = None
     label: Optional[str] = None
     name: Optional[str] = None  # Custom name for the annotation (especially for headers)
+    level: Optional[AnnotationLevel] = None  # Importance level: minor, major, critical
     meta: Optional[Dict[str, Any]] = None
     confidence: int = 100
 
@@ -43,6 +45,7 @@ class AnnotationUpdate(BaseModel):
     selected_text: Optional[str] = None
     label: Optional[str] = None
     name: Optional[str] = None  # Custom name for the annotation
+    level: Optional[AnnotationLevel] = None  # Importance level: minor, major, critical
     meta: Optional[Dict[str, Any]] = None
     confidence: Optional[int] = None
 

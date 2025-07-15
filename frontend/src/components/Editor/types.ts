@@ -7,8 +7,13 @@ export interface EditorProps {
   onTextSelect: (
     selection: { text: string; start: number; end: number } | null
   ) => void;
-  onAddAnnotation: (type: string, name?: string) => void;
+  onAddAnnotation: (type: string, name?: string, level?: string) => void;
   onRemoveAnnotation: (id: string) => void;
+  onUpdateAnnotation?: (
+    annotationId: string,
+    newType: string,
+    newText?: string
+  ) => void;
   onHeaderSelected?: (selection: {
     text: string;
     start: number;
@@ -52,12 +57,14 @@ export interface BubbleMenuProps {
   currentSelection: CurrentSelection | null;
   annotationText: string;
   selectedHeaderId: string;
+  annotationLevel: string;
   annotations: Annotation[];
   isCreatingAnnotation: boolean;
   onAddAnnotation: (type: string) => void;
   onCancel: () => void;
   onAnnotationTextChange: (text: string) => void;
   onSelectedHeaderIdChange: (id: string) => void;
+  onAnnotationLevelChange: (level: string) => void;
   onUpdateHeaderSpan: () => void;
 }
 
@@ -66,6 +73,16 @@ export interface DeletePopupProps {
   position: DeletePopupPosition;
   annotation: Annotation | null;
   isDeletingAnnotation: boolean;
+  onDelete: () => void;
+  onCancel: () => void;
+}
+
+export interface EditPopupProps {
+  visible: boolean;
+  position: DeletePopupPosition;
+  annotation: Annotation | null;
+  isUpdatingAnnotation: boolean;
+  onUpdate: (annotationId: string, newType: string, newText?: string) => void;
   onDelete: () => void;
   onCancel: () => void;
 }

@@ -21,6 +21,7 @@ class AnnotationCRUD:
             selected_text=obj_in.selected_text,
             label=obj_in.label,
             name=obj_in.name,
+            level=obj_in.level,
             meta=obj_in.meta,
             confidence=obj_in.confidence,
         )
@@ -47,6 +48,7 @@ class AnnotationCRUD:
             selected_text=obj_in.selected_text,
             label=obj_in.label,
             name=obj_in.name,
+            level=obj_in.level,
             meta=obj_in.meta,
             confidence=obj_in.confidence,
         )
@@ -251,16 +253,16 @@ class AnnotationCRUD:
         # Extract the selected text
         selected_text = text.content[start_pos:end_pos]
         
-        # Check for overlapping annotations
-        overlapping = self.get_overlapping_annotations(
-            db, text_id, start_pos, end_pos, exclude_annotation_id
-        )
-        
-        if overlapping:
-            return {
-                "valid": False, 
-                "error": f"Annotation overlaps with existing annotation(s): {[ann.id for ann in overlapping]}"
-            }
+        # Note: Overlapping annotations are now allowed
+        # overlapping = self.get_overlapping_annotations(
+        #     db, text_id, start_pos, end_pos, exclude_annotation_id
+        # )
+        # 
+        # if overlapping:
+        #     return {
+        #         "valid": False, 
+        #         "error": f"Annotation overlaps with existing annotation(s): {[ann.id for ann in overlapping]}"
+        #     }
         
         return {
             "valid": True, 

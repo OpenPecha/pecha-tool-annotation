@@ -59,4 +59,13 @@ class TaskSubmissionResponse(BaseModel):
     """Response for task submission - includes submitted task and next task if available"""
     submitted_task: TextResponse
     next_task: Optional[TextResponse] = None
-    message: str 
+    message: str
+
+
+class RecentActivityWithReviewCounts(BaseModel):
+    """Response for recent activity with annotation review counts"""
+    text: TextResponse
+    total_annotations: int
+    accepted_count: int
+    rejected_count: int
+    all_accepted: bool 

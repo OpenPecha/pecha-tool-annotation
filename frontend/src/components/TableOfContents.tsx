@@ -382,119 +382,117 @@ export const TableOfContents = ({
   };
 
   return (
-    <div className="sticky top-5 z-40">
-      <div
-        className={`transition-all duration-300 ease-in-out ${
-          isOpen ? "w-80" : "w-14"
+    <div
+      className={`transition-all duration-300 ease-in-out z-40 ${
+        isOpen ? "w-80" : "w-14"
+      }`}
+    >
+      <Card
+        className={`shadow-lg border-0 backdrop-blur-sm h-[75vh] flex flex-col mt-4 mb-4 ${
+          !isOpen ? "p-0" : ""
         }`}
       >
-        <Card
-          className={`shadow-lg border-0 backdrop-blur-sm h-fit ${
-            !isOpen ? "p-0" : "p-3"
-          }`}
-        >
-          <CardHeader className={`${isOpen ? "pb-3" : "p-3"}`}>
-            <div className="flex items-center justify-between">
-              {isOpen && (
-                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <IoList className="w-5 h-5 text-purple-600" />
-                  Table of Contents
-                </CardTitle>
+        <CardHeader className={`${isOpen ? "pb-3" : "p-3"}`}>
+          <div className="flex items-center justify-between">
+            {isOpen && (
+              <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <IoList className="w-5 h-5 text-purple-600" />
+                Table of Contents
+              </CardTitle>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggle}
+              className={`${
+                isOpen
+                  ? "h-8 w-8 p-0 hover:bg-blue-50"
+                  : "h-10 w-10 p-0 hover:bg-blue-50 rounded-full shadow-sm border border-gray-200"
+              } transition-all duration-200`}
+              title={
+                isOpen ? "Close Table of Contents" : "Open Table of Contents"
+              }
+            >
+              {isOpen ? (
+                <IoChevronBack className="h-4 w-4 text-gray-600" />
+              ) : (
+                <IoList className="h-5 w-5 text-purple-600" />
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onToggle}
-                className={`${
-                  isOpen
-                    ? "h-8 w-8 p-0 hover:bg-blue-50"
-                    : "h-10 w-10 p-0 hover:bg-blue-50 rounded-full shadow-sm border border-gray-200"
-                } transition-all duration-200`}
-                title={
-                  isOpen ? "Close Table of Contents" : "Open Table of Contents"
-                }
-              >
-                {isOpen ? (
-                  <IoChevronBack className="h-4 w-4 text-gray-600" />
-                ) : (
-                  <IoList className="h-5 w-5 text-purple-600" />
-                )}
-              </Button>
-            </div>
-          </CardHeader>
+            </Button>
+          </div>
+        </CardHeader>
 
-          {isOpen && (
-            <CardContent className="pt-0">
-              {/* Pending Header Input */}
-              {pendingHeader && (
-                <div className="mb-3 p-2 border-2 border-purple-300 rounded bg-purple-50">
-                  <div className="mb-1">
-                    <p className="text-xs text-purple-700 truncate">
-                      "{pendingHeader.text}"
-                    </p>
-                  </div>
-                  <div className="relative">
-                    <div className="flex gap-2">
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={headerName}
-                        onChange={handleInputChange}
-                        onKeyDown={handleKeyDown}
-                        onFocus={handleInputFocus}
-                        onBlur={handleInputBlur}
-                        placeholder="Enter header name..."
-                        className="flex-1 px-2 py-1 text-xs border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-transparent"
-                        autoFocus
-                      />
-                    </div>
-
-                    {/* Suggestions Dropdown */}
-                    {showSuggestions && suggestions.length > 0 && (
-                      <div
-                        ref={suggestionsRef}
-                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto z-50"
-                      >
-                        {suggestions.map((suggestion, index) => (
-                          <div
-                            key={index}
-                            onClick={() => handleSuggestionClick(suggestion)}
-                            className={`px-2 py-1 cursor-pointer text-xs hover:bg-blue-50 ${
-                              index === selectedSuggestionIndex
-                                ? "bg-blue-100 text-purple-900"
-                                : "text-gray-900"
-                            }`}
-                          >
-                            {suggestion?.res || String(suggestion)}
-                          </div>
-                        ))}
-                        {isLoadingSuggestions && (
-                          <div className="px-2 py-1 text-xs text-gray-500">
-                            Loading suggestions...
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-purple-600 mt-1">
-                    Press Enter to save, Esc to cancel.
+        {isOpen && (
+          <CardContent className="pt-0 flex-1 flex flex-col min-h-0">
+            {/* Pending Header Input */}
+            {pendingHeader && (
+              <div className="mb-3 p-2 border-2 border-purple-300 rounded bg-purple-50 flex-shrink-0">
+                <div className="mb-1">
+                  <p className="text-xs text-purple-700 truncate">
+                    "{pendingHeader.text}"
                   </p>
                 </div>
-              )}
+                <div className="relative">
+                  <div className="flex gap-2">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={headerName}
+                      onChange={handleInputChange}
+                      onKeyDown={handleKeyDown}
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
+                      placeholder="Enter header name..."
+                      className="flex-1 px-2 py-1 text-xs border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-transparent"
+                      autoFocus
+                    />
+                  </div>
 
-              <div className="space-y-1 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                {headers.length === 0 ? (
-                  <p className="text-xs text-gray-500 italic px-2 py-3">
-                    No headers found. Add header annotations to see them here.
-                  </p>
-                ) : (
-                  renderHeaderNodes(headerTree)
-                )}
+                  {/* Suggestions Dropdown */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div
+                      ref={suggestionsRef}
+                      className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto z-50"
+                    >
+                      {suggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className={`px-2 py-1 cursor-pointer text-xs hover:bg-blue-50 ${
+                            index === selectedSuggestionIndex
+                              ? "bg-blue-100 text-purple-900"
+                              : "text-gray-900"
+                          }`}
+                        >
+                          {suggestion?.res || String(suggestion)}
+                        </div>
+                      ))}
+                      {isLoadingSuggestions && (
+                        <div className="px-2 py-1 text-xs text-gray-500">
+                          Loading suggestions...
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-purple-600 mt-1">
+                  Press Enter to save, Esc to cancel.
+                </p>
               </div>
-            </CardContent>
-          )}
-        </Card>
-      </div>
+            )}
+
+            <div className="space-y-1 flex-1 min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              {headers.length === 0 ? (
+                <p className="text-xs text-gray-500 italic px-2 py-3">
+                  No headers found. Add header annotations to see them here.
+                </p>
+              ) : (
+                renderHeaderNodes(headerTree)
+              )}
+            </div>
+          </CardContent>
+        )}
+      </Card>
     </div>
   );
 };

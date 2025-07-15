@@ -232,6 +232,55 @@ class TextCRUD:
         
         return recent_texts
 
+    def get_recent_activity_with_review_counts(self, db: Session, user_id: int, limit: int = 10) -> List[dict]:
+        """Get recent texts annotated or reviewed by the user with annotation review counts."""
+        from models.annotation import Annotation
+        from models.annotation_review import AnnotationReview
+        
+        # Get recent texts
+        recent_texts = self.get_recent_activity(db, user_id, limit)
+        
+        result = []
+        for text in recent_texts:
+            # Get all annotations for this text
+            annotations = db.query(Annotation).filter(Annotation.text_id == text.id).all()
+            
+            # Count total annotations
+            total_annotations = len(annotations)
+            
+            # Count accepted and rejected annotations
+            accepted_count = 0
+            rejected_count = 0
+            
+            for annotation in annotations:
+                reviews = db.query(AnnotationReview).filter(
+                    AnnotationReview.annotation_id == annotation.id
+                ).all()
+                
+                # For each annotation, check if there are reviews
+                if reviews:
+                    # Count agree vs disagree decisions
+                    for review in reviews:
+                        if review.decision == "agree":
+                            accepted_count += 1
+                        elif review.decision == "disagree":
+                            rejected_count += 1
+            
+            # Calculate if all annotations are accepted (no rejections and all have reviews)
+            all_accepted = (total_annotations > 0 and 
+                           rejected_count == 0 and 
+                           accepted_count == total_annotations)
+            
+            result.append({
+                "text": text,
+                "total_annotations": total_annotations,
+                "accepted_count": accepted_count,
+                "rejected_count": rejected_count,
+                "all_accepted": all_accepted
+            })
+        
+        return result
+
     def get_user_stats(self, db: Session, user_id: int) -> dict:
         """Get statistics for a specific user."""
         # Count texts annotated by user (where user is annotator and status is annotated/reviewed/reviewed_needs_revision)

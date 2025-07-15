@@ -12,6 +12,7 @@ import type {
   UserStats,
   RejectedTextWithDetails,
   AdminTextStatistics,
+  RecentActivityWithReviewCounts,
 } from "./types";
 
 // Text API client
@@ -124,8 +125,13 @@ export const textApi = {
   },
 
   // Get recent activity for current user
-  getRecentActivity: async (limit: number = 10): Promise<TextResponse[]> => {
-    return apiClient.get<TextResponse[]>("/texts/recent-activity", { limit });
+  getRecentActivity: async (
+    limit: number = 10
+  ): Promise<RecentActivityWithReviewCounts[]> => {
+    return apiClient.get<RecentActivityWithReviewCounts[]>(
+      "/texts/recent-activity",
+      { limit }
+    );
   },
 
   // Get user statistics

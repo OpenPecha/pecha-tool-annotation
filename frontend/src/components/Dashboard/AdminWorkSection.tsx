@@ -13,6 +13,8 @@ import { textApi } from "@/api/text";
 import { toast } from "sonner";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { IoDocumentText } from "react-icons/io5";
+import { useAuth } from "@/auth/use-auth-hook";
+import type { RecentActivityWithReviewCounts } from "@/api/types";
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -59,6 +61,7 @@ const RecentActivityIcon = () => (
 export const AdminWorkSection: React.FC = () => {
   const navigate = useNavigate();
   const [isLoadingText, setIsLoadingText] = React.useState(false);
+  const { currentUser } = useAuth();
 
   // Fetch user's work in progress
   const { data: workInProgress = [] } = useQuery({
@@ -124,95 +127,97 @@ export const AdminWorkSection: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Start Work Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <IoDocumentText className="w-5 h-5" />
-            Work Management
-          </CardTitle>
-          <CardDescription>
-            Manage annotation tasks and work in progress
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {workInProgress.length > 0 ? (
-            // Show work in progress
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-orange-50 border-2 border-orange-200 p-6 rounded-lg">
-                <div className="text-center mb-4">
-                  <h3 className="text-xl font-semibold text-orange-800 mb-2">
-                    Work in Progress
-                  </h3>
-                  <p className="text-orange-600 text-sm">
-                    You have annotation tasks in progress
-                  </p>
-                </div>
-                <div className="space-y-3">
-                  {workInProgress.map((text) => (
-                    <div
-                      key={text.id}
-                      className="flex items-center justify-between p-4 bg-white rounded-lg border"
-                    >
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {text.title}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Status: {text.status} • Started:{" "}
-                          {formatDate(text.updated_at || text.created_at)}
-                        </p>
-                      </div>
-                      <Button
-                        size="lg"
-                        className="cursor-pointer"
-                        onClick={() => navigate(`/task/${text.id}`)}
+      {/* Start Work Card - Hide from reviewers */}
+      {currentUser?.role !== "reviewer" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <IoDocumentText className="w-5 h-5" />
+              Work Management
+            </CardTitle>
+            <CardDescription>
+              Manage annotation tasks and work in progress
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {workInProgress.length > 0 ? (
+              // Show work in progress
+              <div className="max-w-2xl mx-auto">
+                <div className="bg-orange-50 border-2 border-orange-200 p-6 rounded-lg">
+                  <div className="text-center mb-4">
+                    <h3 className="text-xl font-semibold text-orange-800 mb-2">
+                      Work in Progress
+                    </h3>
+                    <p className="text-orange-600 text-sm">
+                      You have annotation tasks in progress
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    {workInProgress.map((text) => (
+                      <div
+                        key={text.id}
+                        className="flex items-center justify-between p-4 bg-white rounded-lg border"
                       >
-                        Continue
-                      </Button>
-                    </div>
-                  ))}
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {text.title}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Status: {text.status} • Started:{" "}
+                            {formatDate(text.updated_at || text.created_at)}
+                          </p>
+                        </div>
+                        <Button
+                          size="lg"
+                          className="cursor-pointer"
+                          onClick={() => navigate(`/task/${text.id}`)}
+                        >
+                          Continue
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            // Show start working
-            <div className="max-w-lg mx-auto">
-              <Card className="border-2 border-blue-200 bg-blue-50">
-                <CardHeader className="text-center">
-                  <StartWorkIcon />
-                  <CardTitle className="text-xl">Start Working</CardTitle>
-                  <CardDescription>
-                    Begin annotating texts as an admin
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    size="lg"
-                    className="w-full"
-                    onClick={handleStartWork}
-                    disabled={isLoadingText}
-                  >
-                    {isLoadingText ? (
-                      <>
-                        <AiOutlineLoading3Quarters className="w-4 h-4 mr-2 animate-spin" />
-                        Finding Text...
-                      </>
-                    ) : (
-                      "Start Annotating"
-                    )}
-                  </Button>
-                  <p className="text-sm text-gray-500 mt-3 text-center">
-                    {isLoadingText
-                      ? "Looking for available texts to annotate..."
-                      : "Create new annotations, mark headers, identify persons and objects"}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            ) : (
+              // Show start working
+              <div className="max-w-lg mx-auto">
+                <Card className="border-2 border-blue-200 bg-blue-50">
+                  <CardHeader className="text-center">
+                    <StartWorkIcon />
+                    <CardTitle className="text-xl">Start Working</CardTitle>
+                    <CardDescription>
+                      Begin annotating texts as an admin
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      onClick={handleStartWork}
+                      disabled={isLoadingText}
+                    >
+                      {isLoadingText ? (
+                        <>
+                          <AiOutlineLoading3Quarters className="w-4 h-4 mr-2 animate-spin" />
+                          Finding Text...
+                        </>
+                      ) : (
+                        "Start Annotating"
+                      )}
+                    </Button>
+                    <p className="text-sm text-gray-500 mt-3 text-center">
+                      {isLoadingText
+                        ? "Looking for available texts to annotate..."
+                        : "Create new annotations, mark headers, identify persons and objects"}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Activity */}
       <Card>
@@ -234,8 +239,11 @@ export const AdminWorkSection: React.FC = () => {
           )}
           {recentActivity.length > 0 ? (
             <div className="space-y-3">
-              {recentActivity.map((text) => (
-                <RecentActivityItem key={text.id} text={text} />
+              {recentActivity.map((activity) => (
+                <RecentActivityItem
+                  key={activity.text.id}
+                  activity={activity}
+                />
               ))}
             </div>
           ) : (
@@ -249,35 +257,54 @@ export const AdminWorkSection: React.FC = () => {
   );
 };
 
-function RecentActivityItem({ text }: { text: any }) {
+function RecentActivityItem({
+  activity,
+}: {
+  activity: RecentActivityWithReviewCounts;
+}) {
   const navigate = useNavigate();
-  // Handle clicking on recent activity item
 
+  // Handle clicking on recent activity item
   const handleActivityClick = (textId: number) => {
     navigate(`/task/${textId}`);
   };
 
   return (
     <div
-      key={text.id}
+      key={activity.text.id}
       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
     >
       <div className="flex items-center gap-3">
         <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-        <div>
-          <p className="font-medium text-gray-900">{text.title}</p>
+        <div className="flex-1">
+          <p className="font-medium text-gray-900">{activity.text.title}</p>
           <p className="text-sm text-gray-500">
-            {formatDate(text.updated_at || text.created_at)} • {text.status}
+            {formatDate(activity.text.updated_at || activity.text.created_at)} •{" "}
+            {activity.text.status}
           </p>
+          {activity.total_annotations > 0 && (
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                ✓ {activity.accepted_count}
+              </span>
+              <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">
+                ✗ {activity.rejected_count}
+              </span>
+              <span className="text-xs text-gray-500">
+                {activity.total_annotations} total
+              </span>
+            </div>
+          )}
         </div>
       </div>
       <Button
         variant="ghost"
-        className=" cursor-pointer"
+        className="cursor-pointer"
         size="sm"
-        onClick={() => handleActivityClick(text.id)}
+        onClick={() => handleActivityClick(activity.text.id)}
+        disabled={activity.all_accepted}
       >
-        View
+        {activity.all_accepted ? "View" : "Edit"}
       </Button>
     </div>
   );

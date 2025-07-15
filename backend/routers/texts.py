@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from deps import get_db
 from auth import get_current_active_user, require_admin, require_reviewer
 from crud.text import text_crud
-from schemas.text import TextCreate, TextUpdate, TextResponse, TaskSubmissionResponse
+from schemas.text import TextCreate, TextUpdate, TextResponse, TaskSubmissionResponse, RecentActivityWithReviewCounts
 from schemas.combined import TextWithAnnotations
 from schemas.user_rejected_text import RejectedTextWithDetails
 from models.user import User
@@ -357,14 +357,14 @@ def get_text_stats(
     return text_crud.get_stats(db=db)
 
 
-@router.get("/recent-activity", response_model=List[TextResponse])
+@router.get("/recent-activity", response_model=List[RecentActivityWithReviewCounts])
 def get_recent_activity(
     limit: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get recent texts annotated or reviewed by the current user."""
-    return text_crud.get_recent_activity(db=db, user_id=current_user.id, limit=limit)
+    """Get recent texts annotated or reviewed by the current user with annotation review counts."""
+    return text_crud.get_recent_activity_with_review_counts(db=db, user_id=current_user.id, limit=limit)
 
 
 @router.get("/user-stats")

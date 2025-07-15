@@ -11,8 +11,13 @@ interface TextAnnotatorProps {
   onTextSelect: (
     selection: { text: string; start: number; end: number } | null
   ) => void;
-  onAddAnnotation: (type: string, name?: string) => void;
+  onAddAnnotation: (type: string, name?: string, level?: string) => void;
   onRemoveAnnotation: (id: string) => void;
+  onUpdateAnnotation?: (
+    annotationId: string,
+    newType: string,
+    newText?: string
+  ) => void;
   onHeaderSelected?: (selection: {
     text: string;
     start: number;
@@ -42,6 +47,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
       onTextSelect,
       onAddAnnotation,
       onRemoveAnnotation,
+      onUpdateAnnotation,
       onHeaderSelected,
       onUpdateHeaderSpan,
       readOnly = true,
@@ -74,7 +80,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
         />
 
         {/* Editor */}
-        <div className="flex-1">
+        <div className="flex-1 overflow-hidden">
           <Editor
             ref={editorRef}
             text={text}
@@ -83,6 +89,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
             onTextSelect={onTextSelect}
             onAddAnnotation={onAddAnnotation}
             onRemoveAnnotation={onRemoveAnnotation}
+            onUpdateAnnotation={onUpdateAnnotation}
             onHeaderSelected={onHeaderSelected}
             onUpdateHeaderSpan={onUpdateHeaderSpan}
             readOnly={readOnly}

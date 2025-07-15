@@ -124,7 +124,7 @@ function ActionButtons({
     }
   };
   return (
-    <div className="flex flex-1 gap-2 flex-wrap flex-col">
+    <div className="flex gap-2 flex-wrap flex-col">
       <Button
         onClick={handleSubmit}
         className="bg-green-600 h-20 hover:bg-green-700 text-white cursor-pointer"

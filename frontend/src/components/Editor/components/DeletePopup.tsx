@@ -1,6 +1,11 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import {
+  IoChatbubbleEllipses,
+  IoCheckmarkCircle,
+  IoCloseCircle,
+} from "react-icons/io5";
 import type { DeletePopupProps } from "../types";
 
 export const DeletePopup: React.FC<DeletePopupProps> = ({
@@ -37,6 +42,50 @@ export const DeletePopup: React.FC<DeletePopupProps> = ({
             : annotation.text}
           "
         </p>
+
+        {/* Review Comments Section */}
+        {annotation.reviews && annotation.reviews.length > 0 && (
+          <div className="mt-3">
+            <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+              <IoChatbubbleEllipses className="h-3 w-3" />
+              <span>Reviewer Comments:</span>
+            </div>
+            <div className="max-h-24 overflow-y-auto space-y-1">
+              {annotation.reviews.map((review) => (
+                <div
+                  key={review.id}
+                  className={`p-2 rounded border text-xs ${
+                    review.decision === "agree"
+                      ? "bg-green-50 border-green-200"
+                      : "bg-red-50 border-red-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-1 mb-1">
+                    {review.decision === "agree" ? (
+                      <IoCheckmarkCircle className="h-3 w-3 text-green-600" />
+                    ) : (
+                      <IoCloseCircle className="h-3 w-3 text-red-600" />
+                    )}
+                    <span
+                      className={`font-medium ${
+                        review.decision === "agree"
+                          ? "text-green-700"
+                          : "text-red-700"
+                      }`}
+                    >
+                      {review.decision === "agree" ? "Agreed" : "Disagreed"}
+                    </span>
+                  </div>
+                  {review.comment && (
+                    <p className="text-gray-700 italic line-clamp-2">
+                      "{review.comment}"
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-2">

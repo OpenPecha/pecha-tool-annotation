@@ -58,6 +58,8 @@ export interface TextFilters extends PaginationParams {
 }
 
 // Annotation-related types
+export type AnnotationLevel = "minor" | "major" | "critical";
+
 export interface AnnotationBase {
   annotation_type: string;
   start_position: number;
@@ -65,6 +67,7 @@ export interface AnnotationBase {
   selected_text?: string;
   label?: string;
   name?: string; // Custom name for the annotation (especially for headers)
+  level?: AnnotationLevel; // Importance level: minor, major, critical
   meta?: Record<string, unknown>;
   confidence: number;
 }
@@ -80,6 +83,7 @@ export interface AnnotationUpdate {
   selected_text?: string;
   label?: string;
   name?: string; // Custom name for the annotation
+  level?: AnnotationLevel; // Importance level: minor, major, critical
   meta?: Record<string, unknown>;
   confidence?: number;
 }
@@ -219,4 +223,13 @@ export interface AdminTextStatistics {
   heavily_rejected_texts: number;
   total_active_users: number;
   available_for_new_users: number;
+}
+
+// Recent Activity with Review Counts
+export interface RecentActivityWithReviewCounts {
+  text: TextResponse;
+  total_annotations: number;
+  accepted_count: number;
+  rejected_count: number;
+  all_accepted: boolean;
 }

@@ -17,6 +17,7 @@ export const useEditorState = () => {
       transformX: "-50%",
     });
   const [annotationText, setAnnotationText] = useState("");
+  const [annotationLevel, setAnnotationLevel] = useState("");
   const [selectedHeaderId, setSelectedHeaderId] = useState<string>("");
   const [deletePopupVisible, setDeletePopupVisible] = useState(false);
   const [deletePopupPosition, setDeletePopupPosition] =
@@ -26,11 +27,21 @@ export const useEditorState = () => {
     });
   const [annotationToDelete, setAnnotationToDelete] =
     useState<Annotation | null>(null);
+  const [editPopupVisible, setEditPopupVisible] = useState(false);
+  const [editPopupPosition, setEditPopupPosition] =
+    useState<DeletePopupPosition>({
+      x: 0,
+      y: 0,
+    });
+  const [annotationToEdit, setAnnotationToEdit] = useState<Annotation | null>(
+    null
+  );
   const [editorReady, setEditorReady] = useState(false);
 
   const resetBubbleMenu = () => {
     setBubbleMenuVisible(false);
     setAnnotationText("");
+    setAnnotationLevel("");
     setSelectedHeaderId("");
     setCurrentSelection(null);
   };
@@ -40,9 +51,15 @@ export const useEditorState = () => {
     setAnnotationToDelete(null);
   };
 
+  const resetEditPopup = () => {
+    setEditPopupVisible(false);
+    setAnnotationToEdit(null);
+  };
+
   const resetAll = () => {
     resetBubbleMenu();
     resetDeletePopup();
+    resetEditPopup();
   };
 
   return {
@@ -51,10 +68,14 @@ export const useEditorState = () => {
     bubbleMenuVisible,
     bubbleMenuPosition,
     annotationText,
+    annotationLevel,
     selectedHeaderId,
     deletePopupVisible,
     deletePopupPosition,
     annotationToDelete,
+    editPopupVisible,
+    editPopupPosition,
+    annotationToEdit,
     editorReady,
 
     // Setters
@@ -62,15 +83,20 @@ export const useEditorState = () => {
     setBubbleMenuVisible,
     setBubbleMenuPosition,
     setAnnotationText,
+    setAnnotationLevel,
     setSelectedHeaderId,
     setDeletePopupVisible,
     setDeletePopupPosition,
     setAnnotationToDelete,
+    setEditPopupVisible,
+    setEditPopupPosition,
+    setAnnotationToEdit,
     setEditorReady,
 
     // Reset functions
     resetBubbleMenu,
     resetDeletePopup,
+    resetEditPopup,
     resetAll,
   };
 };

@@ -4,18 +4,21 @@ import { TextAnnotator } from "@/components/TextAnnotator";
 import type { TextAnnotatorRef } from "@/components/TextAnnotator";
 import { AnnotationSidebar } from "@/components/AnnotationSidebar";
 import { TableOfContents } from "@/components/TableOfContents";
+import { ErrorList } from "@/components/ErrorList";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import ActionButtons from "@/components/ActionButtons";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { textApi } from "@/api/text";
 import { annotationsApi } from "@/api/annotations";
+import { reviewApi } from "@/api/reviews";
 import type {
   AnnotationResponse,
   AnnotationCreate,
   TaskSubmissionResponse,
   TextResponse,
 } from "@/api/types";
+import type { AnnotationReviewResponse } from "@/api/reviews";
 import {
   loadAnnotationConfig,
   isValidAnnotationType,
@@ -31,8 +34,16 @@ export type Annotation = {
   start: number;
   end: number;
   name?: string; // Custom name for the annotation
+  level?: "minor" | "major" | "critical"; // Importance level
   annotator_id?: number; // ID of the user who created this annotation
   is_agreed?: boolean; // Whether annotation has been agreed upon by a reviewer
+  reviews?: Array<{
+    id: number;
+    decision: "agree" | "disagree";
+    comment?: string;
+    reviewer_id: number;
+    created_at: string;
+  }>; // Review comments from reviewers
 };
 
 const Index = () => {
@@ -67,21 +78,38 @@ const Index = () => {
   });
 
   // Convert API annotations to component format
-  const convertApiAnnotations = (
+  const convertApiAnnotations = async (
     apiAnnotations: AnnotationResponse[]
-  ): Annotation[] => {
-    const converted = apiAnnotations.map((ann) => ({
-      id: ann.id.toString(),
-      type: ann.annotation_type,
-      text: ann.selected_text || "",
-      start: ann.start_position,
-      end: ann.end_position,
-      name: ann.name,
-      annotator_id: ann.annotator_id,
-      is_agreed: ann.is_agreed,
-    }));
+  ): Promise<Annotation[]> => {
+    const annotationsWithReviews = await Promise.all(
+      apiAnnotations.map(async (ann) => {
+        let reviews: AnnotationReviewResponse[] = [];
+        try {
+          // Fetch reviews for this annotation
+          reviews = await reviewApi.getAnnotationReviews(ann.id);
+        } catch (error) {
+          console.warn(
+            `Failed to fetch reviews for annotation ${ann.id}:`,
+            error
+          );
+          reviews = [];
+        }
 
-    return converted;
+        return {
+          id: ann.id.toString(),
+          type: ann.annotation_type,
+          text: ann.selected_text || "",
+          start: ann.start_position,
+          end: ann.end_position,
+          name: ann.name,
+          annotator_id: ann.annotator_id,
+          is_agreed: ann.is_agreed,
+          reviews: reviews,
+        };
+      })
+    );
+
+    return annotationsWithReviews;
   };
 
   // State for local annotations and UI
@@ -99,6 +127,7 @@ const Index = () => {
 
   const [tocOpen, setTocOpen] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [errorListOpen, setErrorListOpen] = useState(true);
   const textAnnotatorRef = useRef<TextAnnotatorRef>(null);
 
   // Skip confirmation dialog state
@@ -113,16 +142,43 @@ const Index = () => {
     string | null
   >(null);
 
+  // Check if all annotations are accepted (can't edit)
+  const [allAnnotationsAccepted, setAllAnnotationsAccepted] = useState(false);
+
   // Get text content directly from textData (no state needed since it never changes)
   const text = textData?.content || "";
 
   // Update local state when textData is loaded
   useEffect(() => {
     if (textData) {
-      const convertedAnnotations = convertApiAnnotations(textData.annotations);
-      setAnnotations(convertedAnnotations);
+      convertApiAnnotations(textData.annotations).then(
+        (convertedAnnotations) => {
+          setAnnotations(convertedAnnotations);
+        }
+      );
     }
   }, [textData]);
+
+  // Check if all annotations are accepted when textData is loaded
+  useEffect(() => {
+    if (textData && textId) {
+      // Fetch the activity status to check if all annotations are accepted
+      textApi
+        .getRecentActivity(10)
+        .then((activities) => {
+          const currentTextActivity = activities.find(
+            (activity) => activity.text.id === parseInt(textId, 10)
+          );
+          if (currentTextActivity) {
+            setAllAnnotationsAccepted(currentTextActivity.all_accepted);
+          }
+        })
+        .catch(() => {
+          // If we can't fetch activity, assume editing is allowed
+          setAllAnnotationsAccepted(false);
+        });
+    }
+  }, [textData, textId]);
 
   // Parse URL parameters to get target annotation ID
   useEffect(() => {
@@ -220,6 +276,34 @@ const Index = () => {
         title: "❌ Failed to Create Annotation",
         description:
           error instanceof Error ? error.message : "Failed to save annotation",
+      });
+    },
+  });
+
+  // Mutation for updating annotations
+  const updateAnnotationMutation = useMutation({
+    mutationFn: async (data: { id: number; type: string; name?: string }) => {
+      return annotationsApi.updateAnnotation(data.id, {
+        annotation_type: data.type,
+        name: data.name,
+      });
+    },
+    onSuccess: (data) => {
+      // Only refresh user stats (affects total annotations count)
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+
+      toast({
+        title: "✅ Annotation Updated",
+        description: `${data.annotation_type} annotation updated successfully`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "❌ Failed to Update Annotation",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update annotation",
       });
     },
   });
@@ -392,7 +476,7 @@ const Index = () => {
     },
   });
 
-  const addAnnotation = async (type: string, name?: string) => {
+  const addAnnotation = async (type: string, name?: string, level?: string) => {
     if (!selectedText || !textId) return;
 
     // Load configuration and validate annotation type
@@ -427,6 +511,7 @@ const Index = () => {
       start: selectedText.start,
       end: selectedText.end,
       name: name,
+      level: level as "minor" | "major" | "critical" | undefined,
       annotator_id: currentUser?.id ? parseInt(currentUser.id, 10) : undefined,
     };
 
@@ -449,6 +534,7 @@ const Index = () => {
       confidence: 1.0,
       label: type,
       name: name,
+      level: level as "minor" | "major" | "critical" | undefined,
       meta: {},
     };
 
@@ -466,6 +552,11 @@ const Index = () => {
                   start: data.start_position,
                   end: data.end_position,
                   name: data.name,
+                  level: data.level as
+                    | "minor"
+                    | "major"
+                    | "critical"
+                    | undefined,
                   annotator_id: data.annotator_id,
                 }
               : ann
@@ -553,6 +644,11 @@ const Index = () => {
                   start: data.start_position,
                   end: data.end_position,
                   name: data.name,
+                  level: data.level as
+                    | "minor"
+                    | "major"
+                    | "critical"
+                    | undefined,
                   annotator_id: data.annotator_id,
                 }
               : ann
@@ -613,6 +709,75 @@ const Index = () => {
         existingHeader.name || existingHeader.text
       }" span has been updated.`,
     });
+  };
+
+  const updateAnnotation = (
+    annotationId: string,
+    newType: string,
+    newText?: string
+  ) => {
+    // Check if annotation is agreed upon by a reviewer
+    const annotation = annotations.find((ann) => ann.id === annotationId);
+    if (annotation?.is_agreed) {
+      toast({
+        title: "🔒 Cannot Edit Annotation",
+        description:
+          "This annotation has been agreed upon by a reviewer and cannot be edited.",
+      });
+      return;
+    }
+
+    const annotationIdNumber = parseInt(annotationId, 10);
+    if (isNaN(annotationIdNumber)) {
+      toast({
+        title: "❌ Error",
+        description: "Invalid annotation ID. Cannot update annotation.",
+      });
+      return;
+    }
+
+    if (!annotation) {
+      toast({
+        title: "❌ Error",
+        description: "Annotation not found.",
+      });
+      return;
+    }
+
+    // Store original annotation for potential rollback
+    const originalAnnotation = { ...annotation };
+
+    // Update annotation optimistically in local state for immediate visual feedback
+    setAnnotations((prev) =>
+      prev.map((ann) =>
+        ann.id === annotationId
+          ? {
+              ...ann,
+              type: newType,
+              name: newText,
+            }
+          : ann
+      )
+    );
+
+    // Update in database
+    updateAnnotationMutation.mutate(
+      {
+        id: annotationIdNumber,
+        type: newType,
+        name: newText,
+      },
+      {
+        onError: () => {
+          // Restore the original annotation on error
+          setAnnotations((prev) =>
+            prev.map((ann) =>
+              ann.id === annotationId ? originalAnnotation : ann
+            )
+          );
+        },
+      }
+    );
   };
 
   const removeAnnotation = (id: string) => {
@@ -757,12 +922,9 @@ const Index = () => {
   };
 
   const handleHeaderClick = (annotation: Annotation) => {
-    if (textAnnotatorRef.current) {
-      textAnnotatorRef.current.scrollToPosition(
-        annotation.start,
-        annotation.end
-      );
-    }
+    // Don't auto-scroll when clicking on table of contents items
+    // User can manually navigate if needed
+    console.log("Header clicked:", annotation.id, annotation.text);
   };
 
   const annotationsWithoutHeader = annotations.filter(
@@ -779,12 +941,15 @@ const Index = () => {
       )
     : [];
 
+  // Determine if text should be read-only
+  const isReadOnly = allAnnotationsAccepted || !textData;
+
   // Handle loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
         <Navbar />
-        <div className="flex items-center justify-center h-96 pt-16">
+        <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading text...</p>
@@ -797,9 +962,9 @@ const Index = () => {
   // Handle error state
   if (isError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
         <Navbar />
-        <div className="flex items-center justify-center h-96 pt-16">
+        <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -823,9 +988,9 @@ const Index = () => {
   // Handle case where textData is not available
   if (!textData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
         <Navbar />
-        <div className="flex items-center justify-center h-96 pt-16">
+        <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-gray-600">No text data available</p>
           </div>
@@ -835,12 +1000,61 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
       <Navbar />
 
-      <div className="flex gap-6  justify-center mx-auto relative pt-20">
+      <div className="flex gap-6 flex-1 px-6 pt-16 mx-auto overflow-hidden">
         {/* Table of Contents - Left Sidebar */}
-        <TableOfContents
+        {/* Error List - Right Sidebar */}
+        <div
+          className={`transition-all duration-300 ease-in-out ${
+            errorListOpen ? "w-80" : "w-14"
+          }`}
+        >
+          <div
+            className={`shadow-lg border-0 backdrop-blur-sm h-[75vh] flex flex-col mt-4 mb-4 ${
+              !errorListOpen ? "p-0" : ""
+            } bg-white/80 rounded-lg`}
+          >
+            <div className={`${errorListOpen ? "pb-3" : "p-3"} border-b`}>
+              <div className="flex items-center justify-between">
+                {errorListOpen && (
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <span className="text-orange-600">⚠</span>
+                    Error List
+                  </h3>
+                )}
+                <button
+                  onClick={() => setErrorListOpen(!errorListOpen)}
+                  className={`${
+                    errorListOpen
+                      ? "h-8 w-8 p-0 hover:bg-orange-50"
+                      : "h-10 w-10 p-0 hover:bg-orange-50 rounded-full shadow-sm border border-gray-200"
+                  } transition-all duration-200 flex items-center justify-center`}
+                  title={errorListOpen ? "Close Error List" : "Open Error List"}
+                >
+                  {errorListOpen ? (
+                    <span className="text-gray-600">←</span>
+                  ) : (
+                    <span className="text-orange-600">⚠</span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {errorListOpen && (
+              <div className="pt-0 flex-1 flex flex-col min-h-0 p-4">
+                <ErrorList
+                  onErrorSelect={(error) => {
+                    console.log("Selected error:", error);
+                  }}
+                  searchable={true}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+        {/* <TableOfContents
           annotations={annotations}
           onHeaderClick={handleHeaderClick}
           onRemoveAnnotation={removeAnnotation}
@@ -849,41 +1063,44 @@ const Index = () => {
           pendingHeader={pendingHeader}
           onHeaderNameSubmit={handleHeaderNameSubmit}
           onHeaderNameCancel={handleHeaderNameCancel}
-        />
+        /> */}
 
         {/* Main Content Area */}
         <div
-          className={`flex-1  transition-all duration-300 ease-in-out min-w-0 max-w-5xl mx-auto ${
-            tocOpen && sidebarOpen
+          className={`flex-1 transition-all duration-300 ease-in-out min-w-0 max-w-5xl mx-auto ${
+            tocOpen && (sidebarOpen || errorListOpen)
               ? "mx-6"
-              : tocOpen || sidebarOpen
+              : tocOpen || sidebarOpen || errorListOpen
               ? "mx-3"
               : "mx-0"
           }`}
           style={{
             marginLeft: tocOpen ? "0" : "60px",
-            marginRight: sidebarOpen ? "0" : "60px",
+            marginRight: sidebarOpen || errorListOpen ? "0" : "60px",
           }}
         >
-          <TextAnnotator
-            ref={textAnnotatorRef}
-            text={text}
-            annotations={annotations}
-            selectedText={selectedText}
-            onTextSelect={setSelectedText}
-            onAddAnnotation={addAnnotation}
-            onRemoveAnnotation={removeAnnotation}
-            onHeaderSelected={handleHeaderSelected}
-            onUpdateHeaderSpan={handleUpdateHeaderSpan}
-            readOnly={true}
-            isCreatingAnnotation={createAnnotationMutation.isPending}
-            isDeletingAnnotation={deleteAnnotationMutation.isPending}
-            highlightedAnnotationId={highlightedAnnotationId}
-          />
+          <div className="h-[90vh] mt-4 mb-4">
+            <TextAnnotator
+              ref={textAnnotatorRef}
+              text={text}
+              annotations={annotations}
+              selectedText={selectedText}
+              onTextSelect={setSelectedText}
+              onAddAnnotation={addAnnotation}
+              onRemoveAnnotation={removeAnnotation}
+              onUpdateAnnotation={updateAnnotation}
+              onHeaderSelected={handleHeaderSelected}
+              onUpdateHeaderSpan={handleUpdateHeaderSpan}
+              readOnly={isReadOnly}
+              isCreatingAnnotation={createAnnotationMutation.isPending}
+              isDeletingAnnotation={deleteAnnotationMutation.isPending}
+              highlightedAnnotationId={highlightedAnnotationId}
+            />
+          </div>
         </div>
 
         {/* Annotation Sidebar - Right Sidebar */}
-        <div className="space-y-4">
+        <div className=" flex flex-col gap-4 h-[90vh] mt-4 mb-4 overflow-y-hidden">
           <ActionButtons
             annotations={annotations}
             onSubmitTask={handleSubmitTask}

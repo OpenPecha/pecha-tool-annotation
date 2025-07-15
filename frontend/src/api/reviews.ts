@@ -79,6 +79,22 @@ export interface TextForReview {
   annotation_count: number;
 }
 
+export interface ReviewProgressItem {
+  id: number;
+  title: string;
+  content: string;
+  language: string;
+  status: string;
+  annotator_id: number;
+  reviewer_id: number;
+  created_at: string;
+  updated_at?: string;
+  annotation_count: number;
+  reviewed_count: number;
+  progress_percentage: number;
+  is_complete: boolean;
+}
+
 export interface ReviewerStats {
   total_reviews: number;
   agreed_reviews: number;
@@ -130,6 +146,16 @@ export const reviewApi = {
     filters: { skip?: number; limit?: number } = {}
   ): Promise<TextForReview[]> => {
     return apiClient.get<TextForReview[]>("/reviews/texts-for-review", filters);
+  },
+
+  // Get reviewer's work in progress
+  getMyReviewProgress: async (
+    filters: { skip?: number; limit?: number } = {}
+  ): Promise<ReviewProgressItem[]> => {
+    return apiClient.get<ReviewProgressItem[]>(
+      "/reviews/my-review-progress",
+      filters
+    );
   },
 
   // Start a review session for a specific text

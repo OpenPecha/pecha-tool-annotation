@@ -50,6 +50,56 @@ def get_texts_for_review(
     return result
 
 
+@router.get("/my-review-progress", response_model=List[dict])
+def get_my_review_progress(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_reviewer)
+):
+    """Get texts currently assigned to the reviewer for review (in progress)."""
+    # Get texts where reviewer_id is current user and status is still annotated (not yet reviewed)
+    texts = text_crud.get_multi(
+        db=db, 
+        skip=skip, 
+        limit=limit, 
+        status=ANNOTATED,
+        reviewer_id=current_user.id
+    )
+    
+    # Add annotation count and review progress for each text
+    result = []
+    for text in texts:
+        annotation_count = len(text.annotations)
+        
+        # Get existing reviews for this text by current reviewer
+        existing_reviews = annotation_review_crud.get_reviews_by_text(
+            db=db, text_id=text.id, reviewer_id=current_user.id
+        )
+        
+        reviewed_count = len(existing_reviews)
+        progress_percentage = (reviewed_count / annotation_count * 100) if annotation_count > 0 else 0
+        
+        text_data = {
+            "id": text.id,
+            "title": text.title,
+            "content": text.content[:200] + "..." if len(text.content) > 200 else text.content,
+            "language": text.language,
+            "status": text.status,
+            "annotator_id": text.annotator_id,
+            "reviewer_id": text.reviewer_id,
+            "created_at": text.created_at,
+            "updated_at": text.updated_at,
+            "annotation_count": annotation_count,
+            "reviewed_count": reviewed_count,
+            "progress_percentage": round(progress_percentage, 1),
+            "is_complete": reviewed_count == annotation_count
+        }
+        result.append(text_data)
+    
+    return result
+
+
 @router.get("/session/{text_id}", response_model=ReviewSessionResponse)
 def start_review_session(
     text_id: int,
@@ -69,6 +119,15 @@ def start_review_session(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Text must be in annotated status for review. Current status: {text.status}"
+        )
+    
+    # Assign reviewer to the text when they start reviewing
+    if not text.reviewer_id:
+        text_crud.update_status(
+            db=db, 
+            text_id=text_id, 
+            status=ANNOTATED,  # Keep current status
+            reviewer_id=current_user.id
         )
     
     # Get comprehensive review session data

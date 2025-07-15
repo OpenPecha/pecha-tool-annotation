@@ -285,12 +285,11 @@ const Review = () => {
     }));
   };
 
-  // Handle header click in TOC - scroll to annotation in text
+  // Handle header click in TOC - don't auto-scroll
   const handleHeaderClick = (annotation: Annotation) => {
-    const element = document.getElementById(`annotation-${annotation.id}`);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    // Don't auto-scroll when clicking on table of contents items
+    // User can manually navigate if needed
+    console.log("Header clicked:", annotation.id, annotation.text);
   };
 
   // Handle annotation removal from TOC (disabled in review mode)
@@ -362,7 +361,7 @@ const Review = () => {
       elements.push(<span key="text-end">{text.slice(lastIndex)}</span>);
     }
 
-    return <p className="text-gray-700 leading-relaxed">{elements}</p>;
+    return <p className="text-gray-700 leading-[normal]">{elements}</p>;
   };
 
   const getAnnotationTypeColor = (type: string) => {
@@ -379,9 +378,9 @@ const Review = () => {
 
   if (isLoading) {
     return (
-      <div>
+      <div className="h-screen bg-gray-50 flex flex-col">
         <Navbar />
-        <div className="flex items-center justify-center h-96 pt-20">
+        <div className="flex-1 flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin" />
           <span className="ml-2">Loading review session...</span>
         </div>
@@ -391,9 +390,9 @@ const Review = () => {
 
   if (error || !reviewSession) {
     return (
-      <div>
+      <div className="h-screen bg-gray-50 flex flex-col">
         <Navbar />
-        <div className="container mx-auto px-4 py-8 pt-20">
+        <div className="flex-1 flex items-center justify-center px-6">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -418,12 +417,12 @@ const Review = () => {
   const allReviewed = reviewedCount === review_status.total_annotations;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen bg-gray-50 flex flex-col">
       <Navbar />
 
-      <div className="container mx-auto px-4 py-6 pt-20">
+      <div className="flex-1 overflow-hidden px-6">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-6 flex-shrink-0 pt-20">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Review Text</h1>
@@ -474,7 +473,7 @@ const Review = () => {
           </div>
         </div>
 
-        <div className="flex gap-6 justify-center mx-auto relative">
+        <div className="flex gap-6 flex-1 container mx-auto py-4">
           {/* Table of Contents - Left Sidebar */}
           <TableOfContents
             annotations={convertToTocAnnotations(annotations)}
@@ -486,23 +485,19 @@ const Review = () => {
           />
 
           {/* Main Content Area */}
-          <div
-            className={`flex-1 transition-all duration-300 ease-in-out min-w-0 max-w-4xl ${
-              tocOpen ? "ml-0" : "ml-16"
-            }`}
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Text Content */}
-              <div className="lg:col-span-1">
-                <Card>
-                  <CardHeader>
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-6 gap-6">
+            {/* Text Content */}
+            <div className="lg:col-span-4">
+              <div className="h-[90vh] mt-4 mb-4">
+                <Card className="h-full flex flex-col">
+                  <CardHeader className="flex-shrink-0">
                     <CardTitle className="flex items-center gap-2">
                       <Eye className="w-5 h-5" />
                       Text Content
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-96">
+                  <CardContent className="flex-1 overflow-hidden ">
+                    <ScrollArea className="h-full font-monlam">
                       {renderAnnotationInText(
                         reviewSession.content,
                         annotations
@@ -511,18 +506,20 @@ const Review = () => {
                   </CardContent>
                 </Card>
               </div>
+            </div>
 
-              {/* Annotations Review Panel */}
-              <div className="lg:col-span-1">
-                <Card>
-                  <CardHeader>
+            {/* Annotations Review Panel */}
+            <div className="lg:col-span-2">
+              <div className="h-[90vh] mt-4 mb-4">
+                <Card className="h-full flex flex-col">
+                  <CardHeader className="flex-shrink-0">
                     <CardTitle className="flex items-center gap-2">
                       <MessageCircle className="w-5 h-5" />
                       Annotations ({annotations.length})
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-96">
+                  <CardContent className="flex-1 overflow-hidden">
+                    <ScrollArea className="h-full">
                       <div className="space-y-4">
                         {annotations.map((annotation) => {
                           const reviewDecision = reviewDecisions.get(
@@ -569,7 +566,7 @@ const Review = () => {
                                 )}
                               </div>
 
-                              <p className="text-sm font-medium mb-2">
+                              <p className="text-sm font-medium font-monlam mb-2">
                                 "{annotation.selected_text}"
                               </p>
 
@@ -641,67 +638,54 @@ const Review = () => {
                                   </Button>
                                 </div>
 
-                                {isReviewed && (
-                                  <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                      <label className="text-sm font-medium text-gray-700">
-                                        Comment:
-                                      </label>
-                                      {reviewDecision.decision ===
-                                        "disagree" && (
+                                {isReviewed &&
+                                  reviewDecision.decision === "disagree" && (
+                                    <div className="space-y-2">
+                                      <div className="flex items-center gap-2">
+                                        <label className="text-sm font-medium text-gray-700">
+                                          Comment:
+                                        </label>
                                         <span className="text-xs text-red-600 font-medium">
                                           better if you can explain!
                                         </span>
-                                      )}
-                                    </div>
-                                    <div className="relative">
-                                      <Textarea
-                                        placeholder={
-                                          reviewDecision.decision === "disagree"
-                                            ? "Please explain why you disagree (required)..."
-                                            : "Add a comment (optional)..."
-                                        }
-                                        value={reviewDecision.comment || ""}
-                                        onChange={(e) =>
-                                          handleReviewDecision(
-                                            annotation.id,
-                                            reviewDecision.decision,
-                                            e.target.value
-                                          )
-                                        }
-                                        className={`text-sm ${
-                                          reviewDecision.decision ===
-                                            "disagree" &&
-                                          !reviewDecision.comment?.trim()
-                                            ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                                            : ""
-                                        }`}
-                                        rows={
-                                          reviewDecision.decision === "disagree"
-                                            ? 3
-                                            : 2
-                                        }
-                                      />
-                                      {pendingSave.has(annotation.id) && (
-                                        <div className="absolute right-2 top-2">
-                                          <Timer className="w-4 h-4 text-blue-600 animate-spin" />
-                                        </div>
-                                      )}
-                                      {savedComments.has(annotation.id) && (
-                                        <div className="absolute right-2 top-2">
-                                          <Check className="w-4 h-4 text-green-600" />
-                                        </div>
-                                      )}
-                                    </div>
-                                    {reviewDecision.decision === "disagree" &&
-                                      !reviewDecision.comment?.trim() && (
+                                      </div>
+                                      <div className="relative">
+                                        <Textarea
+                                          placeholder="Please explain why you disagree (required)..."
+                                          value={reviewDecision.comment || ""}
+                                          onChange={(e) =>
+                                            handleReviewDecision(
+                                              annotation.id,
+                                              reviewDecision.decision,
+                                              e.target.value
+                                            )
+                                          }
+                                          className={`text-sm ${
+                                            !reviewDecision.comment?.trim()
+                                              ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                                              : ""
+                                          }`}
+                                          rows={3}
+                                        />
+                                        {pendingSave.has(annotation.id) && (
+                                          <div className="absolute right-2 top-2">
+                                            <Timer className="w-4 h-4 text-blue-600 animate-spin" />
+                                          </div>
+                                        )}
+                                        {savedComments.has(annotation.id) && (
+                                          <div className="absolute right-2 top-2">
+                                            <Check className="w-4 h-4 text-green-600" />
+                                          </div>
+                                        )}
+                                      </div>
+                                      {!reviewDecision.comment?.trim() && (
                                         <p className="text-xs text-red-600">
                                           This field is required when
                                           disagreeing with an annotation
                                         </p>
                                       )}
-                                  </div>
-                                )}
+                                    </div>
+                                  )}
                               </div>
                             </div>
                           );

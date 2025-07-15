@@ -17,12 +17,14 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   currentSelection,
   annotationText,
   selectedHeaderId,
+  annotationLevel,
   annotations,
   isCreatingAnnotation,
   onAddAnnotation,
   onCancel,
   onAnnotationTextChange,
   onSelectedHeaderIdChange,
+  onAnnotationLevelChange,
   onUpdateHeaderSpan,
 }) => {
   const [annotationConfig, setAnnotationConfig] =
@@ -197,6 +199,24 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
         )}
       </div>
 
+      {/* Level Selection */}
+      <div className="mb-3">
+        <p className="text-xs text-gray-500 mb-2">
+          Importance level (optional):
+        </p>
+        <select
+          value={annotationLevel}
+          onChange={(e) => onAnnotationLevelChange(e.target.value)}
+          disabled={isCreatingAnnotation}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
+        >
+          <option value="">Select level...</option>
+          <option value="minor">🟢 Minor</option>
+          <option value="major">🟡 Major</option>
+          <option value="critical">🔴 Critical</option>
+        </select>
+      </div>
+
       <div>
         <input
           type="text"
@@ -209,7 +229,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
             }
           }}
           disabled={isCreatingAnnotation}
-          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
         />
       </div>
     </div>

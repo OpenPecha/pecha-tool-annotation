@@ -1,7 +1,14 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON, Enum
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
+import enum
+
+
+class AnnotationLevel(enum.Enum):
+    MINOR = "minor"
+    MAJOR = "major"
+    CRITICAL = "critical"
 
 
 class Annotation(Base):
@@ -16,6 +23,7 @@ class Annotation(Base):
     selected_text = Column(String, nullable=True)     # The actual text that was annotated
     label = Column(String, nullable=True)             # The annotation label/value
     name = Column(String, nullable=True)              # Custom name for the annotation (especially for headers)
+    level = Column(Enum(AnnotationLevel), nullable=True)  # Importance level: minor, major, critical
     meta = Column(JSON, nullable=True)                # Additional metadata as JSON
     confidence = Column(Integer, default=100)         # Confidence score (0-100)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
