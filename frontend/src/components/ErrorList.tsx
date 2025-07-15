@@ -6,6 +6,7 @@ import {
   IoWarning,
 } from "react-icons/io5";
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 
 // Type definitions for error typology
 interface ErrorCategory {
@@ -44,6 +45,15 @@ export const ErrorList = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tooltipData, setTooltipData] = useState<{
+    visible: boolean;
+    category: ErrorCategory | null;
+    position: { x: number; y: number };
+  }>({
+    visible: false,
+    category: null,
+    position: { x: 0, y: 0 },
+  });
 
   // Load error list data
   useEffect(() => {
@@ -188,6 +198,47 @@ export const ErrorList = ({
     });
   };
 
+  // Tooltip handlers
+  const showTooltip = (event: React.MouseEvent, category: ErrorCategory) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const tooltipWidth = 320; // w-80 = 320px
+    const tooltipHeight = 200; // approximate height
+    const margin = 10;
+
+    // Calculate position with viewport bounds checking
+    let x = rect.right + margin;
+    let y = rect.top;
+
+    // Check if tooltip would go off-screen horizontally
+    if (x + tooltipWidth > window.innerWidth - margin) {
+      x = rect.left - tooltipWidth - margin; // Show on the left side
+    }
+
+    // Check if tooltip would go off-screen vertically
+    if (y + tooltipHeight > window.innerHeight - margin) {
+      y = window.innerHeight - tooltipHeight - margin;
+    }
+
+    // Ensure tooltip doesn't go above viewport
+    if (y < margin) {
+      y = margin;
+    }
+
+    setTooltipData({
+      visible: true,
+      category,
+      position: { x, y },
+    });
+  };
+
+  const hideTooltip = () => {
+    setTooltipData({
+      visible: false,
+      category: null,
+      position: { x: 0, y: 0 },
+    });
+  };
+
   // Component to render individual error category
   const ErrorCategoryComponent = ({
     category,
@@ -292,68 +343,13 @@ export const ErrorList = ({
                 </div>
 
                 {/* Exclamation mark with tooltip */}
-                <div className="relative group flex-shrink-0">
-                  <div className="w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold cursor-help hover:bg-orange-600 transition-colors border-2 border-white shadow-sm">
-                    !
-                  </div>
-
-                  {/* Tooltip */}
+                <div className="flex-shrink-0">
                   <div
-                    className="absolute left-7 top-0 w-80 p-4 bg-gray-900 text-white text-xs rounded-lg shadow-2xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none"
-                    style={{
-                      zIndex: 9999,
-                      transform: "translateY(-10px)",
-                    }}
+                    className="w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold cursor-help hover:bg-orange-600 transition-colors border-2 border-white shadow-sm"
+                    onMouseEnter={(e) => showTooltip(e, category)}
+                    onMouseLeave={hideTooltip}
                   >
-                    <div className="space-y-2">
-                      <div>
-                        <p className="font-semibold text-gray-200">
-                          {category.name}
-                        </p>
-                        <p className="text-gray-300 font-mono">
-                          {category.mnemonic} • {category.id}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-gray-100 leading-relaxed">
-                          {category.description}
-                        </p>
-                      </div>
-
-                      {category.examples && category.examples.length > 0 && (
-                        <div>
-                          <p className="font-medium text-gray-200 mb-1">
-                            Examples:
-                          </p>
-                          <ul className="text-gray-300 space-y-1">
-                            {category.examples
-                              .slice(0, 2)
-                              .map((example, idx) => (
-                                <li key={idx} className="italic">
-                                  "{example}"
-                                </li>
-                              ))}
-                            {category.examples.length > 2 && (
-                              <li className="text-gray-400">
-                                +{category.examples.length - 2} more examples
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                      )}
-
-                      {category.notes && (
-                        <div>
-                          <p className="text-blue-300 italic">
-                            {category.notes}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Tooltip arrow */}
-                    <div className="absolute top-6 left-0 transform -translate-x-1/2 rotate-45 w-2 h-2 bg-gray-900 border-l border-t border-gray-700"></div>
+                    !
                   </div>
                 </div>
               </div>
@@ -409,20 +405,7 @@ export const ErrorList = ({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-visible">
-      {/* Header info */}
-      <div className="mb-3 p-2 bg-gray-50 rounded border flex-shrink-0">
-        <h3 className="text-sm font-semibold text-gray-900">
-          {errorData.error_typology.title}
-        </h3>
-        <p className="text-xs text-gray-600 mt-1">
-          {errorData.error_typology.description}
-        </p>
-        <p className="text-xs text-gray-500 mt-1">
-          Version: {errorData.error_typology.version}
-        </p>
-      </div>
-
+    <div className="h-full flex flex-col overflow-visible pt-6">
       {/* Search box */}
       {searchable && (
         <div className="mb-3 flex-shrink-0">
@@ -463,6 +446,71 @@ export const ErrorList = ({
           ))
         )}
       </div>
+
+      {/* Portal-based tooltip */}
+      {tooltipData.visible &&
+        tooltipData.category &&
+        createPortal(
+          <div
+            className="fixed w-80 p-4 bg-gray-900 text-white text-xs rounded-lg shadow-2xl border border-gray-700 pointer-events-none z-[9999]"
+            style={{
+              left: `${tooltipData.position.x}px`,
+              top: `${tooltipData.position.y}px`,
+              transform: "translateY(-10px)",
+            }}
+          >
+            <div className="space-y-2">
+              <div>
+                <p className="font-semibold text-gray-200">
+                  {tooltipData.category.name}
+                </p>
+                <p className="text-gray-300 font-mono">
+                  {tooltipData.category.mnemonic} • {tooltipData.category.id}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-gray-100 leading-relaxed">
+                  {tooltipData.category.description}
+                </p>
+              </div>
+
+              {tooltipData.category.examples &&
+                tooltipData.category.examples.length > 0 && (
+                  <div>
+                    <p className="font-medium text-gray-200 mb-1">Examples:</p>
+                    <ul className="text-gray-300 space-y-1">
+                      {tooltipData.category.examples
+                        .slice(0, 2)
+                        .map((example, idx) => (
+                          <li key={idx} className="italic">
+                            "{example}"
+                          </li>
+                        ))}
+                      {tooltipData.category.examples.length > 2 && (
+                        <li className="text-gray-400">
+                          +{tooltipData.category.examples.length - 2} more
+                          examples
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+
+              {tooltipData.category.notes && (
+                <div>
+                  <p className="text-blue-300 italic">
+                    {tooltipData.category.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Tooltip arrow */}
+            <div className="absolute top-6 left-0 transform -translate-x-1/2 rotate-45 w-2 h-2 bg-gray-900 border-l border-t border-gray-700"></div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

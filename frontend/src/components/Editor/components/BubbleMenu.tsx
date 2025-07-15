@@ -322,26 +322,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
         {/* Update existing header section - HIDDEN FOR NOW */}
       </div>
 
-      {/* Selected Error Category Display */}
-      {selectedErrorCategory && (
-        <div className="mb-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
-          <p className="text-xs text-orange-700 mb-1 font-medium">
-            Selected Error:
-          </p>
-          <p className="text-sm font-semibold text-gray-900 mb-1">
-            {selectedErrorCategory.name}
-          </p>
-          {selectedErrorCategory.breadcrumb && (
-            <p className="text-xs text-gray-600 mb-1">
-              {selectedErrorCategory.breadcrumb}
-            </p>
-          )}
-          <p className="text-xs text-gray-600 font-mono">
-            {selectedErrorCategory.mnemonic} • L{selectedErrorCategory.level}
-          </p>
-        </div>
-      )}
-
       {/* Level Selection */}
       <div className="mb-3">
         <p className="text-xs text-gray-500 mb-2">
