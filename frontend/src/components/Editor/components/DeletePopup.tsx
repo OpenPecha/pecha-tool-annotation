@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import {
@@ -18,9 +19,9 @@ export const DeletePopup: React.FC<DeletePopupProps> = ({
 }) => {
   if (!visible || !annotation) return null;
 
-  return (
+  const modalContent = (
     <div
-      className="delete-popup absolute bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-64"
+      className="delete-popup fixed bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-64"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -112,4 +113,6 @@ export const DeletePopup: React.FC<DeletePopupProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };

@@ -195,34 +195,28 @@ body {
 }
 
 /* Annotation Styles */
-/* Base annotation mark styles */
-.annotation-header {
-  background-color: rgba(147, 51, 234, 0.2);
-  border-bottom: 2px solid #9333ea;
-  border-radius: 2px;
-}
-
-.annotation-title {
-  background-color: rgba(34, 197, 94, 0.2);
-  border-bottom: 2px solid #22c55e;
-  border-radius: 2px;
-}
-
-.annotation-author {
-  background-color: rgba(59, 130, 246, 0.2);
-  border-bottom: 2px solid #3b82f6;
-  border-radius: 2px;
-}
-
-.annotation-translator {
+/* Base annotation mark styles - Generic error annotation styling */
+[class*="annotation-"]:not(.annotation-optimistic):not(.annotation-agreed):not(.annotation-highlighted):not(.annotation-label) {
   background-color: rgba(249, 115, 22, 0.2);
   border-bottom: 2px solid #f97316;
   border-radius: 2px;
 }
 
+/* Special states for annotations */
 .annotation-optimistic {
   opacity: 0.7;
   animation: pulse 1.5s ease-in-out infinite;
+}
+
+.annotation-agreed {
+  background-color: rgba(34, 197, 94, 0.2) !important;
+  border-bottom: 2px solid #22c55e !important;
+}
+
+.annotation-highlighted {
+  background-color: rgba(59, 130, 246, 0.3) !important;
+  border-bottom: 2px solid #3b82f6 !important;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
 }
 
 /* Annotation Label Styles */
@@ -240,6 +234,9 @@ body {
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   z-index: 10;
+  /* Default error styling for all annotation labels */
+  background-color: #f97316;
+  border: 1px solid #ea580c;
 }
 
 .annotation-label:hover {
@@ -247,29 +244,21 @@ body {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.annotation-label-header {
-  background-color: #9333ea;
-  border: 1px solid #7e22ce;
-}
-
-.annotation-label-title {
-  background-color: #22c55e;
-  border: 1px solid #16a34a;
-}
-
-.annotation-label-author {
-  background-color: #3b82f6;
-  border: 1px solid #2563eb;
-}
-
-.annotation-label-translator {
-  background-color: #f97316;
-  border: 1px solid #ea580c;
-}
-
+/* Special states for annotation labels */
 .annotation-label-optimistic {
   opacity: 0.7;
   animation: pulse 1.5s ease-in-out infinite;
+}
+
+.annotation-label-agreed {
+  background-color: #22c55e !important;
+  border: 1px solid #16a34a !important;
+}
+
+.annotation-label-highlighted {
+  background-color: #3b82f6 !important;
+  border: 1px solid #2563eb !important;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
 }
 
 @keyframes pulse {

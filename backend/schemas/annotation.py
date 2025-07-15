@@ -1,7 +1,6 @@
 from pydantic import BaseModel, ConfigDict, validator
 from typing import Optional, Dict, Any
 from datetime import datetime
-from models.annotation import AnnotationLevel
 
 
 class AnnotationBase(BaseModel):
@@ -11,7 +10,7 @@ class AnnotationBase(BaseModel):
     selected_text: Optional[str] = None
     label: Optional[str] = None
     name: Optional[str] = None  # Custom name for the annotation (especially for headers)
-    level: Optional[AnnotationLevel] = None  # Importance level: minor, major, critical
+    level: Optional[str] = None  # Importance level: minor, major, critical
     meta: Optional[Dict[str, Any]] = None
     confidence: int = 100
 
@@ -33,6 +32,20 @@ class AnnotationBase(BaseModel):
             raise ValueError('Confidence must be between 0 and 100')
         return v
 
+    @validator('level', pre=True)
+    def validate_level(cls, v):
+        if v is None:
+            return v
+        if isinstance(v, str):
+            # Convert string to lowercase to match enum values
+            v = v.lower()
+            # Validate against enum values
+            valid_values = ["minor", "major", "critical"]
+            if v not in valid_values:
+                raise ValueError(f'Level must be one of: {", ".join(valid_values)}')
+            return v
+        return v
+
 
 class AnnotationCreate(AnnotationBase):
     text_id: int
@@ -45,7 +58,7 @@ class AnnotationUpdate(BaseModel):
     selected_text: Optional[str] = None
     label: Optional[str] = None
     name: Optional[str] = None  # Custom name for the annotation
-    level: Optional[AnnotationLevel] = None  # Importance level: minor, major, critical
+    level: Optional[str] = None  # Importance level: minor, major, critical
     meta: Optional[Dict[str, Any]] = None
     confidence: Optional[int] = None
 
@@ -59,6 +72,20 @@ class AnnotationUpdate(BaseModel):
     def validate_confidence_update(cls, v):
         if v is not None and not 0 <= v <= 100:
             raise ValueError('Confidence must be between 0 and 100')
+        return v
+
+    @validator('level', pre=True)
+    def validate_level_update(cls, v):
+        if v is None:
+            return v
+        if isinstance(v, str):
+            # Convert string to lowercase to match enum values
+            v = v.lower()
+            # Validate against enum values
+            valid_values = ["minor", "major", "critical"]
+            if v not in valid_values:
+                raise ValueError(f'Level must be one of: {", ".join(valid_values)}')
+            return v
         return v
 
 

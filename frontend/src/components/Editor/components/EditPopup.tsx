@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import {
   IoClose,
@@ -15,13 +16,19 @@ import {
 import type { Annotation } from "@/pages/Task";
 import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 import { useAuth } from "@/auth/use-auth-hook";
+import { truncateText } from "@/lib/utils";
 
 interface EditPopupProps {
   visible: boolean;
   position: { x: number; y: number };
   annotation: Annotation | null;
   isUpdatingAnnotation?: boolean;
-  onUpdate: (annotationId: string, newType: string, newText?: string) => void;
+  onUpdate: (
+    annotationId: string,
+    newType: string,
+    newText?: string,
+    newLevel?: string
+  ) => void;
   onDelete: () => void;
   onCancel: () => void;
 }
@@ -102,11 +109,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
               This annotation has been approved:
             </p>
             <p className="text-sm text-green-700 font-medium">
-              "
-              {annotation.text.length > 100
-                ? annotation.text.substring(0, 100) + "..."
-                : annotation.text}
-              "
+              "{truncateText(annotation.text, 100)}"
             </p>
             <p className="text-xs text-green-600 mt-2">
               Type:{" "}
@@ -193,7 +196,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
           new_type: selectedType,
         },
       });
-      onUpdate(annotation.id, selectedType, annotationText);
+      onUpdate(annotation.id, selectedType, annotationText, selectedLevel);
     }
   };
 
@@ -213,9 +216,9 @@ export const EditPopup: React.FC<EditPopupProps> = ({
     annotationText !== (annotation.name || "") ||
     selectedLevel !== (annotation.level || "");
 
-  return (
+  const modalContent = (
     <div
-      className="edit-popup absolute bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50 min-w-[400px] max-w-[500px]"
+      className="edit-popup fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50 min-w-[400px] max-w-[500px]"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -309,39 +312,52 @@ export const EditPopup: React.FC<EditPopupProps> = ({
 
         {/* Annotation Type Selection */}
         <div className="mb-3">
-          <p className="text-xs text-gray-500 mb-2">Annotation type:</p>
-          <div className="flex flex-wrap gap-2">
-            {annotationConfig.options.map((option: AnnotationOption) => (
-              <Button
-                key={option.id}
-                onClick={() => setSelectedType(option.id)}
-                disabled={isUpdatingAnnotation}
-                size="sm"
-                variant={selectedType === option.id ? "default" : "outline"}
-                className={`px-3 py-2 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  selectedType === option.id
-                    ? "ring-2 ring-blue-500"
-                    : "hover:scale-105"
-                }`}
-                style={
-                  selectedType === option.id
-                    ? {
-                        backgroundColor: option.borderColor,
-                        color: option.color,
-                        borderColor: option.borderColor,
-                      }
-                    : {
-                        borderColor: option.borderColor,
-                        color: option.borderColor,
-                      }
-                }
-              >
-                {option.icon && (
-                  <span className="text-xs mr-1">{option.icon}</span>
-                )}
-                {option.label}
-              </Button>
-            ))}
+          <p className="text-xs text-gray-500 mb-2">Error type:</p>
+          <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-md bg-gray-50">
+            {annotationConfig.options.length > 0 ? (
+              annotationConfig.options.map((option: AnnotationOption) => (
+                <div
+                  key={option.id}
+                  onClick={() => setSelectedType(option.label)}
+                  className={`p-2 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-orange-50 transition-colors ${
+                    selectedType === option.label || selectedType === option.id
+                      ? "bg-orange-100 border-orange-200"
+                      : ""
+                  } ${
+                    isUpdatingAnnotation ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-orange-500">⚠️</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {option.label}
+                        </p>
+                        {option.mnemonic && (
+                          <p className="text-xs text-gray-500">
+                            ({option.mnemonic})
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {(selectedType === option.label ||
+                      selectedType === option.id) && (
+                      <span className="text-orange-500 text-sm">✓</span>
+                    )}
+                  </div>
+                  {option.description && (
+                    <p className="text-xs text-gray-600 mt-1 pl-6">
+                      {option.description}
+                    </p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="p-3 text-center text-gray-500 text-sm">
+                Loading error types...
+              </div>
+            )}
           </div>
         </div>
 
@@ -423,4 +439,6 @@ export const EditPopup: React.FC<EditPopupProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };

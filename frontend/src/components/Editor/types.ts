@@ -12,7 +12,8 @@ export interface EditorProps {
   onUpdateAnnotation?: (
     annotationId: string,
     newType: string,
-    newText?: string
+    newText?: string,
+    newLevel?: string
   ) => void;
   onHeaderSelected?: (selection: {
     text: string;
@@ -60,7 +61,7 @@ export interface BubbleMenuProps {
   annotationLevel: string;
   annotations: Annotation[];
   isCreatingAnnotation: boolean;
-  onAddAnnotation: (type: string) => void;
+  onAddAnnotation: (type: string, name?: string, level?: string) => void;
   onCancel: () => void;
   onAnnotationTextChange: (text: string) => void;
   onSelectedHeaderIdChange: (id: string) => void;
@@ -82,7 +83,12 @@ export interface EditPopupProps {
   position: DeletePopupPosition;
   annotation: Annotation | null;
   isUpdatingAnnotation: boolean;
-  onUpdate: (annotationId: string, newType: string, newText?: string) => void;
+  onUpdate: (
+    annotationId: string,
+    newType: string,
+    newText?: string,
+    newLevel?: string
+  ) => void;
   onDelete: () => void;
   onCancel: () => void;
 }

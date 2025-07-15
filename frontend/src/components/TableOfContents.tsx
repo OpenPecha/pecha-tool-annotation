@@ -383,7 +383,7 @@ export const TableOfContents = ({
 
   return (
     <div
-      className={`transition-all duration-300 ease-in-out z-40 ${
+      className={`transition-all duration-300 ease-in-out z-50 ${
         isOpen ? "w-80" : "w-14"
       }`}
     >

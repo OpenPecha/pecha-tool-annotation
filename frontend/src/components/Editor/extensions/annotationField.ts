@@ -122,8 +122,9 @@ export const annotationField = StateField.define<AnnotationFieldState>({
         const annotation = effect.value;
         const isOptimistic = annotation.id.startsWith("temp-");
         const isHighlighted = highlightedAnnotationId === annotation.id;
+        // Get display name - will use custom name if provided, otherwise use error type label
         const titleText =
-          typeof annotation.name === "string" && annotation.name.trim()
+          annotation.name && annotation.name.trim()
             ? annotation.name
             : annotation.type;
 

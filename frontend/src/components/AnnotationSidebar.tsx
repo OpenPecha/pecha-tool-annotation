@@ -12,6 +12,7 @@ import {
 } from "react-icons/io5";
 import type { Annotation } from "@/pages/Task";
 import { ScrollArea } from "./ui/scroll-area";
+import { truncateText } from "@/lib/utils";
 
 interface AnnotationSidebarProps {
   annotations: Annotation[];
@@ -49,7 +50,8 @@ export const AnnotationSidebar = ({
       case "header":
         return "bg-slate-100 text-slate-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        // Default for error annotations - use orange theme to match error classification
+        return "bg-orange-100 text-orange-800";
     }
   };
 
@@ -146,7 +148,7 @@ export const AnnotationSidebar = ({
                         )}
                       </div>
                       <p className="text-sm font-monlam leading-[normal] text-gray-900 font-medium mb-1 break-words">
-                        "{annotation.text}"
+                        "{truncateText(annotation.text, 30)}"
                       </p>
 
                       {/* Review Comments Section */}

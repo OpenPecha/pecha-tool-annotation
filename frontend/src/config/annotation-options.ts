@@ -6,80 +6,124 @@ export interface AnnotationOption {
   borderColor: string;
   description?: string;
   icon?: string;
+  mnemonic?: string;
+  examples?: string[];
+  notes?: string;
+  level?: number;
+  parent?: string;
 }
 
 export interface AnnotationConfig {
   options: AnnotationOption[];
 }
 
-export const defaultAnnotationConfig: AnnotationConfig = {
-  options: [
-    {
-      id: "header",
-      label: "Header",
-      color: "#ffffff",
-      backgroundColor: "rgba(147, 51, 234, 0.2)",
-      borderColor: "#9333ea",
-      description: "Title, heading, or section header",
-      icon: "📄",
-    },
-    {
-      id: "title",
-      label: "Title",
-      color: "#ffffff",
-      backgroundColor: "rgba(34, 197, 94, 0.2)",
-      borderColor: "#22c55e",
-      description: "Title of the text",
-      icon: "🏷️",
-    },
-    {
-      id: "author",
-      label: "Author",
-      color: "#ffffff",
-      backgroundColor: "rgba(59, 130, 246, 0.2)",
-      borderColor: "#3b82f6",
-      description: "Author of the text",
-      icon: "👤",
-    },
-    {
-      id: "translator",
-      label: "Translator",
-      color: "#ffffff",
-      backgroundColor: "rgba(249, 115, 22, 0.2)",
-      borderColor: "#f97316",
-      description: "Translation of the text",
-      icon: "👤",
-    },
-  ],
+// Interface for error category structure from error_list.json
+interface ErrorCategory {
+  id: string;
+  name: string;
+  mnemonic: string;
+  description: string;
+  examples?: string[];
+  notes?: string;
+  level: number;
+  parent?: string;
+  subcategories?: ErrorCategory[];
+}
+
+// Helper function to extract leaf nodes (innermost categories) from error list
+const extractLeafNodes = (
+  categories: ErrorCategory[],
+  level: number = 0
+): AnnotationOption[] => {
+  const leafNodes: AnnotationOption[] = [];
+
+  for (const category of categories) {
+    if (!category.subcategories || category.subcategories.length === 0) {
+      // This is a leaf node - no subcategories
+      leafNodes.push({
+        id: category.id,
+        label: category.name,
+        mnemonic: category.mnemonic,
+        description: category.description,
+        examples: category.examples,
+        notes: category.notes,
+        level: category.level,
+        parent: category.parent,
+        // Color scheme based on error severity - using orange theme for errors
+        color: "#ffffff",
+        backgroundColor: "rgba(249, 115, 22, 0.2)",
+        borderColor: "#f97316",
+        icon: "⚠️",
+      });
+    } else {
+      // Recursively process subcategories
+      leafNodes.push(...extractLeafNodes(category.subcategories, level + 1));
+    }
+  }
+
+  return leafNodes;
 };
 
-// Function to load annotation configuration from file or use default
+// Function to load annotation configuration from error list
 export const loadAnnotationConfig = async (): Promise<AnnotationConfig> => {
   try {
-    // In a real application, you might load this from an API or external file
-    // For now, we'll use the default configuration
-    return defaultAnnotationConfig;
+    // Load error list from the public directory
+    const response = await fetch("/error_list.json");
+    if (!response.ok) {
+      throw new Error(`Failed to load error list: ${response.statusText}`);
+    }
+
+    const errorData = await response.json();
+    const categories = errorData.error_typology?.categories || [];
+
+    // Extract only leaf nodes (innermost categories) for annotation options
+    const leafNodes = extractLeafNodes(categories);
+
+    return {
+      options: leafNodes,
+    };
   } catch (error) {
     console.warn(
-      "Failed to load annotation configuration, using default:",
+      "Failed to load error list for annotation configuration, using empty config:",
       error
     );
-    return defaultAnnotationConfig;
+    // Return empty config if error list can't be loaded
+    return {
+      options: [],
+    };
   }
 };
 
-// Helper function to get annotation option by ID
+// Helper function to get annotation option by ID or label
 export const getAnnotationOption = (
   config: AnnotationConfig,
-  id: string
+  identifier: string
 ): AnnotationOption | undefined => {
-  return config.options.find((option) => option.id === id);
+  return config.options.find(
+    (option) => option.id === identifier || option.label === identifier
+  );
 };
 
-// Helper function to validate annotation type
+// Helper function to validate annotation type (accepts both ID and label)
 export const isValidAnnotationType = (
   config: AnnotationConfig,
   type: string
 ): boolean => {
-  return config.options.some((option) => option.id === type);
+  return config.options.some(
+    (option) => option.id === type || option.label === type
+  );
+};
+
+// Helper function to get annotation display name
+export const getAnnotationDisplayName = (
+  config: AnnotationConfig,
+  type: string,
+  customName?: string
+): string => {
+  if (customName && customName.trim()) {
+    return customName;
+  }
+
+  const option = getAnnotationOption(config, type);
+  return option?.label || type;
 };

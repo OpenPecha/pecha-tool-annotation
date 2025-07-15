@@ -282,10 +282,16 @@ const Index = () => {
 
   // Mutation for updating annotations
   const updateAnnotationMutation = useMutation({
-    mutationFn: async (data: { id: number; type: string; name?: string }) => {
+    mutationFn: async (data: {
+      id: number;
+      type: string;
+      name?: string;
+      level?: string;
+    }) => {
       return annotationsApi.updateAnnotation(data.id, {
         annotation_type: data.type,
         name: data.name,
+        level: data.level as "minor" | "major" | "critical" | undefined,
       });
     },
     onSuccess: (data) => {
@@ -714,7 +720,8 @@ const Index = () => {
   const updateAnnotation = (
     annotationId: string,
     newType: string,
-    newText?: string
+    newText?: string,
+    newLevel?: string
   ) => {
     // Check if annotation is agreed upon by a reviewer
     const annotation = annotations.find((ann) => ann.id === annotationId);
@@ -755,6 +762,7 @@ const Index = () => {
               ...ann,
               type: newType,
               name: newText,
+              level: newLevel as "minor" | "major" | "critical" | undefined,
             }
           : ann
       )
@@ -766,8 +774,28 @@ const Index = () => {
         id: annotationIdNumber,
         type: newType,
         name: newText,
+        level: newLevel,
       },
       {
+        onSuccess: (data) => {
+          // Update local state with actual response data
+          setAnnotations((prev) =>
+            prev.map((ann) =>
+              ann.id === annotationId
+                ? {
+                    ...ann,
+                    type: data.annotation_type,
+                    name: data.name,
+                    level: data.level as
+                      | "minor"
+                      | "major"
+                      | "critical"
+                      | undefined,
+                  }
+                : ann
+            )
+          );
+        },
         onError: () => {
           // Restore the original annotation on error
           setAnnotations((prev) =>

@@ -445,7 +445,7 @@ export const ErrorList = ({
       )}
 
       {/* Error categories */}
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 space-y-1">
+      <div className="flex-1 min-h-0 overflow-y-auto  scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 space-y-1">
         {filteredCategories.length === 0 ? (
           <p className="text-xs text-gray-500 italic px-2 py-3">
             {searchQuery

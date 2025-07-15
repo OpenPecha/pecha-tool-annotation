@@ -83,6 +83,18 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       resetEditPopup,
     } = useEditorState();
 
+    // Track initial scroll position for modals
+    const initialScrollPositionRef = useRef<{ top: number; left: number }>({
+      top: 0,
+      left: 0,
+    });
+    const initialBubblePositionRef = useRef<{ x: number; y: number } | null>(
+      null
+    );
+    const initialEditPopupPositionRef = useRef<{ x: number; y: number } | null>(
+      null
+    );
+
     const editorRef = useAnnotationEffects(annotations, editorReady);
 
     // Function to save current scroll position
@@ -133,31 +145,38 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           }
 
           // Handle annotation label click (same as clicking on annotation mark)
-          const editorElement = editorRef.current?.view?.dom;
-          const editorRect = editorElement?.getBoundingClientRect();
-
-          if (editorRect) {
+          {
             const popupWidth = 256;
             const popupHeight = 120;
             const margin = 10;
 
-            // Position popup near the label click
+            // Position popup near the label click using viewport coordinates
             const rect = (event.target as HTMLElement).getBoundingClientRect();
-            let popupX = rect.left + rect.width / 2 - editorRect.left;
-            let popupY = rect.bottom + 5 - editorRect.top;
+            let popupX = rect.left + rect.width / 2;
+            let popupY = rect.bottom + 5;
 
-            // Ensure popup stays within bounds
+            // Ensure popup stays within viewport bounds
             const popupHalfWidth = popupWidth / 2;
             if (popupX - popupHalfWidth < margin) {
               popupX = popupHalfWidth + margin;
-            } else if (popupX + popupHalfWidth > editorRect.width - margin) {
-              popupX = editorRect.width - popupHalfWidth - margin;
+            } else if (popupX + popupHalfWidth > window.innerWidth - margin) {
+              popupX = window.innerWidth - popupHalfWidth - margin;
             }
 
             if (popupY < margin) {
               popupY = margin;
-            } else if (popupY + popupHeight > editorRect.height - margin) {
-              popupY = editorRect.height - popupHeight - margin;
+            } else if (popupY + popupHeight > window.innerHeight - margin) {
+              popupY = window.innerHeight - popupHeight - margin;
+            }
+
+            // Store initial scroll position and edit popup position
+            const scrollElement = editorRef.current?.view?.scrollDOM;
+            if (scrollElement) {
+              initialScrollPositionRef.current = {
+                top: scrollElement.scrollTop,
+                left: scrollElement.scrollLeft,
+              };
+              initialEditPopupPositionRef.current = { x: popupX, y: popupY };
             }
 
             setEditPopupPosition({ x: popupX, y: popupY });
@@ -230,32 +249,42 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
             // Only show delete popup if there's no multi-character selection
             if (!hasMultiCharSelection) {
               const rect = annotationElement.getBoundingClientRect();
-              const editorElement = annotationElement.closest(".cm-editor");
-              const editorRect = editorElement?.getBoundingClientRect();
-
-              if (editorRect) {
+              {
                 const popupWidth = 256;
                 const popupHeight = 120;
                 const margin = 10;
 
-                let popupX = rect.left + rect.width / 2 - editorRect.left;
-                let popupY = rect.bottom + 5 - editorRect.top;
+                let popupX = rect.left + rect.width / 2;
+                let popupY = rect.bottom + 5;
 
-                // Ensure popup stays within bounds
+                // Ensure popup stays within viewport bounds
                 const popupHalfWidth = popupWidth / 2;
                 if (popupX - popupHalfWidth < margin) {
                   popupX = popupHalfWidth + margin;
                 } else if (
                   popupX + popupHalfWidth >
-                  editorRect.width - margin
+                  window.innerWidth - margin
                 ) {
-                  popupX = editorRect.width - popupHalfWidth - margin;
+                  popupX = window.innerWidth - popupHalfWidth - margin;
                 }
 
                 if (popupY < margin) {
                   popupY = margin;
-                } else if (popupY + popupHeight > editorRect.height - margin) {
-                  popupY = editorRect.height - popupHeight - margin;
+                } else if (popupY + popupHeight > window.innerHeight - margin) {
+                  popupY = window.innerHeight - popupHeight - margin;
+                }
+
+                // Store initial scroll position and edit popup position
+                const scrollElement = editorRef.current?.view?.scrollDOM;
+                if (scrollElement) {
+                  initialScrollPositionRef.current = {
+                    top: scrollElement.scrollTop,
+                    left: scrollElement.scrollLeft,
+                  };
+                  initialEditPopupPositionRef.current = {
+                    x: popupX,
+                    y: popupY,
+                  };
                 }
 
                 setEditPopupPosition({ x: popupX, y: popupY });
@@ -304,6 +333,65 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       };
     }, [resetBubbleMenu, resetDeletePopup]);
 
+    // Add scroll event listener to update modal positions
+    useEffect(() => {
+      const handleScroll = () => {
+        if (!editorRef.current?.view) return;
+
+        const scrollElement = editorRef.current.view.scrollDOM;
+        const currentScrollTop = scrollElement.scrollTop;
+        const currentScrollLeft = scrollElement.scrollLeft;
+
+        const scrollDeltaY =
+          currentScrollTop - initialScrollPositionRef.current.top;
+        const scrollDeltaX =
+          currentScrollLeft - initialScrollPositionRef.current.left;
+
+        // Update bubble menu position if visible
+        if (bubbleMenuVisible && initialBubblePositionRef.current) {
+          setBubbleMenuPosition({
+            x: initialBubblePositionRef.current.x - scrollDeltaX,
+            y: initialBubblePositionRef.current.y - scrollDeltaY,
+            transformX: "-50%",
+          });
+        }
+
+        // Update edit popup position if visible
+        if (editPopupVisible && initialEditPopupPositionRef.current) {
+          setEditPopupPosition({
+            x: initialEditPopupPositionRef.current.x - scrollDeltaX,
+            y: initialEditPopupPositionRef.current.y - scrollDeltaY,
+          });
+        }
+      };
+
+      const editorElement = editorRef.current?.view?.scrollDOM;
+      if (editorElement) {
+        editorElement.addEventListener("scroll", handleScroll);
+        return () => {
+          editorElement.removeEventListener("scroll", handleScroll);
+        };
+      }
+    }, [
+      bubbleMenuVisible,
+      editPopupVisible,
+      setBubbleMenuPosition,
+      setEditPopupPosition,
+    ]);
+
+    // Clear position refs when modals are closed
+    useEffect(() => {
+      if (!bubbleMenuVisible) {
+        initialBubblePositionRef.current = null;
+      }
+    }, [bubbleMenuVisible]);
+
+    useEffect(() => {
+      if (!editPopupVisible) {
+        initialEditPopupPositionRef.current = null;
+      }
+    }, [editPopupVisible]);
+
     const handleSelectionComplete = useCallback(
       (selection: EditorSelection) => {
         // Close delete popup when selection changes
@@ -334,25 +422,23 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               const endCoords = view.coordsAtPos(end);
 
               if (startCoords && endCoords) {
-                const editorElement = view.dom;
-                const editorRect = editorElement.getBoundingClientRect();
-
+                // Calculate position relative to viewport for portal
                 const selectionCenterX =
-                  (startCoords.left + endCoords.right) / 2 - editorRect.left;
-                const selectionBottom =
-                  Math.max(startCoords.bottom, endCoords.bottom) -
-                  editorRect.top;
-                const selectionTop =
-                  Math.min(startCoords.top, endCoords.top) - editorRect.top;
+                  (startCoords.left + endCoords.right) / 2;
+                const selectionBottom = Math.max(
+                  startCoords.bottom,
+                  endCoords.bottom
+                );
+                const selectionTop = Math.min(startCoords.top, endCoords.top);
 
-                const editorWidth = editorRect.width;
-                const editorHeight = editorRect.height;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
                 const bubbleWidth = 380;
                 const bubbleHeight = 250;
                 const margin = 10;
 
                 // Determine positioning with more spacing
-                const spaceBelow = editorHeight - selectionBottom;
+                const spaceBelow = viewportHeight - selectionBottom;
                 const spaceAbove = selectionTop;
                 const bubbleSpacing = 20; // Increased spacing from selection
 
@@ -365,10 +451,10 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                     ? selectionBottom + bubbleSpacing
                     : selectionTop - bubbleHeight - bubbleSpacing;
 
-                // Ensure bounds
+                // Ensure bounds within viewport
                 if (bubbleY < margin) bubbleY = margin;
-                else if (bubbleY + bubbleHeight > editorHeight - margin) {
-                  bubbleY = editorHeight - bubbleHeight - margin;
+                else if (bubbleY + bubbleHeight > viewportHeight - margin) {
+                  bubbleY = viewportHeight - bubbleHeight - margin;
                 }
 
                 // Horizontal positioning
@@ -378,9 +464,17 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
 
                 if (bubbleX - bubbleHalfWidth < margin) {
                   bubbleX = bubbleHalfWidth + margin;
-                } else if (bubbleX + bubbleHalfWidth > editorWidth - margin) {
-                  bubbleX = editorWidth - bubbleHalfWidth - margin;
+                } else if (bubbleX + bubbleHalfWidth > viewportWidth - margin) {
+                  bubbleX = viewportWidth - bubbleHalfWidth - margin;
                 }
+
+                // Store initial scroll position and bubble position
+                const scrollElement = editorRef.current.view.scrollDOM;
+                initialScrollPositionRef.current = {
+                  top: scrollElement.scrollTop,
+                  left: scrollElement.scrollLeft,
+                };
+                initialBubblePositionRef.current = { x: bubbleX, y: bubbleY };
 
                 setBubbleMenuPosition({
                   x: bubbleX,
@@ -493,10 +587,15 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     ]);
 
     const handleUpdateAnnotation = useCallback(
-      (annotationId: string, newType: string, newText?: string) => {
+      (
+        annotationId: string,
+        newType: string,
+        newText?: string,
+        newLevel?: string
+      ) => {
         if (onUpdateAnnotation) {
           // Use the passed update function if available
-          onUpdateAnnotation(annotationId, newType, newText);
+          onUpdateAnnotation(annotationId, newType, newText, newLevel);
         } else {
           // Fallback to remove and add if no update function provided
           // Save scroll position before update
@@ -507,8 +606,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           if (annotation) {
             // Remove the old annotation and add the updated one
             onRemoveAnnotation(annotationId);
-            // Add new annotation with same position but new type/text
-            onAddAnnotation(newType, newText);
+            // Add new annotation with same position but new type/text/level
+            onAddAnnotation(newType, newText, newLevel);
           }
 
           // Restore scroll position after update
@@ -523,6 +622,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         annotations,
         onRemoveAnnotation,
         onAddAnnotation,
+        onUpdateAnnotation,
         resetEditPopup,
         saveScrollPosition,
         restoreScrollPosition,
