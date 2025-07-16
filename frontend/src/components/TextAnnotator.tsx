@@ -1,4 +1,5 @@
-import { useRef, useImperativeHandle, forwardRef, useState } from "react";
+import { useRef, useImperativeHandle, forwardRef } from "react";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Editor } from "./Editor";
 import type { EditorRef } from "./Editor/types";
 import type { Annotation } from "@/pages/Task";
@@ -64,7 +65,10 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
     ref
   ) => {
     const editorRef = useRef<EditorRef>(null);
-    const [showTranslation, setShowTranslation] = useState(true);
+    const [showTranslation, setShowTranslation] = useLocalStorage(
+      "showTranslation",
+      true
+    );
 
     useImperativeHandle(ref, () => ({
       scrollToPosition: (start: number, end: number) => {

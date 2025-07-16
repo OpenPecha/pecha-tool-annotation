@@ -898,6 +898,10 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           extensions={extensions}
           readOnly={readOnly}
           onCreateEditor={(view) => {
+            // Store the view in the editorRef for useImperativeHandle and useAnnotationEffects
+            if (editorRef.current) {
+              editorRef.current.view = view;
+            }
             setEditorReady(true);
             setTimeout(() => {
               if (annotations.length > 0) {

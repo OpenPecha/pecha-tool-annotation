@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TextAnnotator } from "@/components/TextAnnotator";
 import type { TextAnnotatorRef } from "@/components/TextAnnotator";
-import { AnnotationSidebar } from "@/components/AnnotationSidebar";
+import { AnnotationSidebar } from "@/components/AnnotationSidebar/AnnotationSidebar";
 import { ErrorList } from "@/components/ErrorList";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
@@ -125,8 +126,14 @@ const Index = () => {
   } | null>(null);
 
   const [tocOpen, setTocOpen] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [errorListOpen, setErrorListOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useLocalStorage(
+    "annotationSidebarOpen",
+    true
+  );
+  const [errorListOpen, setErrorListOpen] = useLocalStorage(
+    "errorListOpen",
+    true
+  );
   const textAnnotatorRef = useRef<TextAnnotatorRef>(null);
 
   // Skip confirmation dialog state
@@ -1037,48 +1044,51 @@ const Index = () => {
         {/* Error List - Right Sidebar */}
         <div
           className={`transition-all duration-300 ease-in-out ${
-            errorListOpen ? "w-80" : "w-14"
+            errorListOpen ? "w-80" : "w-16"
           }`}
         >
           <div
-            className={`shadow-lg border-0 backdrop-blur-sm h-[75vh] flex flex-col mt-4 mb-4 ${
-              !errorListOpen ? "p-0" : ""
-            } bg-white/80 rounded-lg`}
+            className={`shadow-lg border-0 backdrop-blur-sm flex flex-col mt-4 mb-4 bg-white/80 rounded-lg transition-all duration-300 ${
+              errorListOpen ? "h-[75vh]" : "h-auto"
+            }`}
           >
-            <div className={`${errorListOpen ? "pb-3" : "p-3"} border-b`}>
-              <div className="flex items-center justify-between">
-                {errorListOpen && (
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 p-2">
-                    <span className="text-orange-600">⚠</span>
-                    Error List
-                  </h3>
-                )}
+            {errorListOpen ? (
+              // Expanded state
+              <>
+                <div className="pb-3 border-b">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 p-2">
+                      <span className="text-orange-600">⚠</span>
+                      Error List
+                    </h3>
+                    <button
+                      onClick={() => setErrorListOpen(!errorListOpen)}
+                      className="h-8 w-8 p-0 hover:bg-orange-50 transition-all duration-200 flex items-center justify-center rounded"
+                      title="Close Error List"
+                    >
+                      <span className="text-gray-600">←</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="pt-0 flex-1 flex flex-col min-h-0 p-4">
+                  <ErrorList
+                    onErrorSelect={(error) => {
+                      console.log("Selected error:", error);
+                    }}
+                    searchable={true}
+                  />
+                </div>
+              </>
+            ) : (
+              // Collapsed state
+              <div className="p-3 flex items-center justify-center">
                 <button
                   onClick={() => setErrorListOpen(!errorListOpen)}
-                  className={`${
-                    errorListOpen
-                      ? "h-8 w-8 p-0 hover:bg-orange-50"
-                      : "h-10 w-10 p-0 hover:bg-orange-50 rounded-full shadow-sm border border-gray-200"
-                  } transition-all duration-200 flex items-center justify-center`}
-                  title={errorListOpen ? "Close Error List" : "Open Error List"}
+                  className="h-10 w-10 p-0 hover:bg-orange-50 rounded-full shadow-sm border border-gray-200 transition-all duration-200 flex items-center justify-center"
+                  title="Open Error List"
                 >
-                  {errorListOpen ? (
-                    <span className="text-gray-600">←</span>
-                  ) : (
-                    <span className="text-orange-600">⚠</span>
-                  )}
+                  <span className="text-orange-600 text-lg">⚠</span>
                 </button>
-              </div>
-            </div>
-
-            {errorListOpen && (
-              <div className="pt-0 flex-1 flex flex-col min-h-0 p-4">
-                <ErrorList
-                  onErrorSelect={(error) => {
-                    console.log("Selected error:", error);
-                  }}
-                  searchable={true}
-                />
               </div>
             )}
           </div>
@@ -1131,7 +1141,7 @@ const Index = () => {
         </div>
 
         {/* Annotation Sidebar - Right Sidebar */}
-        <div className=" flex flex-col gap-4 h-[90vh] mt-4 mb-4 overflow-y-hidden">
+        <div className="w-80 flex flex-col gap-4 h-[90vh] mt-4 mb-4 overflow-y-hidden">
           <ActionButtons
             annotations={annotations}
             onSubmitTask={handleSubmitTask}

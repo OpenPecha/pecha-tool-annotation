@@ -52,6 +52,11 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
     }
   }, [searchTerm, caseSensitive, wholeWord, text]);
 
+  // Helper function to escape special regex characters
+  const escapeRegExp = (string: string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  };
+
   const performSearch = (term: string) => {
     if (!term.trim()) {
       setSearchResults([]);
@@ -63,7 +68,7 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
     let globalIndex = 0;
 
     // Create regex pattern based on options
-    let pattern = term;
+    let pattern = escapeRegExp(term);
     if (wholeWord) {
       pattern = `\\b${pattern}\\b`;
     }
