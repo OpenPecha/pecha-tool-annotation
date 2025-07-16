@@ -11,7 +11,7 @@ import {
   IoCloseCircle,
 } from "react-icons/io5";
 import type { Annotation } from "@/pages/Task";
-import { ScrollArea } from "./ui/scroll-area";
+import { ScrollArea } from "../ui/scroll-area";
 import { truncateText } from "@/lib/utils";
 
 interface AnnotationSidebarProps {

@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TextAnnotator } from "@/components/TextAnnotator";
 import type { TextAnnotatorRef } from "@/components/TextAnnotator";
 import { AnnotationSidebar } from "@/components/AnnotationSidebar";
-import { TableOfContents } from "@/components/TableOfContents";
 import { ErrorList } from "@/components/ErrorList";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
