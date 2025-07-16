@@ -49,6 +49,7 @@ const Review = () => {
   >(new Map());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tocOpen, setTocOpen] = useState(true);
+
   const [savingComments, setSavingComments] = useState<Set<number>>(new Set());
   const [savedComments, setSavedComments] = useState<Set<number>>(new Set());
   const [pendingSave, setPendingSave] = useState<Set<number>>(new Set());
@@ -489,22 +490,64 @@ const Review = () => {
             {/* Text Content */}
             <div className="lg:col-span-4">
               <div className="h-[90vh] mt-4 mb-4">
-                <Card className="h-full flex flex-col">
-                  <CardHeader className="flex-shrink-0">
-                    <CardTitle className="flex items-center gap-2">
-                      <Eye className="w-5 h-5" />
-                      Text Content
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-1 overflow-hidden ">
-                    <ScrollArea className="h-full font-monlam">
-                      {renderAnnotationInText(
-                        reviewSession.content,
-                        annotations
-                      )}
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
+                {reviewSession.translation &&
+                reviewSession.translation.trim() ? (
+                  // Split view: Original and Translation side by side
+                  <div className="flex h-full gap-2">
+                    {/* Original Text */}
+                    <Card className="flex-1 flex flex-col">
+                      <CardHeader className="flex-shrink-0">
+                        <CardTitle className="flex items-center gap-2">
+                          <Eye className="w-5 h-5" />
+                          Original Text
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-1 overflow-hidden">
+                        <ScrollArea className="h-full font-monlam">
+                          {renderAnnotationInText(
+                            reviewSession.content,
+                            annotations
+                          )}
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+
+                    {/* Translation */}
+                    <Card className="flex-1 flex flex-col">
+                      <CardHeader className="flex-shrink-0">
+                        <CardTitle className="flex items-center gap-2">
+                          <Eye className="w-5 h-5" />
+                          Translation
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-1 overflow-hidden">
+                        <ScrollArea className="h-full font-monlam">
+                          <p className="text-gray-700 leading-[normal]">
+                            {reviewSession.translation}
+                          </p>
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  // Single view: Just original text
+                  <Card className="h-full flex flex-col">
+                    <CardHeader className="flex-shrink-0">
+                      <CardTitle className="flex items-center gap-2">
+                        <Eye className="w-5 h-5" />
+                        Text Content
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 overflow-hidden">
+                      <ScrollArea className="h-full font-monlam">
+                        {renderAnnotationInText(
+                          reviewSession.content,
+                          annotations
+                        )}
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
 

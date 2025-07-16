@@ -56,6 +56,7 @@ def create_text_from_data(db: Session, text_data: BulkTextData) -> Text:
     text_create = TextCreate(
         title=text_data.title,
         content=text_data.content,
+        translation=text_data.translation,
         source=text_data.source,
         language=text_data.language
         # status will default to "initialized" in the schema

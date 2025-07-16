@@ -29,6 +29,7 @@ export interface EditorProps {
   isCreatingAnnotation?: boolean;
   isDeletingAnnotation?: boolean;
   highlightedAnnotationId?: string | null;
+  hideScrollbar?: boolean;
 }
 
 export type EditorRef = {

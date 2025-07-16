@@ -34,6 +34,7 @@ export interface ReviewSessionResponse {
   text_id: number;
   title: string;
   content: string;
+  translation?: string;
   annotations: Array<{
     id: number;
     annotation_type: string;

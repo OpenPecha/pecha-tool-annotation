@@ -12,6 +12,7 @@ class TextCRUD:
         db_obj = Text(
             title=obj_in.title,
             content=obj_in.content,
+            translation=obj_in.translation,
             source=obj_in.source,
             language=obj_in.language,
         )

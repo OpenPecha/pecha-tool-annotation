@@ -172,7 +172,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   if (!visible || !currentSelection) return null;
 
   const handleAddAnnotation = () => {
-    if (currentSelection && selectedErrorCategory && annotationLevel) {
+    if (currentSelection && selectedErrorCategory) {
       // Track annotation creation
       trackAnnotationCreated(
         selectedErrorCategory.id,
@@ -183,8 +183,12 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
           annotation_id: `temp-${Date.now()}`,
         }
       );
-      // Pass the human-readable label instead of the ID
-      onAddAnnotation(selectedErrorCategory.name, undefined, annotationLevel);
+      // Pass the human-readable label instead of the ID, level is optional
+      onAddAnnotation(
+        selectedErrorCategory.name,
+        undefined,
+        annotationLevel || undefined
+      );
     }
   };
 
@@ -336,7 +340,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
       {selectedErrorCategory && (
         <div className="mb-3">
           <p className="text-xs text-gray-500 mb-2">
-            Importance level (required):
+            Importance level (optional):
           </p>
           <select
             value={annotationLevel}
@@ -353,7 +357,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
       )}
 
       {/* Add Annotation Button */}
-      {selectedErrorCategory && annotationLevel && (
+      {selectedErrorCategory && (
         <div className="mb-3">
           <Button
             onClick={handleAddAnnotation}
@@ -369,7 +373,8 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
               <div className="flex items-center justify-center gap-2">
                 <span>Add Annotation</span>
                 <span className="text-xs opacity-75">
-                  ({selectedErrorCategory.mnemonic} • {annotationLevel})
+                  ({selectedErrorCategory.mnemonic}
+                  {annotationLevel ? ` • ${annotationLevel}` : ""})
                 </span>
               </div>
             )}

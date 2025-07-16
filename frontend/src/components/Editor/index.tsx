@@ -39,6 +39,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       isCreatingAnnotation = false,
       isDeletingAnnotation = false,
       highlightedAnnotationId,
+      hideScrollbar = false,
     },
     ref
   ) => {
@@ -690,6 +691,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           overflow: "auto",
           height: "100%",
           scrollBehavior: "smooth",
+          scrollbarWidth: hideScrollbar ? "none" : "auto", // Firefox
+          msOverflowStyle: hideScrollbar ? "none" : "auto", // IE/Edge
         },
         ".cm-focused": {
           outline: "none",
@@ -708,23 +711,23 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           opacity: "1 !important",
         },
         ".cm-scroller::-webkit-scrollbar": {
-          width: "12px",
-          height: "12px",
+          width: hideScrollbar ? "0px" : "12px",
+          height: hideScrollbar ? "0px" : "12px",
         },
         ".cm-scroller::-webkit-scrollbar-track": {
-          background: "#f8f9fa",
+          background: hideScrollbar ? "transparent" : "#f8f9fa",
           borderRadius: "6px",
         },
         ".cm-scroller::-webkit-scrollbar-thumb": {
-          background: "#6c757d",
+          background: hideScrollbar ? "transparent" : "#6c757d",
           borderRadius: "6px",
-          border: "2px solid #f8f9fa",
+          border: hideScrollbar ? "none" : "2px solid #f8f9fa",
         },
         ".cm-scroller::-webkit-scrollbar-thumb:hover": {
-          background: "#495057",
+          background: hideScrollbar ? "transparent" : "#495057",
         },
         ".cm-scroller::-webkit-scrollbar-corner": {
-          background: "#f8f9fa",
+          background: hideScrollbar ? "transparent" : "#f8f9fa",
         },
       }),
     ];

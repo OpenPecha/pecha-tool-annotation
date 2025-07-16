@@ -146,6 +146,8 @@ const Index = () => {
 
   // Get text content directly from textData (no state needed since it never changes)
   const text = textData?.content || "";
+  const translation = textData?.translation || "";
+  const hasTranslation = Boolean(translation && translation.trim().length > 0);
 
   // Update local state when textData is loaded
   useEffect(() => {
@@ -1110,6 +1112,8 @@ const Index = () => {
             <TextAnnotator
               ref={textAnnotatorRef}
               text={text}
+              translation={translation}
+              hasTranslation={hasTranslation}
               annotations={annotations}
               selectedText={selectedText}
               onTextSelect={setSelectedText}

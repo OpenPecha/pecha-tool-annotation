@@ -17,6 +17,7 @@ class UserBasic(BaseModel):
 class TextBase(BaseModel):
     title: str
     content: str
+    translation: Optional[str] = None
     source: Optional[str] = None
     language: str = "en"
 
@@ -47,6 +48,7 @@ class TextCreate(TextBase):
 class TextUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
+    translation: Optional[str] = None
     source: Optional[str] = None
     language: Optional[str] = None
     status: Optional[str] = None

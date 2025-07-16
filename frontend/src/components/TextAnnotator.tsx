@@ -1,11 +1,15 @@
-import { useRef, useImperativeHandle, forwardRef } from "react";
+import { useRef, useImperativeHandle, forwardRef, useState } from "react";
 import { Editor } from "./Editor";
 import type { EditorRef } from "./Editor/types";
 import type { Annotation } from "@/pages/Task";
 import { SearchComponent } from "./SearchComponent";
+import { Button } from "@/components/ui/button";
+import { IoEye, IoEyeOff } from "react-icons/io5";
 
 interface TextAnnotatorProps {
   text: string;
+  translation?: string;
+  hasTranslation?: boolean;
   annotations: Annotation[];
   selectedText: { text: string; start: number; end: number } | null;
   onTextSelect: (
@@ -42,6 +46,8 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
   (
     {
       text,
+      translation,
+      hasTranslation = false,
       annotations,
       selectedText,
       onTextSelect,
@@ -58,6 +64,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
     ref
   ) => {
     const editorRef = useRef<EditorRef>(null);
+    const [showTranslation, setShowTranslation] = useState(true);
 
     useImperativeHandle(ref, () => ({
       scrollToPosition: (start: number, end: number) => {
@@ -69,35 +76,125 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
       editorRef.current?.scrollToPosition(start, end);
     };
 
+    const shouldShowSplitView =
+      hasTranslation && translation && showTranslation;
+
     return (
       <div className="flex flex-col h-full">
-        {/* Search Bar - Always visible */}
-        <SearchComponent
-          text={text}
-          isVisible={true}
-          onClose={() => {}} // No close functionality needed
-          onResultSelect={handleSearchResultSelect}
-        />
-
-        {/* Editor */}
-        <div className="flex-1 overflow-hidden">
-          <Editor
-            ref={editorRef}
-            text={text}
-            annotations={annotations}
-            selectedText={selectedText}
-            onTextSelect={onTextSelect}
-            onAddAnnotation={onAddAnnotation}
-            onRemoveAnnotation={onRemoveAnnotation}
-            onUpdateAnnotation={onUpdateAnnotation}
-            onHeaderSelected={onHeaderSelected}
-            onUpdateHeaderSpan={onUpdateHeaderSpan}
-            readOnly={readOnly}
-            isCreatingAnnotation={isCreatingAnnotation}
-            isDeletingAnnotation={isDeletingAnnotation}
-            highlightedAnnotationId={highlightedAnnotationId}
-          />
+        {/* Header with Search Bar and Translation Toggle */}
+        <div className="bg-gray-50 p-2 border-b flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <SearchComponent
+              text={text}
+              isVisible={true}
+              onClose={() => {}} // No close functionality needed
+              onResultSelect={handleSearchResultSelect}
+            />
+          </div>
+          {hasTranslation && translation && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowTranslation(!showTranslation)}
+              className="flex items-center gap-2 shrink-0"
+            >
+              {showTranslation ? (
+                <>
+                  <IoEyeOff className="w-4 h-4" />
+                  Hide Translation
+                </>
+              ) : (
+                <>
+                  <IoEye className="w-4 h-4" />
+                  Show Translation
+                </>
+              )}
+            </Button>
+          )}
         </div>
+
+        {/* Content Area */}
+        {shouldShowSplitView ? (
+          // Split view: Original text (with annotations) on left, Translation on right
+          <div className="flex flex-1 overflow-hidden">
+            {/* Original Text with Annotations */}
+            <div className="flex-1 border-r border-gray-200">
+              <div className="p-2 bg-blue-50 border-b border-gray-200">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Original Text
+                </h3>
+              </div>
+              <div className="h-full overflow-hidden">
+                <Editor
+                  ref={editorRef}
+                  text={text}
+                  annotations={annotations}
+                  selectedText={selectedText}
+                  onTextSelect={onTextSelect}
+                  onAddAnnotation={onAddAnnotation}
+                  onRemoveAnnotation={onRemoveAnnotation}
+                  onUpdateAnnotation={onUpdateAnnotation}
+                  onHeaderSelected={onHeaderSelected}
+                  onUpdateHeaderSpan={onUpdateHeaderSpan}
+                  readOnly={readOnly}
+                  isCreatingAnnotation={isCreatingAnnotation}
+                  isDeletingAnnotation={isDeletingAnnotation}
+                  highlightedAnnotationId={highlightedAnnotationId}
+                  hideScrollbar={true}
+                />
+              </div>
+            </div>
+
+            {/* Translation Text (Read-only) */}
+            <div className="flex-1">
+              <div className="p-2 bg-green-50 border-b border-gray-200">
+                <h3 className="text-sm font-medium text-green-800">
+                  Translation
+                </h3>
+              </div>
+              <div className="h-full overflow-hidden">
+                <Editor
+                  ref={null}
+                  text={translation}
+                  annotations={[]} // No annotations on translation
+                  selectedText={null}
+                  onTextSelect={() => {}} // No selection on translation
+                  onAddAnnotation={() => {}} // No annotation creation on translation
+                  onRemoveAnnotation={() => {}} // No annotation removal on translation
+                  onUpdateAnnotation={() => {}} // No annotation updates on translation
+                  onHeaderSelected={() => {}}
+                  onUpdateHeaderSpan={() => {}}
+                  readOnly={true} // Always read-only for translation
+                  isCreatingAnnotation={false}
+                  isDeletingAnnotation={false}
+                  highlightedAnnotationId={null}
+                  hideScrollbar={true}
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Single view: Just the original text (full width)
+          <div className="flex-1 overflow-hidden">
+            <Editor
+              ref={editorRef}
+              text={text}
+              annotations={annotations}
+              selectedText={selectedText}
+              onTextSelect={onTextSelect}
+              onAddAnnotation={onAddAnnotation}
+              onRemoveAnnotation={onRemoveAnnotation}
+              onUpdateAnnotation={onUpdateAnnotation}
+              onHeaderSelected={onHeaderSelected}
+              onUpdateHeaderSpan={onUpdateHeaderSpan}
+              readOnly={readOnly}
+              isCreatingAnnotation={isCreatingAnnotation}
+              isDeletingAnnotation={isDeletingAnnotation}
+              highlightedAnnotationId={highlightedAnnotationId}
+              hideScrollbar={true}
+            />
+          </div>
+        )}
       </div>
     );
   }

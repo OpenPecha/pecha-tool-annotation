@@ -34,6 +34,7 @@ class BulkTextData(BaseModel):
     """Schema for text data in bulk upload"""
     title: str = Field(..., description="Title of the text (must be unique)")
     content: str = Field(..., description="The actual text content")
+    translation: Optional[str] = Field(None, description="Optional translation of the content")
     source: Optional[str] = Field(None, description="Source/origin of the text")
     language: Optional[str] = Field("en", description="Language code")
     # Note: status is not included in upload data - always set to "initialized"

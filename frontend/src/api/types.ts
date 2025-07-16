@@ -28,6 +28,7 @@ export type TextStatus = (typeof TextStatus)[keyof typeof TextStatus];
 export interface TextBase {
   title: string;
   content: string;
+  translation?: string;
   source?: string;
   language: string;
 }
@@ -37,6 +38,7 @@ export type TextCreate = TextBase;
 export interface TextUpdate {
   title?: string;
   content?: string;
+  translation?: string;
   source?: string;
   language?: string;
   status?: TextStatus;
