@@ -8,6 +8,11 @@ const AdminWorkSection = React.lazy(() =>
     default: module.AdminWorkSection,
   }))
 );
+const AdminTaskSection = React.lazy(() =>
+  import("./AdminTaskSection").then((module) => ({
+    default: module.AdminTaskSection,
+  }))
+);
 const AdminStatisticsSection = React.lazy(() =>
   import("./AdminStatisticsSection").then((module) => ({
     default: module.AdminStatisticsSection,
@@ -26,7 +31,7 @@ const AdminBulkUploadSection = React.lazy(() =>
 
 export const AdminDashboard: React.FC = () => {
   const [activeAdminTab, setActiveAdminTab] = useState<
-    "statistics" | "users" | "work" | "bulk-upload"
+    "statistics" | "users" | "work" | "bulk-upload" | "tasks"
   >("work");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -34,6 +39,7 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     // Delay preloading to not interfere with initial render
     const timeoutId = setTimeout(() => {
+      import("./AdminTaskSection");
       import("./AdminStatisticsSection");
       import("./AdminUsersSection");
       import("./AdminBulkUploadSection");
@@ -53,6 +59,8 @@ export const AdminDashboard: React.FC = () => {
               return <AdminUsersSection />;
             case "work":
               return <AdminWorkSection />;
+            case "tasks":
+              return <AdminTaskSection />;
             case "bulk-upload":
               return <AdminBulkUploadSection />;
             default:

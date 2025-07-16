@@ -6,14 +6,15 @@ import {
   IoDocumentText,
   IoSettings,
   IoCloudUpload,
+  IoList,
 } from "react-icons/io5";
 
 interface AdminSidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  activeAdminTab: "statistics" | "users" | "work" | "bulk-upload";
+  activeAdminTab: "statistics" | "users" | "work" | "bulk-upload" | "tasks";
   setActiveAdminTab: (
-    tab: "statistics" | "users" | "work" | "bulk-upload"
+    tab: "statistics" | "users" | "work" | "bulk-upload" | "tasks"
   ) => void;
 }
 
@@ -59,6 +60,18 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           >
             <IoDocumentText className="w-5 h-5" />
             {sidebarOpen && <span>Work Management</span>}
+          </button>
+
+          <button
+            onClick={() => setActiveAdminTab("tasks")}
+            className={`w-full flex items-center gap-3 px-1 rounded-lg text-left transition-colors ${
+              activeAdminTab === "tasks"
+                ? "bg-teal-100 text-teal-700 border-2 border-teal-200"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <IoList className="w-5 h-5" />
+            {sidebarOpen && <span>Task Listing</span>}
           </button>
 
           <button

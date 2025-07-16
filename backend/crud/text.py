@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from models.text import Text, INITIALIZED, ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION, SKIPPED, PROGRESS, VALID_STATUSES
 from models.annotation import Annotation
@@ -21,12 +21,18 @@ class TextCRUD:
         return db_obj
 
     def get(self, db: Session, text_id: int) -> Optional[Text]:
-        """Get text by ID."""
-        return db.query(Text).filter(Text.id == text_id).first()
+        """Get text by ID with user relationships."""
+        return db.query(Text).options(
+            joinedload(Text.annotator),
+            joinedload(Text.reviewer)
+        ).filter(Text.id == text_id).first()
 
     def get_with_annotations(self, db: Session, text_id: int) -> Optional[Text]:
         """Get text with its annotations."""
-        return db.query(Text).filter(Text.id == text_id).first()
+        return db.query(Text).options(
+            joinedload(Text.annotator),
+            joinedload(Text.reviewer)
+        ).filter(Text.id == text_id).first()
 
     def get_by_title(self, db: Session, title: str) -> Optional[Text]:
         """Get text by title."""
@@ -41,8 +47,11 @@ class TextCRUD:
         language: Optional[str] = None,
         reviewer_id: Optional[int] = None
     ) -> List[Text]:
-        """Get multiple texts with optional filtering."""
-        query = db.query(Text)
+        """Get multiple texts with optional filtering and user relationships."""
+        query = db.query(Text).options(
+            joinedload(Text.annotator),
+            joinedload(Text.reviewer)
+        )
         
         if status:
             query = query.filter(Text.status == status)
@@ -129,13 +138,19 @@ class TextCRUD:
     def get_texts_for_annotation(self, db: Session, skip: int = 0, limit: int = 100) -> List[Text]:
         """Get texts available for annotation (initialized status or needs revision)."""
         from models.text import REVIEWED_NEEDS_REVISION
-        return db.query(Text).filter(
+        return db.query(Text).options(
+            joinedload(Text.annotator),
+            joinedload(Text.reviewer)
+        ).filter(
             Text.status.in_([INITIALIZED, REVIEWED_NEEDS_REVISION])
         ).offset(skip).limit(limit).all()
 
     def get_texts_for_review(self, db: Session, skip: int = 0, limit: int = 100, reviewer_id: Optional[int] = None) -> List[Text]:
         """Get texts ready for review (annotated status), excluding texts annotated by the current reviewer."""
-        query = db.query(Text).filter(Text.status == ANNOTATED)
+        query = db.query(Text).options(
+            joinedload(Text.annotator),
+            joinedload(Text.reviewer)
+        ).filter(Text.status == ANNOTATED)
         
         # Exclude texts annotated by the current reviewer to prevent self-review
         if reviewer_id:

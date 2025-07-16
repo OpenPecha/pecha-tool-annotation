@@ -41,13 +41,23 @@ export interface TextUpdate {
   reviewer_id?: number;
 }
 
+export interface UserInfo {
+  id: number;
+  username: string;
+  full_name?: string;
+  email?: string;
+}
+
 export interface TextResponse extends TextBase {
   id: number;
   status: TextStatus;
+  annotator_id?: number;
   reviewer_id?: number;
   created_at: string;
   updated_at?: string;
   annotations_count?: number;
+  annotator?: UserInfo;
+  reviewer?: UserInfo;
 }
 
 export interface TextFilters extends PaginationParams {
