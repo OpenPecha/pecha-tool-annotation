@@ -1046,7 +1046,7 @@ const Index = () => {
             <div className={`${errorListOpen ? "pb-3" : "p-3"} border-b`}>
               <div className="flex items-center justify-between">
                 {errorListOpen && (
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 p-2">
                     <span className="text-orange-600">⚠</span>
                     Error List
                   </h3>

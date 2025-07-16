@@ -5,7 +5,7 @@ import {
   IoSearch,
   IoWarning,
 } from "react-icons/io5";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 
 // Type definitions for error typology
@@ -55,6 +55,9 @@ export const ErrorList = ({
     position: { x: 0, y: 0 },
   });
 
+  // Ref to store the auto-hide timeout
+  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Load error list data
   useEffect(() => {
     const loadErrorData = async () => {
@@ -76,6 +79,15 @@ export const ErrorList = ({
     };
 
     loadErrorData();
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+      }
+    };
   }, []);
 
   // Flatten the hierarchical structure for easier searching
@@ -200,12 +212,18 @@ export const ErrorList = ({
 
   // Tooltip handlers
   const showTooltip = (event: React.MouseEvent, category: ErrorCategory) => {
+    // Clear any existing timeout
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+      tooltipTimeoutRef.current = null;
+    }
+
     const rect = event.currentTarget.getBoundingClientRect();
     const tooltipWidth = 320; // w-80 = 320px
     const tooltipHeight = 200; // approximate height
     const margin = 10;
 
-    // Calculate position with viewport bounds checking
+    // Simple fixed positioning - use viewport coordinates directly
     let x = rect.right + margin;
     let y = rect.top;
 
@@ -216,12 +234,17 @@ export const ErrorList = ({
 
     // Check if tooltip would go off-screen vertically
     if (y + tooltipHeight > window.innerHeight - margin) {
-      y = window.innerHeight - tooltipHeight - margin;
+      y = rect.bottom - tooltipHeight;
     }
 
     // Ensure tooltip doesn't go above viewport
     if (y < margin) {
       y = margin;
+    }
+
+    // Ensure tooltip doesn't go too far left
+    if (x < margin) {
+      x = margin;
     }
 
     setTooltipData({
@@ -232,11 +255,21 @@ export const ErrorList = ({
   };
 
   const hideTooltip = () => {
-    setTooltipData({
-      visible: false,
-      category: null,
-      position: { x: 0, y: 0 },
-    });
+    // Clear any existing timeout
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+      tooltipTimeoutRef.current = null;
+    }
+
+    // Set timeout to hide tooltip after 4 seconds
+    tooltipTimeoutRef.current = setTimeout(() => {
+      setTooltipData({
+        visible: false,
+        category: null,
+        position: { x: 0, y: 0 },
+      });
+      tooltipTimeoutRef.current = null;
+    }, 4000);
   };
 
   // Component to render individual error category
@@ -452,12 +485,20 @@ export const ErrorList = ({
         tooltipData.category &&
         createPortal(
           <div
-            className="fixed w-80 p-4 bg-gray-900 text-white text-xs rounded-lg shadow-2xl border border-gray-700 pointer-events-none z-[9999]"
+            className="fixed w-80 p-4 bg-gray-900 text-white text-xs rounded-lg shadow-2xl border border-gray-700 z-[9999]"
             style={{
               left: `${tooltipData.position.x}px`,
               top: `${tooltipData.position.y}px`,
               transform: "translateY(-10px)",
             }}
+            onMouseEnter={() => {
+              // Clear timeout when hovering over tooltip
+              if (tooltipTimeoutRef.current) {
+                clearTimeout(tooltipTimeoutRef.current);
+                tooltipTimeoutRef.current = null;
+              }
+            }}
+            onMouseLeave={hideTooltip}
           >
             <div className="space-y-2">
               <div>
