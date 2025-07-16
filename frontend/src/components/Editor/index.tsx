@@ -477,12 +477,15 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                 };
                 initialBubblePositionRef.current = { x: bubbleX, y: bubbleY };
 
-                setBubbleMenuPosition({
-                  x: bubbleX,
-                  y: bubbleY,
-                  transformX: bubbleTransformX,
-                });
-                setBubbleMenuVisible(true);
+                // Only show bubble menu if editor is not read-only
+                if (!readOnly) {
+                  setBubbleMenuPosition({
+                    x: bubbleX,
+                    y: bubbleY,
+                    transformX: bubbleTransformX,
+                  });
+                  setBubbleMenuVisible(true);
+                }
               }
             }
           } else {
