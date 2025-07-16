@@ -14,14 +14,16 @@ export interface SearchParams extends PaginationParams {
 }
 
 // Text-related types
-export enum TextStatus {
-  DRAFT = "draft",
-  INITIALIZED = "initialized",
-  ANNOTATION_IN_PROGRESS = "progress",
-  ANNOTATED = "annotated",
-  REVIEWED = "reviewed",
-  PUBLISHED = "published",
-}
+export const TextStatus = {
+  DRAFT: "draft",
+  INITIALIZED: "initialized",
+  ANNOTATION_IN_PROGRESS: "progress",
+  ANNOTATED: "annotated",
+  REVIEWED: "reviewed",
+  PUBLISHED: "published",
+} as const;
+
+export type TextStatus = (typeof TextStatus)[keyof typeof TextStatus];
 
 export interface TextBase {
   title: string;
@@ -133,12 +135,14 @@ export interface ValidatePositionsResponse {
 }
 
 // User-related types
-export enum UserRole {
-  VIEWER = "viewer",
-  ANNOTATOR = "annotator",
-  REVIEWER = "reviewer",
-  ADMIN = "admin",
-}
+export const UserRole = {
+  USER: "user",
+  ANNOTATOR: "annotator",
+  REVIEWER: "reviewer",
+  ADMIN: "admin",
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export interface UserBase {
   username: string;

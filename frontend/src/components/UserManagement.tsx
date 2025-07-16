@@ -214,6 +214,8 @@ export function UserManagement({ className }: UserManagementProps) {
         return <IoCreateOutline className="w-4 h-4" />;
       case "annotator":
         return <IoPeople className="w-4 h-4" />;
+      case "user":
+        return <IoEye className="w-4 h-4" />;
       default:
         return <IoEye className="w-4 h-4" />;
     }
@@ -227,6 +229,8 @@ export function UserManagement({ className }: UserManagementProps) {
         return "bg-purple-100 text-purple-800";
       case "annotator":
         return "bg-blue-100 text-blue-800";
+      case "user":
+        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -284,7 +288,7 @@ export function UserManagement({ className }: UserManagementProps) {
             <option value="admin">Admin</option>
             <option value="reviewer">Reviewer</option>
             <option value="annotator">Annotator</option>
-            <option value="viewer">Viewer</option>
+            <option value="user">User</option>
           </select>
           <select
             value={selectedStatus}
@@ -354,7 +358,7 @@ export function UserManagement({ className }: UserManagementProps) {
                     <option value="admin">Admin</option>
                     <option value="reviewer">Reviewer</option>
                     <option value="annotator">Annotator</option>
-                    <option value="viewer">Viewer</option>
+                    <option value="user">User</option>
                   </select>
                   <Button
                     size="sm"

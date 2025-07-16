@@ -1,64 +1,7 @@
 {
   "text": {
-    "title": "The Heart of Wisdom Sutra - Tibetan Translationq",
+    "title": "The Heart of Wisdom Sutra - Tibetan Translationq123",
     "content": "བཅོམ་ལྡན་འདས་མ་ཤེས་རབ་ཀྱི་ཕ་རོལ་ཏུ་ཕྱིན་པའི་སྙིང་པོ།q \n\nཨོཾ་ནམོ་བྷ་ག་ཝ་ཏི་ཤེ་ས་རབ་ཀྱི་ཕ་རོལ་ཏུ་ཕྱིན་པ་ཡེ། \n\nདེ་ལྟར་སྤྱོད་པ་ན་བྱང་ཆུབ་སེམས་དཔའ་སེམས་དཔའ་ཆེན་པོ་འཕགས་པ་སྤྱན་རས་གཟིགས་དབང་ཕྱུག་གིས། ཤེས་རབ་ཀྱི་ཕ་རོལ་ཏུ་ཕྱིན་པ་ཟབ་མོ་ལ་སྤྱོད་པ་ན་ཕུང་པོ་ལྔ་པོ་དེ་དག་ཀྱང་རང་བཞིན་གྱིས་སྟོང་པར་རྣམ་པར་ལྟ་སྟེ། \n\nཤཱ་རིའི་བུ། གཟུགས་ནི་སྟོང་པ་སྟེ། སྟོང་པ་ཉིད་ཀྱང་གཟུགས་ཡིན། གཟུགས་ལས་སྟོང་པ་ཉིད་གཞན་མིན། སྟོང་པ་ཉིད་ལས་ཀྱང་གཟུགས་གཞན་མིན། དེ་བཞིན་དུ་ཚོར་བ་དང་། འདུ་ཤེས། འདུ་བྱེད། རྣམ་ཤེས་རྣམས་ཀྱང་སྟོང་པ་ཉིད་ཡིན་ནོ།། \n\n(ཞུ་ཅན་དགེ་འདུན་ལེགས་བཤད་ཀྱིས་བསྒྱུར་བ།)"
   },
-  "annotations": [
-    {
-      "annotation_type": "title",
-      "start_position": 0,
-      "end_position": 53,
-      "label": "main_title",
-      "name": "Prajnaparamita Heart Sutra Title"
-    },
-    {
-      "annotation_type": "header",
-      "start_position": 56,
-      "end_position": 94,
-      "label": "invocation",
-      "name": "Opening Invocation"
-    },
-    {
-      "annotation_type": "header",
-      "start_position": 58,
-      "end_position": 70,
-      "label": "invocations",
-      "name": "Opening Invocationasdfa"
-    },
-    {
-      "annotation_type": "header",
-      "start_position": 71,
-      "end_position": 92,
-      "label": "invocationdd",
-      "name": "Opening Invocationfdfs"
-    },
-    {
-      "annotation_type": "header",
-      "start_position": 97,
-      "end_position": 120,
-      "label": "instruction",
-      "name": "Practice Instructions"
-    },
-    {
-      "annotation_type": "author",
-      "start_position": 121,
-      "end_position": 160,
-      "label": "bodhisattva",
-      "name": "Avalokiteshvara"
-    },
-    {
-      "annotation_type": "header",
-      "start_position": 280,
-      "end_position": 295,
-      "label": "dialogue",
-      "name": "Teaching Section"
-    },
-    {
-      "annotation_type": "translator",
-      "start_position": 495,
-      "end_position": 530,
-      "label": "translator_colophon",
-      "name": "Translator Attribution"
-    }
-  ]
+  "annotations": []
 }
