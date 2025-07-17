@@ -105,12 +105,12 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
               {showTranslation ? (
                 <>
                   <IoEyeOff className="w-4 h-4" />
-                  Hide Translation
+                  Hide Original
                 </>
               ) : (
                 <>
                   <IoEye className="w-4 h-4" />
-                  Show Translation
+                  Show Original
                 </>
               )}
             </Button>
@@ -125,7 +125,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
             <div className="flex-1 border-r border-gray-200">
               <div className="p-2 bg-blue-50 border-b border-gray-200">
                 <h3 className="text-sm font-medium text-blue-800">
-                  Work in Progress
+                  Translation
                 </h3>
               </div>
               <div className="h-full overflow-hidden">
@@ -152,9 +152,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
             {/* Translation Text (Read-only) */}
             <div className="flex-1">
               <div className="p-2 bg-green-50 border-b border-gray-200">
-                <h3 className="text-sm font-medium text-green-800">
-                  Translation
-                </h3>
+                <h3 className="text-sm font-medium text-green-800">Original</h3>
               </div>
               <div className="h-full overflow-hidden">
                 <Editor
