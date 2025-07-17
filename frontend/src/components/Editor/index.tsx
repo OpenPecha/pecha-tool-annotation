@@ -739,13 +739,34 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     useEffect(() => {
       if (editorReady && editorRef.current?.view) {
         const view = editorRef.current.view;
+
+        // Save current scroll position
+        const scrollElement = view.scrollDOM;
+        const scrollTop = scrollElement.scrollTop;
+        const scrollLeft = scrollElement.scrollLeft;
+
         view.dispatch({
           effects: [
             setHighlightedAnnotationEffect.of(highlightedAnnotationId || null),
           ],
         });
+
+        // Re-add all annotations after highlighting changes
+        if (annotations.length > 0) {
+          annotations.forEach((annotation) => {
+            view.dispatch({
+              effects: addAnnotationEffect.of(annotation),
+            });
+          });
+        }
+
+        // Restore scroll position after a short delay to allow DOM updates
+        requestAnimationFrame(() => {
+          scrollElement.scrollTop = scrollTop;
+          scrollElement.scrollLeft = scrollLeft;
+        });
       }
-    }, [highlightedAnnotationId, editorReady]);
+    }, [highlightedAnnotationId, editorReady, annotations]);
 
     // Apply dynamic annotation styling
     useEffect(() => {

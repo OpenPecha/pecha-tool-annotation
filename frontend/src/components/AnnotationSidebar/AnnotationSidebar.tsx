@@ -17,6 +17,7 @@ import { truncateText } from "@/lib/utils";
 interface AnnotationSidebarProps {
   annotations: Annotation[];
   onRemoveAnnotation: (id: string) => void;
+  onAnnotationClick?: (annotation: Annotation) => void;
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -24,6 +25,7 @@ interface AnnotationSidebarProps {
 export const AnnotationSidebar = ({
   annotations,
   onRemoveAnnotation,
+  onAnnotationClick,
   isOpen,
   onToggle,
 }: AnnotationSidebarProps) => {
@@ -94,11 +96,13 @@ export const AnnotationSidebar = ({
                     annotations.map((annotation) => (
                       <div
                         key={annotation.id}
-                        className={`p-3 rounded-lg border transition-all duration-200 bg-white group ${
+                        className={`p-3 rounded-lg border transition-all duration-200 bg-white group cursor-pointer ${
                           annotation.is_agreed
-                            ? "border-green-200 bg-green-50/50"
-                            : "border-gray-200 hover:border-gray-300"
+                            ? "border-green-200 bg-green-50/50 hover:bg-green-100/50"
+                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                         }`}
+                        onClick={() => onAnnotationClick?.(annotation)}
+                        title="Click to navigate to this annotation in the editor"
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex items-center gap-2">
@@ -107,8 +111,9 @@ export const AnnotationSidebar = ({
                               className={`text-xs font-medium ${getAnnotationColor(
                                 annotation.type
                               )}`}
+                              title={annotation.type}
                             >
-                              {annotation.type}
+                              {truncateText(annotation.type, 30)}
                             </Badge>
                             {annotation.level && (
                               <Badge
@@ -146,7 +151,10 @@ export const AnnotationSidebar = ({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => onRemoveAnnotation(annotation.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onRemoveAnnotation(annotation.id);
+                              }}
                               className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                             >
                               <IoTrash className="h-3 w-3" />

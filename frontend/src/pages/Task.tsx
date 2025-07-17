@@ -963,6 +963,34 @@ const Index = () => {
     console.log("Header clicked:", annotation.id, annotation.text);
   };
 
+  const handleAnnotationClick = (annotation: Annotation) => {
+    // Scroll to the annotation in the editor
+    if (textAnnotatorRef.current) {
+      textAnnotatorRef.current.scrollToPosition(
+        annotation.start,
+        annotation.end
+      );
+    }
+
+    // Highlight the annotation
+    setHighlightedAnnotationId(annotation.id);
+
+    // Show toast notification
+    toast({
+      title: "📍 Navigated to Annotation",
+      description: `Found "${
+        annotation.type
+      }" annotation: "${annotation.text.substring(0, 50)}${
+        annotation.text.length > 50 ? "..." : ""
+      }"`,
+    });
+
+    // Clear highlighting after 3 seconds
+    setTimeout(() => {
+      setHighlightedAnnotationId(null);
+    }, 3000);
+  };
+
   const annotationsWithoutHeader = annotations.filter(
     (ann) => ann.type !== "header"
   );
@@ -1158,6 +1186,7 @@ const Index = () => {
           <AnnotationSidebar
             annotations={annotationsWithoutHeader}
             onRemoveAnnotation={removeAnnotation}
+            onAnnotationClick={handleAnnotationClick}
             isOpen={sidebarOpen}
             onToggle={() => setSidebarOpen(!sidebarOpen)}
           />
