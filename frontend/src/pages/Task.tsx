@@ -103,6 +103,7 @@ const Index = () => {
           start: ann.start_position,
           end: ann.end_position,
           name: ann.name,
+          level: ann.level, // Add the missing level field
           annotator_id: ann.annotator_id,
           is_agreed: ann.is_agreed,
           reviews: reviews,

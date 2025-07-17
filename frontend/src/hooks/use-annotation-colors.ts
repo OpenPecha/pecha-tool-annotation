@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export interface AnnotationColorScheme {
   critical: {
@@ -56,11 +56,16 @@ const DEFAULT_COLOR_SCHEME: AnnotationColorScheme = {
 };
 
 const STORAGE_KEY = "annotation-color-scheme";
+const DEBOUNCE_DELAY = 1000; // 1 second
 
 export const useAnnotationColors = () => {
   const [colorScheme, setColorScheme] =
     useState<AnnotationColorScheme>(DEFAULT_COLOR_SCHEME);
+  const [pendingColorScheme, setPendingColorScheme] =
+    useState<AnnotationColorScheme | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Apply colors to CSS dynamically
   const applyColorsToCSS = useCallback((scheme: AnnotationColorScheme) => {
@@ -122,6 +127,43 @@ export const useAnnotationColors = () => {
     document.head.appendChild(style);
   }, []);
 
+  // Debounced update function
+  const debouncedUpdate = useCallback(
+    (scheme: AnnotationColorScheme) => {
+      // Clear existing timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      // Set pending state and saving indicator
+      setPendingColorScheme(scheme);
+      setIsSaving(true);
+
+      // Set new timeout for both UI update and localStorage save
+      saveTimeoutRef.current = setTimeout(() => {
+        try {
+          // Apply colors to UI
+          setColorScheme(scheme);
+          applyColorsToCSS(scheme);
+
+          // Save to localStorage
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(scheme));
+          console.log("Colors applied and saved:", scheme);
+        } catch (error) {
+          console.error(
+            "Failed to save annotation colors to localStorage:",
+            error
+          );
+        } finally {
+          setIsSaving(false);
+          setPendingColorScheme(null);
+          saveTimeoutRef.current = null;
+        }
+      }, DEBOUNCE_DELAY);
+    },
+    [applyColorsToCSS]
+  );
+
   // Load colors from localStorage on mount
   useEffect(() => {
     try {
@@ -152,32 +194,56 @@ export const useAnnotationColors = () => {
     }
   }, [applyColorsToCSS]);
 
-  // Save colors to localStorage and apply to CSS
+  // Update color scheme with proper debouncing
   const updateColorScheme = useCallback(
     (newScheme: AnnotationColorScheme) => {
-      try {
-        setColorScheme(newScheme);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newScheme));
-        applyColorsToCSS(newScheme);
-      } catch (error) {
-        console.error(
-          "Failed to save annotation colors to localStorage:",
-          error
-        );
-      }
+      // Use debounced update for both UI and localStorage
+      debouncedUpdate(newScheme);
     },
-    [applyColorsToCSS]
+    [debouncedUpdate]
   );
 
   // Reset to default colors
   const resetToDefaults = useCallback(() => {
-    updateColorScheme(DEFAULT_COLOR_SCHEME);
-  }, [updateColorScheme]);
+    // Clear any pending saves
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+
+    // Clear pending state
+    setPendingColorScheme(null);
+
+    // Update immediately (no debounce for reset)
+    setColorScheme(DEFAULT_COLOR_SCHEME);
+    applyColorsToCSS(DEFAULT_COLOR_SCHEME);
+
+    // Save immediately
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_COLOR_SCHEME));
+      setIsSaving(false);
+    } catch (error) {
+      console.error("Failed to save default colors to localStorage:", error);
+    }
+  }, [applyColorsToCSS]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Get the currently displayed color scheme (pending if exists, otherwise current)
+  const displayColorScheme = pendingColorScheme || colorScheme;
 
   return {
-    colorScheme,
+    colorScheme: displayColorScheme,
     updateColorScheme,
     resetToDefaults,
     isLoaded,
+    isSaving,
   };
 };

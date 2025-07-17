@@ -168,40 +168,33 @@ const rgbaToHex = (rgba: string): string => {
 };
 
 export const AnnotationColorSettings: React.FC = () => {
-  const { colorScheme, updateColorScheme, resetToDefaults } =
+  const { colorScheme, updateColorScheme, resetToDefaults, isSaving } =
     useAnnotationColors();
   const [isOpen, setIsOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   const updateLevelColors = (
     level: keyof AnnotationColorScheme,
     colors: AnnotationColorScheme[keyof AnnotationColorScheme]
   ) => {
-    setIsSaving(true);
     updateColorScheme({
       ...colorScheme,
       [level]: colors,
     });
 
     // Show feedback toast
-    toast.success(`Updated ${level} colors`, {
-      description: "Color changes saved to localStorage",
+    toast.success(`Updating ${level} colors`, {
+      description: "Colors will be applied after 1 second of no changes",
       duration: 2000,
     });
-
-    // Reset saving indicator
-    setTimeout(() => setIsSaving(false), 500);
   };
 
   const handleReset = () => {
-    setIsSaving(true);
     resetToDefaults();
     toast.success("Colors reset to defaults", {
       description:
         "All annotation colors have been restored to their original values",
       duration: 3000,
     });
-    setTimeout(() => setIsSaving(false), 500);
   };
 
   const testLocalStorage = () => {
@@ -240,9 +233,10 @@ export const AnnotationColorSettings: React.FC = () => {
                 <IoColorPalette className="w-4 h-4" />
                 <span>Annotation Colors</span>
                 {isSaving && (
-                  <span className="text-xs text-blue-600 animate-pulse">
-                    Saving...
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-blue-600">Saving...</span>
+                  </div>
                 )}
               </div>
               <div className="flex items-center gap-1">
@@ -261,6 +255,7 @@ export const AnnotationColorSettings: React.FC = () => {
                   onClick={handleReset}
                   className="h-6 w-6 p-0"
                   title="Reset to defaults"
+                  disabled={isSaving}
                 >
                   <IoRefresh className="w-3 h-3" />
                 </Button>
@@ -311,11 +306,20 @@ export const AnnotationColorSettings: React.FC = () => {
           <div className="px-4 pb-3">
             <div className="text-xs text-gray-500 text-center border-t border-gray-200 pt-2">
               <div className="flex items-center justify-center gap-2">
-                <span>💾</span>
-                <span>Colors saved automatically to localStorage</span>
+                {isSaving ? (
+                  <>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span>Applying changes...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>💾</span>
+                    <span>Changes applied after 1 second</span>
+                  </>
+                )}
               </div>
-              <div className="mt-1">
-                Changes apply instantly to all annotations
+              <div className="mt-1 text-gray-400">
+                Colors update and save together when you stop editing
               </div>
             </div>
           </div>
