@@ -37,6 +37,14 @@ export const textApi = {
     return apiClient.post<TextResponse>("/texts", data);
   },
 
+  // Upload text file
+  uploadTextFile: async (file: File): Promise<TextResponse> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return apiClient.post<TextResponse>("/texts/upload-file", formData);
+  },
+
   // Update text
   updateText: async (id: number, data: TextUpdate): Promise<TextResponse> => {
     return apiClient.put<TextResponse>(`/texts/${id}`, data);

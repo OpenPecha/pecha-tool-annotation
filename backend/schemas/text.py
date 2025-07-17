@@ -42,7 +42,7 @@ class TextBase(BaseModel):
 
 
 class TextCreate(TextBase):
-    pass
+    uploaded_by: Optional[int] = None
 
 
 class TextUpdate(BaseModel):
@@ -53,6 +53,7 @@ class TextUpdate(BaseModel):
     language: Optional[str] = None
     status: Optional[str] = None
     reviewer_id: Optional[int] = None
+    uploaded_by: Optional[int] = None
 
     @validator('status')
     def validate_status(cls, v):
@@ -68,6 +69,7 @@ class TextResponse(TextBase):
     status: str
     annotator_id: Optional[int] = None
     reviewer_id: Optional[int] = None
+    uploaded_by: Optional[int] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     
@@ -77,6 +79,7 @@ class TextResponse(TextBase):
     # Nested user information
     annotator: Optional[UserBasic] = None
     reviewer: Optional[UserBasic] = None
+    uploader: Optional[UserBasic] = None
     
     @validator('status')
     def validate_status(cls, v):

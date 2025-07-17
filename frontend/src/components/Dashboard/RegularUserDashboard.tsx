@@ -92,11 +92,29 @@ const BulkUploadIcon = () => (
   </svg>
 );
 
+const UploadIcon = () => (
+  <svg
+    className="w-12 h-12 text-orange-500"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+    />
+  </svg>
+);
+
 export const RegularUserDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [isLoadingText, setIsLoadingText] = useState(false);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const queryClient = useQueryClient();
 
   // Mutation to start work - find work in progress or assign new text
   const startWorkMutation = useMutation({
@@ -196,6 +214,45 @@ export const RegularUserDashboard: React.FC = () => {
       });
     }
     setShowBulkUploadModal(false);
+  };
+
+  // File upload handler for regular users
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check if file is a text file
+    if (!file.type.startsWith("text/")) {
+      toast.error("Invalid file type", {
+        description: "Please select a text file (.txt, .md, etc.)",
+      });
+      return;
+    }
+
+    setIsUploadingFile(true);
+    try {
+      const uploadedText = await textApi.uploadTextFile(file);
+      toast.success("File uploaded successfully!", {
+        description: `"${uploadedText.title}" is ready for annotation`,
+      });
+
+      // Refresh work in progress query
+      queryClient.invalidateQueries({ queryKey: ["my-work-in-progress"] });
+
+      // Automatically start working on the uploaded text
+      navigate(`/task/${uploadedText.id}`);
+    } catch (error) {
+      toast.error("Upload failed", {
+        description:
+          error instanceof Error ? error.message : "Please try again",
+      });
+    } finally {
+      setIsUploadingFile(false);
+      // Reset file input
+      event.target.value = "";
+    }
   };
 
   // Helper function to determine activity type
@@ -355,6 +412,51 @@ export const RegularUserDashboard: React.FC = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* File Upload Card - Show for regular users only */}
+          {currentUser?.role === "user" && (
+            <Card className="hover:shadow-lg transition-all duration-300 border-2 hover:border-orange-200">
+              <CardHeader className="text-center pb-4">
+                <div className="flex justify-center mb-4">
+                  <UploadIcon />
+                </div>
+                <CardTitle className="text-2xl">Upload Text</CardTitle>
+                <CardDescription className="text-base">
+                  Upload your own text file to start annotating
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept=".txt,.md,.text"
+                    onChange={handleFileUpload}
+                    disabled={isUploadingFile}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                    id="file-upload"
+                  />
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full border-orange-200 hover:bg-orange-50"
+                    disabled={isUploadingFile}
+                  >
+                    {isUploadingFile ? (
+                      <>
+                        <AiOutlineLoading3Quarters className="w-4 h-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      "Choose Text File"
+                    )}
+                  </Button>
+                </div>
+                <p className="text-sm text-gray-500 mt-3">
+                  Upload .txt or .md files to create your own annotation tasks
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Review Progress Section - Show for reviewers and admins */}
@@ -362,13 +464,6 @@ export const RegularUserDashboard: React.FC = () => {
           currentUser?.role === "admin") && (
           <div className="mb-8">
             <ReviewProgressSection />
-          </div>
-        )}
-
-        {/* Reviewed Work Section - Hide from annotators */}
-        {currentUser?.role !== "annotator" && (
-          <div className="mb-8">
-            <AnnotatorReviewedWork />
           </div>
         )}
 
@@ -414,6 +509,15 @@ export const RegularUserDashboard: React.FC = () => {
               )}
             </CardContent>
           </Card>
+        )}
+        {/* Reviewed Work Section - Show only for annotators, reviewers, and admins */}
+
+        {(currentUser?.role === "annotator" ||
+          currentUser?.role === "reviewer" ||
+          currentUser?.role === "admin") && (
+          <div className="mb-8 mt-8">
+            <AnnotatorReviewedWork />
+          </div>
         )}
       </div>
 

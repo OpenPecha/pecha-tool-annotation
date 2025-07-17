@@ -50,7 +50,7 @@ def validate_json_file(file_content: str, filename: str) -> tuple[bool, BulkUplo
             return False, None, [f"Validation error: {str(e)}"]
 
 
-def create_text_from_data(db: Session, text_data: BulkTextData) -> Text:
+def create_text_from_data(db: Session, text_data: BulkTextData, user_id: int) -> Text:
     """Create a text record from BulkTextData"""
     # Always set status to "initialized" for uploaded texts
     text_create = TextCreate(
@@ -58,7 +58,8 @@ def create_text_from_data(db: Session, text_data: BulkTextData) -> Text:
         content=text_data.content,
         translation=text_data.translation,
         source=text_data.source,
-        language=text_data.language
+        language=text_data.language,
+        uploaded_by=user_id
         # status will default to "initialized" in the schema
     )
     
@@ -130,12 +131,13 @@ def process_single_file(
     db: Session, 
     file_data: BulkUploadFileData, 
     filename: str, 
-    annotator_id: int
+    annotator_id: int,
+    uploaded_by: int
 ) -> BulkUploadResult:
     """Process a single validated file and create database records (text status remains 'initialized')"""
     try:
         # Create text record
-        text = create_text_from_data(db, file_data.text)
+        text = create_text_from_data(db, file_data.text, uploaded_by)
         
         # Create annotation records with None as annotator_id (system annotations)
         annotations = create_annotations_from_data(
@@ -260,7 +262,7 @@ async def upload_multiple_files(
             titles_in_batch.add(file_data.text.title)
             
             # Process the file (create text and annotations)
-            result = process_single_file(db, file_data, filename, current_user.id)
+            result = process_single_file(db, file_data, filename, current_user.id, current_user.id)
             results.append(result)
             
             if result.success:

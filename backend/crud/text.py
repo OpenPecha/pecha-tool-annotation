@@ -15,6 +15,7 @@ class TextCRUD:
             translation=obj_in.translation,
             source=obj_in.source,
             language=obj_in.language,
+            uploaded_by=obj_in.uploaded_by,
         )
         db.add(db_obj)
         db.commit()
@@ -25,14 +26,16 @@ class TextCRUD:
         """Get text by ID with user relationships."""
         return db.query(Text).options(
             joinedload(Text.annotator),
-            joinedload(Text.reviewer)
+            joinedload(Text.reviewer),
+            joinedload(Text.uploader)
         ).filter(Text.id == text_id).first()
 
     def get_with_annotations(self, db: Session, text_id: int) -> Optional[Text]:
         """Get text with its annotations."""
         return db.query(Text).options(
             joinedload(Text.annotator),
-            joinedload(Text.reviewer)
+            joinedload(Text.reviewer),
+            joinedload(Text.uploader)
         ).filter(Text.id == text_id).first()
 
     def get_by_title(self, db: Session, title: str) -> Optional[Text]:
@@ -46,12 +49,14 @@ class TextCRUD:
         limit: int = 100,
         status: Optional[str] = None,
         language: Optional[str] = None,
-        reviewer_id: Optional[int] = None
+        reviewer_id: Optional[int] = None,
+        uploaded_by: Optional[str] = None
     ) -> List[Text]:
         """Get multiple texts with optional filtering and user relationships."""
         query = db.query(Text).options(
             joinedload(Text.annotator),
-            joinedload(Text.reviewer)
+            joinedload(Text.reviewer),
+            joinedload(Text.uploader)
         )
         
         if status:
@@ -62,6 +67,14 @@ class TextCRUD:
             
         if reviewer_id:
             query = query.filter(Text.reviewer_id == reviewer_id)
+        
+        if uploaded_by is not None:
+            if uploaded_by == "system":
+                # Filter for system texts (uploaded_by is null)
+                query = query.filter(Text.uploaded_by.is_(None))
+            elif uploaded_by == "user":
+                # Filter for user-uploaded texts (uploaded_by is not null)
+                query = query.filter(Text.uploaded_by.isnot(None))
         
         return query.offset(skip).limit(limit).all()
 
@@ -136,22 +149,38 @@ class TextCRUD:
         """Get texts by status."""
         return db.query(Text).filter(Text.status == status).offset(skip).limit(limit).all()
 
-    def get_texts_for_annotation(self, db: Session, skip: int = 0, limit: int = 100) -> List[Text]:
+    def get_texts_for_annotation(self, db: Session, skip: int = 0, limit: int = 100, user_id: int = None, user_role: str = None) -> List[Text]:
         """Get texts available for annotation (initialized status or needs revision)."""
         from models.text import REVIEWED_NEEDS_REVISION
-        return db.query(Text).options(
-            joinedload(Text.annotator),
-            joinedload(Text.reviewer)
-        ).filter(
-            Text.status.in_([INITIALIZED, REVIEWED_NEEDS_REVISION])
-        ).offset(skip).limit(limit).all()
-
-    def get_texts_for_review(self, db: Session, skip: int = 0, limit: int = 100, reviewer_id: Optional[int] = None) -> List[Text]:
-        """Get texts ready for review (annotated status), excluding texts annotated by the current reviewer."""
         query = db.query(Text).options(
             joinedload(Text.annotator),
-            joinedload(Text.reviewer)
+            joinedload(Text.reviewer),
+            joinedload(Text.uploader)
+        ).filter(
+            Text.status.in_([INITIALIZED, REVIEWED_NEEDS_REVISION])
+        )
+        
+        # Role-based filtering
+        if user_role == "user":
+            # USER role: only show texts they uploaded
+            query = query.filter(Text.uploaded_by == user_id)
+        elif user_role == "annotator":
+            # ANNOTATOR role: only show texts not uploaded by any user (system texts)
+            query = query.filter(Text.uploaded_by.is_(None))
+        # ADMIN role: no additional filtering (can see all texts)
+        
+        return query.offset(skip).limit(limit).all()
+
+    def get_texts_for_review(self, db: Session, skip: int = 0, limit: int = 100, reviewer_id: Optional[int] = None) -> List[Text]:
+        """Get texts ready for review (annotated status), excluding texts annotated by the current reviewer and user-uploaded texts."""
+        query = db.query(Text).options(
+            joinedload(Text.annotator),
+            joinedload(Text.reviewer),
+            joinedload(Text.uploader)
         ).filter(Text.status == ANNOTATED)
+        
+        # Only include system texts (exclude user-uploaded texts)
+        query = query.filter(Text.uploaded_by.is_(None))
         
         # Exclude texts annotated by the current reviewer to prevent self-review
         if reviewer_id:
@@ -193,7 +222,7 @@ class TextCRUD:
             Text.annotator_id.is_(None)
         ).first()
 
-    def get_unassigned_text_for_user(self, db: Session, user_id: int) -> Optional[Text]:
+    def get_unassigned_text_for_user(self, db: Session, user_id: int, user_role: str = None) -> Optional[Text]:
         """Get an unassigned text with initialized status that user hasn't rejected."""
         from models.user_rejected_text import UserRejectedText
         
@@ -202,12 +231,23 @@ class TextCRUD:
             UserRejectedText.user_id == user_id
         ).subquery()
         
-        # Find available text not in rejected list
-        return db.query(Text).filter(
+        # Base query for available texts
+        query = db.query(Text).filter(
             Text.status == INITIALIZED,
             Text.annotator_id.is_(None),
             ~Text.id.in_(rejected_text_ids)
-        ).first()
+        )
+        
+        # Role-based filtering
+        if user_role == "user":
+            # USER role: only show texts they uploaded
+            query = query.filter(Text.uploaded_by == user_id)
+        elif user_role == "annotator":
+            # ANNOTATOR role: only show texts not uploaded by any user (system texts)
+            query = query.filter(Text.uploaded_by.is_(None))
+        # ADMIN role: no additional filtering (can see all texts)
+        
+        return query.first()
 
     def assign_text_to_user(self, db: Session, text_id: int, user_id: int) -> Optional[Text]:
         """Assign a text to a user and set status to progress."""
@@ -220,7 +260,7 @@ class TextCRUD:
             db.refresh(text)
         return text
 
-    def start_work(self, db: Session, user_id: int) -> Optional[Text]:
+    def start_work(self, db: Session, user_id: int, user_role: str = None) -> Optional[Text]:
         """Start work for a user - find work in progress or assign new text."""
         # First, check if user has work in progress
         work_in_progress = self.get_work_in_progress(db, user_id)
@@ -228,7 +268,7 @@ class TextCRUD:
             return work_in_progress
         
         # If no work in progress, find an unassigned text (excluding rejected ones)
-        unassigned_text = self.get_unassigned_text_for_user(db, user_id)
+        unassigned_text = self.get_unassigned_text_for_user(db, user_id, user_role)
         if unassigned_text:
             return self.assign_text_to_user(db, unassigned_text.id, user_id)
         
@@ -342,7 +382,7 @@ class TextCRUD:
             "accuracy_rate": round(accuracy_rate, 1)
         }
 
-    def skip_text(self, db: Session, user_id: int) -> Optional[Text]:
+    def skip_text(self, db: Session, user_id: int, user_role: str = None) -> Optional[Text]:
         """Skip current text by adding it to rejected list and get next available text."""
         from crud.user_rejected_text import user_rejected_text_crud
         
@@ -361,7 +401,7 @@ class TextCRUD:
         db.commit()
         
         # Find and assign the next available text (excluding rejected ones)
-        next_text = self.get_unassigned_text_for_user(db, user_id)
+        next_text = self.get_unassigned_text_for_user(db, user_id, user_role)
         if next_text:
             return self.assign_text_to_user(db, next_text.id, user_id)
         
@@ -386,12 +426,23 @@ class TextCRUD:
         
         return True
 
-    def get_user_work_in_progress(self, db: Session, user_id: int) -> List[Text]:
+    def get_user_work_in_progress(self, db: Session, user_id: int, user_role: str = None) -> List[Text]:
         """Get all texts that user is currently working on (progress status)."""
-        return db.query(Text).filter(
+        query = db.query(Text).filter(
             Text.annotator_id == user_id,
             Text.status == PROGRESS
-        ).all()
+        )
+        
+        # Role-based filtering for work in progress
+        if user_role == "user":
+            # USER role: only see texts they uploaded
+            query = query.filter(Text.uploaded_by == user_id)
+        elif user_role == "annotator":
+            # ANNOTATOR role: only see system texts (not uploaded by users)
+            query = query.filter(Text.uploaded_by.is_(None))
+        # ADMIN role: no additional filtering (can see all texts they're working on)
+        
+        return query.all()
 
     def get_texts_by_annotator_with_reviews(
         self, db: Session, annotator_id: int, skip: int = 0, limit: int = 100

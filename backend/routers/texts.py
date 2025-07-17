@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from deps import get_db
 from auth import get_current_active_user, require_admin, require_reviewer
@@ -39,6 +39,7 @@ def read_texts(
     status: Optional[str] = Query(None),
     language: Optional[str] = Query(None),
     reviewer_id: Optional[int] = Query(None),
+    uploaded_by: Optional[str] = Query(None, regex="^(system|user)$"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -56,7 +57,8 @@ def read_texts(
         limit=limit,
         status=status,
         language=language,
-        reviewer_id=reviewer_id
+        reviewer_id=reviewer_id,
+        uploaded_by=uploaded_by
     )
     return texts
 
@@ -68,7 +70,60 @@ def create_text(
     current_user: User = Depends(get_current_active_user)
 ):
     """Create new text."""
+    # Set the uploaded_by field to the current user
+    text_in.uploaded_by = current_user.id
     return text_crud.create(db=db, obj_in=text_in)
+
+
+@router.post("/upload-file", response_model=TextResponse, status_code=status.HTTP_201_CREATED)
+def upload_text_file(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Upload a text file and create a new text record."""
+    # Check if file is a text file
+    if not file.content_type or not file.content_type.startswith('text/'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only text files are allowed"
+        )
+    
+    try:
+        # Read the file content
+        content = file.file.read().decode('utf-8')
+        
+        # Get filename without extension for title
+        title = file.filename.rsplit('.', 1)[0] if file.filename else "Uploaded Text"
+        
+        # Create TextCreate object
+        text_create = TextCreate(
+            title=title,
+            content=content,
+            source=file.filename,
+            language="en",  # Default to English, could be made configurable
+            uploaded_by=current_user.id
+        )
+        
+        # Create the text record
+        created_text = text_crud.create(db=db, obj_in=text_create)
+        
+        # For USER role, automatically assign them as annotator and set status to PROGRESS
+        if current_user.role.value == "user":
+            created_text = text_crud.assign_text_to_user(db=db, text_id=created_text.id, user_id=current_user.id)
+        
+        return created_text
+        
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be valid UTF-8 encoded text"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing file: {str(e)}"
+        )
 
 
 @router.get("/for-annotation", response_model=List[TextResponse])
@@ -79,7 +134,13 @@ def get_texts_for_annotation(
     current_user: User = Depends(get_current_active_user)
 ):
     """Get texts available for annotation (initialized status)."""
-    return text_crud.get_texts_for_annotation(db=db, skip=skip, limit=limit)
+    return text_crud.get_texts_for_annotation(
+        db=db, 
+        skip=skip, 
+        limit=limit, 
+        user_id=current_user.id, 
+        user_role=current_user.role.value
+    )
 
 
 @router.post("/start-work", response_model=TextResponse)
@@ -88,12 +149,19 @@ def start_work(
     current_user: User = Depends(get_current_active_user)
 ):
     """Start work for current user - find work in progress or assign new text."""
-    text = text_crud.start_work(db=db, user_id=current_user.id)
+    text = text_crud.start_work(db=db, user_id=current_user.id, user_role=current_user.role.value)
     
     if not text:
+        if current_user.role.value == "user":
+            detail = "No texts available for annotation. Please upload a text file first."
+        elif current_user.role.value == "annotator":
+            detail = "No system texts available for annotation at this time. Contact your administrator."
+        else:
+            detail = "No texts available for annotation at this time"
+        
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No texts available for annotation at this time"
+            detail=detail
         )
     
     return text
@@ -105,12 +173,19 @@ def skip_text(
     current_user: User = Depends(get_current_active_user)
 ):
     """Skip current text by adding it to your rejected list and get next available text."""
-    next_text = text_crud.skip_text(db=db, user_id=current_user.id)
+    next_text = text_crud.skip_text(db=db, user_id=current_user.id, user_role=current_user.role.value)
     
     if not next_text:
+        if current_user.role.value == "user":
+            detail = "No more texts available for annotation. Please upload more text files."
+        elif current_user.role.value == "annotator":
+            detail = "No more system texts available for annotation at this time. Contact your administrator."
+        else:
+            detail = "No more texts available for annotation at this time"
+        
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No more texts available for annotation at this time"
+            detail=detail
         )
     
     return next_text
@@ -244,7 +319,11 @@ def get_my_work_in_progress(
     current_user: User = Depends(get_current_active_user)
 ):
     """Get all texts that the current user is currently working on."""
-    return text_crud.get_user_work_in_progress(db=db, user_id=current_user.id)
+    return text_crud.get_user_work_in_progress(
+        db=db, 
+        user_id=current_user.id, 
+        user_role=current_user.role.value
+    )
 
 
 @router.post("/{text_id}/submit-task", response_model=TaskSubmissionResponse)
@@ -284,7 +363,7 @@ def submit_task(
     )
     
     # Find the next task for the user
-    next_task = text_crud.start_work(db=db, user_id=current_user.id)
+    next_task = text_crud.start_work(db=db, user_id=current_user.id, user_role=current_user.role.value)
     
     if next_task:
         message = f"Task submitted successfully! Next task: '{next_task.title}'"

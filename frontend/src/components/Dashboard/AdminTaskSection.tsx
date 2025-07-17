@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -10,9 +10,21 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { textApi } from "@/api/text";
 import { TextStatus } from "@/api/types";
 import type { TextFilters } from "@/api/types";
+import { toast } from "sonner";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import {
   IoDocumentText,
@@ -22,6 +34,7 @@ import {
   IoStarOutline,
   IoChevronBack,
   IoChevronForward,
+  IoTrash,
 } from "react-icons/io5";
 
 // Helper function to get status badge styling
@@ -100,8 +113,12 @@ const ITEMS_PER_PAGE = 10;
 
 export const AdminTaskSection: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<TextStatus | "all">("all");
   const [languageFilter, setLanguageFilter] = useState<string>("all");
+  const [uploadedByFilter, setUploadedByFilter] = useState<
+    "all" | "system" | "user"
+  >("all");
   const [currentPage, setCurrentPage] = useState(1);
 
   // Calculate skip for pagination
@@ -117,6 +134,7 @@ export const AdminTaskSection: React.FC = () => {
       "admin-paginated-texts",
       statusFilter,
       languageFilter,
+      uploadedByFilter,
       currentPage,
     ],
     queryFn: () => {
@@ -126,6 +144,7 @@ export const AdminTaskSection: React.FC = () => {
       };
       if (statusFilter !== "all") filters.status = statusFilter;
       if (languageFilter !== "all") filters.language = languageFilter;
+      if (uploadedByFilter !== "all") filters.uploaded_by = uploadedByFilter;
       return textApi.getTexts(filters);
     },
     refetchOnWindowFocus: false,
@@ -135,11 +154,17 @@ export const AdminTaskSection: React.FC = () => {
 
   // Fetch total count for pagination (separate query without pagination)
   const { data: allTextsForCountData } = useQuery({
-    queryKey: ["admin-texts-count", statusFilter, languageFilter],
+    queryKey: [
+      "admin-texts-count",
+      statusFilter,
+      languageFilter,
+      uploadedByFilter,
+    ],
     queryFn: () => {
       const filters: TextFilters = {};
       if (statusFilter !== "all") filters.status = statusFilter;
       if (languageFilter !== "all") filters.language = languageFilter;
+      if (uploadedByFilter !== "all") filters.uploaded_by = uploadedByFilter;
       return textApi.getTexts(filters);
     },
     refetchOnWindowFocus: false,
@@ -199,6 +224,25 @@ export const AdminTaskSection: React.FC = () => {
     },
   ];
 
+  // Uploaded by filter options with counts
+  const uploadedByOptions = [
+    { value: "all", label: "All Sources", count: allTextsForCount.length },
+    {
+      value: "system" as const,
+      label: "System Texts",
+      count: allTexts.filter(
+        (t) => t.uploaded_by === null || t.uploaded_by === undefined
+      ).length,
+    },
+    {
+      value: "user" as const,
+      label: "User Uploads",
+      count: allTexts.filter(
+        (t) => t.uploaded_by !== null && t.uploaded_by !== undefined
+      ).length,
+    },
+  ];
+
   // Calculate task progress statistics from all texts
   const taskStats = {
     total: allTexts.length,
@@ -206,25 +250,54 @@ export const AdminTaskSection: React.FC = () => {
     inProgress: allTexts.filter(
       (t) => t.status === TextStatus.ANNOTATION_IN_PROGRESS
     ).length,
-    completed: allTexts.filter((t) =>
-      [
+    completed: allTexts.filter((t) => {
+      const completedStatuses: TextStatus[] = [
         TextStatus.ANNOTATED,
         TextStatus.REVIEWED,
         TextStatus.PUBLISHED,
-      ].includes(t.status)
-    ).length,
+      ];
+      return completedStatuses.includes(t.status);
+    }).length,
   };
 
   const handleViewTask = (textId: number) => {
     navigate(`/task/${textId}`);
   };
 
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: textApi.deleteText,
+    onSuccess: () => {
+      toast.success("Task deleted successfully", {
+        description: "The task has been permanently removed from the system.",
+      });
+      // Invalidate and refetch all related queries
+      queryClient.invalidateQueries({ queryKey: ["admin-paginated-texts"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-texts-count"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-all-texts-for-filters"],
+      });
+    },
+    onError: (error) => {
+      toast.error("Failed to delete task", {
+        description:
+          error instanceof Error ? error.message : "Please try again later",
+      });
+    },
+  });
+
+  const handleDeleteTask = (textId: number) => {
+    deleteTaskMutation.mutate(textId);
+  };
+
   const handleFilterChange = (
     newStatusFilter: TextStatus | "all",
-    newLanguageFilter: string
+    newLanguageFilter: string,
+    newUploadedByFilter: "all" | "system" | "user"
   ) => {
     setStatusFilter(newStatusFilter);
     setLanguageFilter(newLanguageFilter);
+    setUploadedByFilter(newUploadedByFilter);
     setCurrentPage(1); // Reset to first page when filters change
   };
 
@@ -321,7 +394,8 @@ export const AdminTaskSection: React.FC = () => {
                 onChange={(e) =>
                   handleFilterChange(
                     e.target.value as TextStatus | "all",
-                    languageFilter
+                    languageFilter,
+                    uploadedByFilter
                   )
                 }
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -340,7 +414,11 @@ export const AdminTaskSection: React.FC = () => {
               <select
                 value={languageFilter}
                 onChange={(e) =>
-                  handleFilterChange(statusFilter, e.target.value)
+                  handleFilterChange(
+                    statusFilter,
+                    e.target.value,
+                    uploadedByFilter
+                  )
                 }
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
@@ -349,6 +427,28 @@ export const AdminTaskSection: React.FC = () => {
                   <option key={lang} value={lang}>
                     {lang.charAt(0).toUpperCase() + lang.slice(1)} (
                     {allTexts.filter((t) => t.language === lang).length})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Uploaded By Filter
+              </label>
+              <select
+                value={uploadedByFilter}
+                onChange={(e) =>
+                  handleFilterChange(
+                    statusFilter,
+                    languageFilter,
+                    e.target.value as "all" | "system" | "user"
+                  )
+                }
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {uploadedByOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label} ({option.count})
                   </option>
                 ))}
               </select>
@@ -392,6 +492,9 @@ export const AdminTaskSection: React.FC = () => {
                   const reviewerName = text.reviewer
                     ? text.reviewer.full_name || text.reviewer.username
                     : null;
+                  const uploaderName = text.uploader
+                    ? text.uploader.full_name || text.uploader.username
+                    : "system";
 
                   return (
                     <div
@@ -441,9 +544,7 @@ export const AdminTaskSection: React.FC = () => {
                                 Updated: {formatDate(text.updated_at)}
                               </span>
                             )}
-                            {text.annotations_count !== undefined && (
-                              <span>Annotations: {text.annotations_count}</span>
-                            )}
+                            <span>Uploaded by: {uploaderName}</span>
                             {annotatorName && (
                               <span>Annotator: {annotatorName}</span>
                             )}
@@ -462,6 +563,44 @@ export const AdminTaskSection: React.FC = () => {
                             <IoEye className="w-4 h-4" />
                             View
                           </Button>
+
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                disabled={deleteTaskMutation.isPending}
+                              >
+                                {deleteTaskMutation.isPending ? (
+                                  <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <IoTrash className="w-4 h-4" />
+                                )}
+                                Delete
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{text.title}
+                                  "? This action cannot be undone and will
+                                  permanently remove the task and all its
+                                  annotations from the system.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteTask(text.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete Task
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </div>

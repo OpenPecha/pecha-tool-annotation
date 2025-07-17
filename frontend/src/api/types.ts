@@ -57,17 +57,20 @@ export interface TextResponse extends TextBase {
   status: TextStatus;
   annotator_id?: number;
   reviewer_id?: number;
+  uploaded_by?: number;
   created_at: string;
   updated_at?: string;
   annotations_count?: number;
   annotator?: UserInfo;
   reviewer?: UserInfo;
+  uploader?: UserInfo;
 }
 
 export interface TextFilters extends PaginationParams {
   status?: TextStatus;
   language?: string;
   reviewer_id?: number;
+  uploaded_by?: "system" | "user";
   [key: string]: string | number | boolean | undefined;
 }
 

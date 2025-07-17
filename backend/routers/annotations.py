@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from deps import get_db
 from auth import get_current_active_user, require_annotator, require_admin
 from crud.annotation import annotation_crud
+from crud.text import text_crud
 from schemas.annotation import AnnotationCreate, AnnotationUpdate, AnnotationResponse
 from models.user import User
 
@@ -36,9 +37,32 @@ def read_annotations(
 def create_annotation(
     annotation_in: AnnotationCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_annotator)
+    current_user: User = Depends(get_current_active_user)
 ):
-    """Create new annotation - Annotator only."""
+    """Create new annotation - Annotator role or user who uploaded the text."""
+    # Check if user has permission to annotate this text
+    if current_user.role.value not in ["admin", "annotator"]:
+        # For USER role, check if they uploaded this text
+        if current_user.role.value == "user":
+            text = text_crud.get(db=db, text_id=annotation_in.text_id)
+            if not text:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Text not found"
+                )
+            
+            if text.uploaded_by != current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You can only annotate texts you uploaded"
+                )
+        else:
+            # Other roles (like reviewer) are not allowed to create annotations
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Role '{current_user.role.value}' is not allowed to create annotations"
+            )
+    
     # Validate annotation positions
     validation_result = annotation_crud.validate_annotation_positions(
         db=db,

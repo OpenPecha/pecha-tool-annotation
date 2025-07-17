@@ -15,7 +15,7 @@ from schemas.annotation_review import (
     ReviewStatus
 )
 from models.user import User
-from models.text import REVIEWED, ANNOTATED, REVIEWED_NEEDS_REVISION
+from models.text import Text, REVIEWED, ANNOTATED, REVIEWED_NEEDS_REVISION
 
 router = APIRouter(prefix="/reviews", tags=["Reviews"])
 
@@ -59,13 +59,17 @@ def get_my_review_progress(
 ):
     """Get texts currently assigned to the reviewer for review (in progress)."""
     # Get texts where reviewer_id is current user and status is still annotated (not yet reviewed)
-    texts = text_crud.get_multi(
-        db=db, 
-        skip=skip, 
-        limit=limit, 
-        status=ANNOTATED,
-        reviewer_id=current_user.id
-    )
+    # Only include system texts (exclude user-uploaded texts)
+    from sqlalchemy.orm import joinedload
+    texts = db.query(Text).options(
+        joinedload(Text.annotator),
+        joinedload(Text.reviewer),
+        joinedload(Text.uploader)
+    ).filter(
+        Text.status == ANNOTATED,
+        Text.reviewer_id == current_user.id,
+        Text.uploaded_by.is_(None)  # Only system texts
+    ).offset(skip).limit(limit).all()
     
     # Add annotation count and review progress for each text
     result = []
