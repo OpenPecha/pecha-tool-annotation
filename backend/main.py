@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from database import Base, engine
 from deps import get_db
 from models import User, Text, Annotation
-from routers import users, texts, annotations, bulk_upload, reviews
+from routers import users, texts, annotations, bulk_upload, reviews, export
 
 # Load environment variables
 load_dotenv()
@@ -47,6 +47,7 @@ app.include_router(texts.router, prefix="/v1")
 app.include_router(annotations.router, prefix="/v1")
 app.include_router(bulk_upload.router, prefix="/v1")
 app.include_router(reviews.router, prefix="/v1")
+app.include_router(export.router, prefix="/v1/export", tags=["export"])
 
 
 @app.get("/")

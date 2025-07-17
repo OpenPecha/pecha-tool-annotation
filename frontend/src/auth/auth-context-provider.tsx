@@ -45,6 +45,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setBackendUser(null);
     setFetchingBackendUser(false);
 
+    // Clear stored auth token
+    localStorage.removeItem("auth_token");
+
     // If using Auth0, use their logout function
     auth0Logout({
       logoutParams: { returnTo: window.location.origin },
@@ -56,6 +59,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // If using Auth0, get token from Auth0
     try {
       const access_token = await getAccessTokenSilently();
+      // Store token in localStorage for API utils to access
+      if (access_token) {
+        localStorage.setItem("auth_token", access_token);
+      }
       return access_token;
     } catch (error) {
       console.error("Error getting Auth0 token:", error);
@@ -63,12 +70,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [getAccessTokenSilently]);
 
-  // Fetch backend user data when Auth0 user is available
+  // Fetch backend user data and store auth token when Auth0 user is available
   useEffect(() => {
     const fetchBackendUser = async () => {
       if (isAuthenticated && user && !fetchingBackendUser && !backendUser) {
         setFetchingBackendUser(true);
         try {
+          // Get and store Auth0 token for API calls
+          const token = await getAccessTokenSilently();
+          if (token) {
+            localStorage.setItem("auth_token", token);
+          }
+
           const userData = await usersApi.getCurrentUser();
           setBackendUser({
             id: userData.id.toString(),
@@ -93,7 +106,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     fetchBackendUser();
-  }, [isAuthenticated, user, fetchingBackendUser, backendUser]);
+  }, [
+    isAuthenticated,
+    user,
+    fetchingBackendUser,
+    backendUser,
+    getAccessTokenSilently,
+  ]);
 
   // Use backend user data if available, otherwise use Auth0 data
   const currentUser: UserType | null =

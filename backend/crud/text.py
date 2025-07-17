@@ -1,6 +1,7 @@
 from typing import List, Optional
+from datetime import datetime
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func
+from sqlalchemy import func, and_, exists
 from models.text import Text, INITIALIZED, ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION, SKIPPED, PROGRESS, VALID_STATUSES
 from models.annotation import Annotation
 from schemas.text import TextCreate, TextUpdate
@@ -463,6 +464,50 @@ class TextCRUD:
             Text.annotator_id == annotator_id,
             Text.status == status
         ).offset(skip).limit(limit).all()
+
+    def get_texts_by_date_range(
+        self, db: Session, start_date: datetime, end_date: datetime
+    ) -> List[Text]:
+        """Get texts created within a date range."""
+        # Add one day to end_date to include the entire end date
+        end_date_inclusive = datetime.combine(end_date.date(), datetime.max.time())
+        start_date_inclusive = datetime.combine(start_date.date(), datetime.min.time())
+        
+        return db.query(Text).filter(
+            and_(
+                Text.created_at >= start_date_inclusive,
+                Text.created_at <= end_date_inclusive
+            )
+        ).all()
+
+    def get_texts_by_date_range_and_filter(
+        self, db: Session, start_date: datetime, end_date: datetime, filter_type: str
+    ) -> List[Text]:
+        """Get texts within a date range filtered by type (reviewed or annotated)."""
+        # Add one day to end_date to include the entire end date
+        end_date_inclusive = datetime.combine(end_date.date(), datetime.max.time())
+        start_date_inclusive = datetime.combine(start_date.date(), datetime.min.time())
+        base_query = db.query(Text).filter(
+            and_(
+                Text.created_at >= start_date_inclusive,
+                Text.created_at <= end_date_inclusive
+            )
+        )
+        
+        if filter_type == "reviewed":
+            # Filter for texts that have been reviewed
+            return base_query.filter(
+                Text.status.in_([REVIEWED, REVIEWED_NEEDS_REVISION])
+            ).all()
+        elif filter_type == "annotated":
+            # Filter for texts that have annotations using EXISTS
+            # This is more robust than JOIN and handles edge cases better
+            return base_query.filter(
+                exists().where(Annotation.text_id == Text.id)
+            ).all()
+        else:
+            # Default: return all texts in date range
+            return base_query.all()
 
 
 text_crud = TextCRUD() 
