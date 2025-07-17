@@ -125,7 +125,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
             <div className="flex-1 border-r border-gray-200">
               <div className="p-2 bg-blue-50 border-b border-gray-200">
                 <h3 className="text-sm font-medium text-blue-800">
-                  Original Text
+                  Work in Progress
                 </h3>
               </div>
               <div className="h-full overflow-hidden">
