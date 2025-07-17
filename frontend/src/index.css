@@ -194,11 +194,39 @@ body {
   background: #555;
 }
 
-/* Annotation Styles */
-/* Base annotation mark styles - Generic error annotation styling */
-[class*="annotation-"]:not(.annotation-optimistic):not(.annotation-agreed):not(.annotation-highlighted):not(.annotation-label) {
+/* Level-based annotation mark styles */
+/* Critical level - Red theme */
+.annotation-critical {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-bottom: 2px solid #ef4444;
+  border-radius: 2px;
+}
+
+/* Major level - Yellow/Orange theme */
+.annotation-major {
   background-color: rgba(249, 115, 22, 0.2);
   border-bottom: 2px solid #f97316;
+  border-radius: 2px;
+}
+
+/* Minor level - Green theme */
+.annotation-minor {
+  background-color: rgba(34, 197, 94, 0.2);
+  border-bottom: 2px solid #22c55e;
+  border-radius: 2px;
+}
+
+/* Default level (no level specified) - Gray theme */
+.annotation-default {
+  background-color: rgba(107, 114, 128, 0.2);
+  border-bottom: 2px solid #6b7280;
+  border-radius: 2px;
+}
+
+/* Fallback for any annotation without specific level class */
+[class*="annotation-"]:not(.annotation-critical):not(.annotation-major):not(.annotation-minor):not(.annotation-default):not(.annotation-optimistic):not(.annotation-agreed):not(.annotation-highlighted):not(.annotation-label) {
+  background-color: rgba(107, 114, 128, 0.2);
+  border-bottom: 2px solid #6b7280;
   border-radius: 2px;
 }
 
@@ -219,7 +247,36 @@ body {
   box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
 }
 
-/* Annotation Label Styles */
+/* Level-based Annotation Label Styles */
+/* Critical level labels - Red theme */
+.annotation-label-critical {
+  background-color: #ef4444;
+  border: 1px solid #dc2626;
+  color: white;
+}
+
+/* Major level labels - Orange theme */
+.annotation-label-major {
+  background-color: #f97316;
+  border: 1px solid #ea580c;
+  color: white;
+}
+
+/* Minor level labels - Green theme */
+.annotation-label-minor {
+  background-color: #22c55e;
+  border: 1px solid #16a34a;
+  color: white;
+}
+
+/* Default level labels - Gray theme */
+.annotation-label-default {
+  background-color: #6b7280;
+  border: 1px solid #4b5563;
+  color: white;
+}
+
+/* Base annotation label styles */
 .annotation-label {
   display: inline-block;
   position: relative;
@@ -229,14 +286,10 @@ body {
   padding: 2px 6px;
   margin-left: 2px;
   border-radius: 4px;
-  color: white;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   z-index: 10;
-  /* Default error styling for all annotation labels */
-  background-color: #f97316;
-  border: 1px solid #ea580c;
 }
 
 .annotation-label:hover {

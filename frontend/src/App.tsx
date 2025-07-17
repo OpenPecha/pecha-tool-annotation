@@ -6,6 +6,7 @@ import { Suspense, useEffect, lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { FullScreenLoading, AppLoading } from "@/components/ui/loading";
 import { useAuth } from "./auth/use-auth-hook";
+import { useAnnotationColors } from "./hooks/use-annotation-colors";
 import {
   preloadByAuthState,
   preloadByCurrentRoute,
@@ -26,6 +27,9 @@ if (import.meta.env.VITE_ENVIRONMENT === "production") {
 
 function Layout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, login, isLoading, getToken } = useAuth();
+
+  // Initialize annotation colors early when authenticated
+  const { isLoaded: colorsLoaded } = useAnnotationColors();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -50,6 +54,11 @@ function Layout({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated)
     return <button onClick={() => login(true)}>Login</button>;
+
+  // Show loading if colors are not loaded yet to prevent flash of unstyled annotations
+  if (!colorsLoaded) {
+    return <AppLoading message="Loading settings..." />;
+  }
 
   return (
     <Suspense fallback={<AppLoading message="Loading Dashboard..." />}>

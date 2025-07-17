@@ -25,11 +25,17 @@ class AnnotationLabelWidget extends WidgetType {
 
   toDOM() {
     const label = document.createElement("div");
-    label.className = `annotation-label annotation-label-${
-      this.annotation.type
-    } ${this.isOptimistic ? "annotation-label-optimistic" : ""} ${
-      this.annotation.is_agreed ? "annotation-label-agreed" : ""
-    } ${this.isHighlighted ? "annotation-label-highlighted" : ""}`;
+
+    // Get level-based CSS class
+    const levelClass = this.annotation.level
+      ? `annotation-label-${this.annotation.level}`
+      : "annotation-label-default";
+
+    label.className = `annotation-label ${levelClass} ${
+      this.isOptimistic ? "annotation-label-optimistic" : ""
+    } ${this.annotation.is_agreed ? "annotation-label-agreed" : ""} ${
+      this.isHighlighted ? "annotation-label-highlighted" : ""
+    }`;
 
     if (this.annotation.is_agreed) {
       // Create lock icon and text for agreed annotations
@@ -56,6 +62,10 @@ class AnnotationLabelWidget extends WidgetType {
 
     label.setAttribute("data-annotation-id", this.annotation.id);
     label.setAttribute("data-annotation-type", this.annotation.type);
+    label.setAttribute(
+      "data-annotation-level",
+      this.annotation.level || "default"
+    );
 
     // Add click handler for annotation selection/deletion only for non-agreed annotations
     if (!this.annotation.is_agreed) {
@@ -129,8 +139,12 @@ export const annotationField = StateField.define<AnnotationFieldState>({
             : annotation.type;
 
         // Create mark decoration for highlighting the text
+        const levelClass = annotation.level
+          ? `annotation-${annotation.level}`
+          : "annotation-default";
+
         const markDecoration = Decoration.mark({
-          class: `annotation-${annotation.type} ${
+          class: `${levelClass} ${
             isOptimistic ? "annotation-optimistic" : ""
           } ${annotation.is_agreed ? "annotation-agreed" : ""} ${
             isHighlighted ? "annotation-highlighted" : ""
@@ -141,6 +155,7 @@ export const annotationField = StateField.define<AnnotationFieldState>({
               : titleText,
             "data-annotation-id": annotation.id,
             "data-annotation-type": annotation.type,
+            "data-annotation-level": annotation.level || "default",
             "data-annotation-agreed": annotation.is_agreed ? "true" : "false",
           },
         });

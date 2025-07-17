@@ -21,7 +21,6 @@ import {
   clearAnnotationsEffect,
   setHighlightedAnnotationEffect,
 } from "./extensions/annotationField";
-import { loadAnnotationConfig } from "@/config/annotation-options";
 import type { EditorProps, EditorRef } from "./types";
 
 export const Editor = forwardRef<EditorRef, EditorProps>(
@@ -772,23 +771,11 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     useEffect(() => {
       const applyAnnotationStyles = async () => {
         try {
-          const annotationConfig = await loadAnnotationConfig();
           const style = document.createElement("style");
-          const baseStyles = annotationConfig.options
-            .map(
-              (option) =>
-                `.annotation-${option.id} { 
-              background-color: ${option.backgroundColor}; 
-              border-bottom: 2px solid ${option.borderColor}; 
-              border-right: 2px solid ${option.borderColor};
-              padding-inline: 10px;
-              border-radius: 10px;
-              border-radius: 2px; 
-              position: relative; 
-              transition: all 0.15s ease;
-            }`
-            )
-            .join("\n");
+          const baseStyles = `
+            /* Level-based styles are defined in index.css */
+            /* This ensures consistent styling across all components */
+          `;
 
           const optimisticStyles = `
             .annotation-optimistic {

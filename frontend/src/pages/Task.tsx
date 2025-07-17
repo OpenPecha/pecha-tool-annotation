@@ -24,6 +24,7 @@ import {
   isValidAnnotationType,
 } from "@/config/annotation-options";
 import { SkipConfirmationDialog } from "@/components/SkipConfirmationDialog";
+import { AnnotationColorSettings } from "@/components/AnnotationColorSettings";
 import { useAuth } from "@/auth/use-auth-hook";
 import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 
@@ -1199,6 +1200,9 @@ const Index = () => {
         textTitle={textData?.title}
         isSkipping={skipTextMutation.isPending}
       />
+
+      {/* Annotation Color Settings - Floating in bottom right */}
+      <AnnotationColorSettings />
     </div>
   );
 };

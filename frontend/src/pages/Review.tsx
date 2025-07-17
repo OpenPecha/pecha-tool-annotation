@@ -365,18 +365,6 @@ const Review = () => {
     return <p className="text-gray-700 leading-[normal]">{elements}</p>;
   };
 
-  const getAnnotationTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-      person: "bg-blue-100 text-blue-800",
-      place: "bg-green-100 text-green-800",
-      event: "bg-purple-100 text-purple-800",
-      object: "bg-orange-100 text-orange-800",
-      header: "bg-gray-100 text-gray-800",
-      default: "bg-gray-100 text-gray-800",
-    };
-    return colors[type] || colors.default;
-  };
-
   if (isLoading) {
     return (
       <div className="h-screen bg-gray-50 flex flex-col">
@@ -577,11 +565,7 @@ const Review = () => {
                               className="border rounded-lg p-4 bg-white"
                             >
                               <div className="flex items-start justify-between mb-2">
-                                <Badge
-                                  className={getAnnotationTypeColor(
-                                    annotation.annotation_type
-                                  )}
-                                >
+                                <Badge className="bg-gray-100 text-gray-800">
                                   {annotation.annotation_type}
                                 </Badge>
                                 {isReviewed ? (
