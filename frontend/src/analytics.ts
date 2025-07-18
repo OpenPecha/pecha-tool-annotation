@@ -77,8 +77,37 @@ function identifyUserInUmami(user: UmamiUser) {
   if (user.isAdmin !== undefined) userProperties.isAdmin = user.isAdmin;
 
   // window.umami.identify(userId, userProperties);
+  if (window.umami?.identify) {
+    try {
+      window.umami.identify(userId, userProperties);
+      console.log("✅ User identified via umami.identify()");
+    } catch (error) {
+      console.warn("⚠️ umami.identify() failed:", error);
+      // Fallback to tracking a user identification event
+      fallbackUserIdentification(userId, userProperties);
+    }
+  } else {
+    console.log(
+      "ℹ️ umami.identify() not available, using event tracking fallback"
+    );
+    // Fallback to tracking a user identification event
+    fallbackUserIdentification(userId, userProperties);
+  }
 }
 
+
+function fallbackUserIdentification(
+  userId: string,
+  userProperties: Record<string, string | number | boolean>
+) {
+  if (window.umami?.track) {
+    window.umami.track("user-identified", {
+      user_id: userId,
+      ...userProperties,
+    });
+    console.log("✅ User identified via custom event");
+  }
+}
 // Public function to set user for identification
 export function setUmamiUser(user: UmamiUser | null) {
   currentUser = user;
