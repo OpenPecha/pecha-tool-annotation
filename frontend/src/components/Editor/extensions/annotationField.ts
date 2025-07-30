@@ -1,6 +1,10 @@
 import { EditorView, Decoration, WidgetType } from "@codemirror/view";
 import { StateField, StateEffect } from "@codemirror/state";
 import type { DecorationSet } from "@codemirror/view";
+import {
+  isStructuralAnnotationType,
+  getStructuralAnnotationType,
+} from "@/config/structural-annotations";
 import type { Annotation } from "@/pages/Task";
 
 // Widget class for annotation labels
@@ -26,10 +30,19 @@ class AnnotationLabelWidget extends WidgetType {
   toDOM() {
     const label = document.createElement("div");
 
-    // Get level-based CSS class
-    const levelClass = this.annotation.level
-      ? `annotation-label-${this.annotation.level}`
-      : "annotation-label-default";
+    // Determine CSS class based on annotation type
+    let levelClass: string;
+    const isStructural = isStructuralAnnotationType(this.annotation.type);
+
+    if (isStructural) {
+      // Use structural-specific class
+      levelClass = `annotation-label-structural-${this.annotation.type}`;
+    } else {
+      // Use level-based class for error annotations
+      levelClass = this.annotation.level
+        ? `annotation-label-${this.annotation.level}`
+        : "annotation-label-default";
+    }
 
     label.className = `annotation-label ${levelClass} ${
       this.isOptimistic ? "annotation-label-optimistic" : ""
@@ -58,6 +71,18 @@ class AnnotationLabelWidget extends WidgetType {
     } else {
       label.textContent = this.titleText;
       label.style.cursor = "pointer";
+
+      // Apply structural annotation colors if it's a structural type
+      if (isStructural) {
+        const structuralType = getStructuralAnnotationType(
+          this.annotation.type
+        );
+        if (structuralType) {
+          label.style.backgroundColor = structuralType.backgroundColor;
+          label.style.color = structuralType.color;
+          label.style.border = `1px solid ${structuralType.borderColor}`;
+        }
+      }
     }
 
     label.setAttribute("data-annotation-id", this.annotation.id);
@@ -139,9 +164,18 @@ export const annotationField = StateField.define<AnnotationFieldState>({
             : annotation.type;
 
         // Create mark decoration for highlighting the text
-        const levelClass = annotation.level
-          ? `annotation-${annotation.level}`
-          : "annotation-default";
+        const isStructural = isStructuralAnnotationType(annotation.type);
+        let levelClass: string;
+
+        if (isStructural) {
+          // Use structural-specific class for text highlighting
+          levelClass = `annotation-structural-${annotation.type}`;
+        } else {
+          // Use level-based class for error annotations
+          levelClass = annotation.level
+            ? `annotation-${annotation.level}`
+            : "annotation-default";
+        }
 
         const markDecoration = Decoration.mark({
           class: `${levelClass} ${

@@ -3,6 +3,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Editor } from "./Editor";
 import type { EditorRef } from "./Editor/types";
 import type { Annotation } from "@/pages/Task";
+import type { NavigationMode } from "@/store/annotation";
 import { SearchComponent } from "./SearchComponent";
 import { Button } from "@/components/ui/button";
 import { IoEye, IoEyeOff } from "react-icons/io5";
@@ -37,6 +38,7 @@ interface TextAnnotatorProps {
   isCreatingAnnotation?: boolean;
   isDeletingAnnotation?: boolean;
   highlightedAnnotationId?: string | null;
+  annotationMode?: NavigationMode;
 }
 
 export type TextAnnotatorRef = {
@@ -61,6 +63,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
       isCreatingAnnotation = false,
       isDeletingAnnotation = false,
       highlightedAnnotationId,
+      annotationMode = "error-list",
     },
     ref
   ) => {
@@ -145,6 +148,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
                   isDeletingAnnotation={isDeletingAnnotation}
                   highlightedAnnotationId={highlightedAnnotationId}
                   hideScrollbar={true}
+                  annotationMode={annotationMode}
                 />
               </div>
             </div>
@@ -194,6 +198,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
               isDeletingAnnotation={isDeletingAnnotation}
               highlightedAnnotationId={highlightedAnnotationId}
               hideScrollbar={true}
+              annotationMode={annotationMode}
             />
           </div>
         )}

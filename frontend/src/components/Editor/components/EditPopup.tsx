@@ -309,7 +309,6 @@ export const EditPopup: React.FC<EditPopupProps> = ({
             </div>
           </div>
         )}
-
         {/* Annotation Type Selection */}
         <div className="mb-3">
           <p className="text-xs text-gray-500 mb-2">Error type:</p>

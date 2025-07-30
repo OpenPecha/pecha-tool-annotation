@@ -11,6 +11,10 @@ import {
   IoCloseCircle,
 } from "react-icons/io5";
 import type { Annotation } from "@/pages/Task";
+import {
+  isStructuralAnnotationType,
+  getStructuralAnnotationType,
+} from "@/config/structural-annotations";
 import { ScrollArea } from "../ui/scroll-area";
 import { truncateText } from "@/lib/utils";
 
@@ -29,7 +33,17 @@ export const AnnotationSidebar = ({
   isOpen,
   onToggle,
 }: AnnotationSidebarProps) => {
-  const getAnnotationColor = (level?: string) => {
+  const getAnnotationColor = (level?: string, type?: string) => {
+    // Check if it's a structural annotation first
+    if (type && isStructuralAnnotationType(type)) {
+      const structuralType = getStructuralAnnotationType(type);
+      if (structuralType) {
+        // Create inline styles with the structural annotation colors
+        return "";
+      }
+    }
+
+    // Fallback to level-based colors for error annotations
     switch (level) {
       case "critical":
         return "bg-red-100 text-red-800";
@@ -41,6 +55,20 @@ export const AnnotationSidebar = ({
         // Default for annotations without level or unknown levels
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const getAnnotationStyle = (annotation: Annotation) => {
+    if (isStructuralAnnotationType(annotation.type)) {
+      const structuralType = getStructuralAnnotationType(annotation.type);
+      if (structuralType) {
+        return {
+          backgroundColor: structuralType.backgroundColor,
+          color: structuralType.color,
+          borderColor: structuralType.borderColor,
+        };
+      }
+    }
+    return {};
   };
 
   return (
@@ -95,8 +123,10 @@ export const AnnotationSidebar = ({
                             <Badge
                               variant="secondary"
                               className={`text-xs font-medium ${getAnnotationColor(
-                                annotation.level
+                                annotation.level,
+                                annotation.type
                               )}`}
+                              style={getAnnotationStyle(annotation)}
                               title={annotation.type}
                             >
                               {truncateText(annotation.type, 30)}

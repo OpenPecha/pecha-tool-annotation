@@ -948,6 +948,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           selectedHeaderId={selectedHeaderId}
           annotations={annotations}
           isCreatingAnnotation={isCreatingAnnotation}
+          contextAnnotation={annotationToEdit || undefined}
           onAddAnnotation={handleAddAnnotation}
           onCancel={resetBubbleMenu}
           onAnnotationTextChange={setAnnotationText}

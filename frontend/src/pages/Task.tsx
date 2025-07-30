@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAnnotationStore } from "@/store/annotation";
 import { TextAnnotator } from "@/components/TextAnnotator";
 import type { TextAnnotatorRef } from "@/components/TextAnnotator";
 import { AnnotationSidebar } from "@/components/AnnotationSidebar/AnnotationSidebar";
-import { ErrorList } from "@/components/ErrorList";
+import { NavigationModeSelector } from "@/components/NavigationModeSelector";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import ActionButtons from "@/components/ActionButtons";
@@ -127,15 +127,14 @@ const Index = () => {
     end: number;
   } | null>(null);
 
-  const [tocOpen, setTocOpen] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useLocalStorage(
-    "annotationSidebarOpen",
-    true
-  );
-  const [errorListOpen, setErrorListOpen] = useLocalStorage(
-    "errorListOpen",
-    true
-  );
+  // Zustand store for annotation state
+  const {
+    navigationOpen,
+    sidebarOpen,
+
+    toggleNavigation,
+    toggleSidebar,
+  } = useAnnotationStore();
   const textAnnotatorRef = useRef<TextAnnotatorRef>(null);
 
   // Skip confirmation dialog state
@@ -495,9 +494,26 @@ const Index = () => {
   const addAnnotation = async (type: string, name?: string, level?: string) => {
     if (!selectedText || !textId) return;
 
-    // Load configuration and validate annotation type
-    const config = await loadAnnotationConfig();
-    if (!isValidAnnotationType(config, type)) {
+    // Validate annotation type based on current mode
+    let isValidType = false;
+    const currentMode = useAnnotationStore.getState().currentNavigationMode;
+
+    if (currentMode === "table-of-contents") {
+      // For TOC mode, check against structural annotation types
+      const { STRUCTURAL_ANNOTATION_TYPES } = await import(
+        "@/config/structural-annotations"
+      );
+      isValidType =
+        STRUCTURAL_ANNOTATION_TYPES.some(
+          (structuralType) => structuralType.id === type
+        ) || type === "header";
+    } else {
+      // For error-list mode, check against error list configuration
+      const config = await loadAnnotationConfig();
+      isValidType = isValidAnnotationType(config, type) || type === "header";
+    }
+
+    if (!isValidType) {
       toast({
         title: "❌ Error",
         description: "Invalid annotation type.",
@@ -1070,82 +1086,34 @@ const Index = () => {
       <Navbar />
 
       <div className="flex gap-6 flex-1 px-6 pt-16 mx-auto overflow-hidden">
-        {/* Table of Contents - Left Sidebar */}
-        {/* Error List - Right Sidebar */}
-        <div
-          className={`transition-all duration-300 ease-in-out ${
-            errorListOpen ? "w-80" : "w-16"
-          }`}
-        >
-          <div
-            className={`shadow-lg border-0 backdrop-blur-sm flex flex-col mt-4 mb-4 bg-white/80 rounded-lg transition-all duration-300 ${
-              errorListOpen ? "h-[75vh]" : "h-auto"
-            }`}
-          >
-            {errorListOpen ? (
-              // Expanded state
-              <>
-                <div className="pb-3 border-b">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 p-2">
-                      <span className="text-orange-600">⚠</span>
-                      Error List
-                    </h3>
-                    <button
-                      onClick={() => setErrorListOpen(!errorListOpen)}
-                      className="h-8 w-8 p-0 hover:bg-orange-50 transition-all duration-200 flex items-center justify-center rounded"
-                      title="Close Error List"
-                    >
-                      <span className="text-gray-600">←</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="pt-0 flex-1 flex flex-col min-h-0 p-4">
-                  <ErrorList
-                    onErrorSelect={(error) => {
-                      console.log("Selected error:", error);
-                    }}
-                    searchable={true}
-                  />
-                </div>
-              </>
-            ) : (
-              // Collapsed state
-              <div className="p-3 flex items-center justify-center">
-                <button
-                  onClick={() => setErrorListOpen(!errorListOpen)}
-                  className="h-10 w-10 p-0 hover:bg-orange-50 rounded-full shadow-sm border border-gray-200 transition-all duration-200 flex items-center justify-center"
-                  title="Open Error List"
-                >
-                  <span className="text-orange-600 text-lg">⚠</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        {/* <TableOfContents
+        {/* Navigation Panel - Left Sidebar (Error List + Table of Contents) */}
+        <NavigationModeSelector
+          isOpen={navigationOpen}
+          onToggle={toggleNavigation}
+          onErrorSelect={(error) => {
+            console.log("Selected error:", error);
+          }}
+          searchable={true}
           annotations={annotations}
           onHeaderClick={handleHeaderClick}
           onRemoveAnnotation={removeAnnotation}
-          isOpen={tocOpen}
-          onToggle={() => setTocOpen(!tocOpen)}
           pendingHeader={pendingHeader}
           onHeaderNameSubmit={handleHeaderNameSubmit}
           onHeaderNameCancel={handleHeaderNameCancel}
-        /> */}
+        />
 
         {/* Main Content Area */}
         <div
           className={`flex-1 transition-all duration-300 ease-in-out min-w-0 max-w-5xl mx-auto ${
-            tocOpen && (sidebarOpen || errorListOpen)
+            navigationOpen && sidebarOpen
               ? "mx-6"
-              : tocOpen || sidebarOpen || errorListOpen
+              : navigationOpen || sidebarOpen
               ? "mx-3"
               : "mx-0"
           }`}
           style={{
-            marginLeft: tocOpen ? "0" : "60px",
-            marginRight: sidebarOpen || errorListOpen ? "0" : "60px",
+            marginLeft: navigationOpen ? "0" : "60px",
+            marginRight: sidebarOpen ? "0" : "60px",
           }}
         >
           <div className="h-[90vh] mt-4 mb-4">
@@ -1190,7 +1158,7 @@ const Index = () => {
             onRemoveAnnotation={removeAnnotation}
             onAnnotationClick={handleAnnotationClick}
             isOpen={sidebarOpen}
-            onToggle={() => setSidebarOpen(!sidebarOpen)}
+            onToggle={toggleSidebar}
           />
         </div>
       </div>

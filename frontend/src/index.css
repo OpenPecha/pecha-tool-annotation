@@ -223,6 +223,61 @@ body {
   border-radius: 2px;
 }
 
+/* Structural annotation styles - Text highlighting */
+.annotation-structural-header {
+  background-color: #f3f4f6; /* gray-100 */
+  border-bottom: 2px solid #9ca3af; /* gray-400 */
+  border-radius: 2px;
+}
+
+.annotation-structural-translator {
+  background-color: #d1fae5; /* emerald-100 */
+  border-bottom: 2px solid #34d399; /* emerald-400 */
+  border-radius: 2px;
+}
+
+.annotation-structural-topic {
+  background-color: #ede9fe; /* violet-100 */
+  border-bottom: 2px solid #a78bfa; /* violet-400 */
+  border-radius: 2px;
+}
+
+.annotation-structural-author {
+  background-color: #fee2e2; /* red-100 */
+  border-bottom: 2px solid #f87171; /* red-400 */
+  border-radius: 2px;
+}
+
+.annotation-structural-date {
+  background-color: #cffafe; /* cyan-100 */
+  border-bottom: 2px solid #67e8f9; /* cyan-300 */
+  border-radius: 2px;
+}
+
+.annotation-structural-location {
+  background-color: #fed7aa; /* orange-100 */
+  border-bottom: 2px solid #fdba74; /* orange-300 */
+  border-radius: 2px;
+}
+
+.annotation-structural-citation {
+  background-color: #fef3c7; /* amber-100 */
+  border-bottom: 2px solid #fcd34d; /* amber-300 */
+  border-radius: 2px;
+}
+
+.annotation-structural-term {
+  background-color: #fce7f3; /* pink-100 */
+  border-bottom: 2px solid #f9a8d4; /* pink-300 */
+  border-radius: 2px;
+}
+
+.annotation-structural-person {
+  background-color: #ccfbf1; /* teal-100 */
+  border-bottom: 2px solid #5eead4; /* teal-300 */
+  border-radius: 2px;
+}
+
 /* Fallback for any annotation without specific level class */
 [class*="annotation-"]:not(.annotation-critical):not(.annotation-major):not(.annotation-minor):not(.annotation-default):not(.annotation-optimistic):not(.annotation-agreed):not(.annotation-highlighted):not(.annotation-label) {
   background-color: rgba(107, 114, 128, 0.2);
@@ -274,6 +329,61 @@ body {
   background-color: #6b7280;
   border: 1px solid #4b5563;
   color: white;
+}
+
+/* Structural annotation label styles */
+.annotation-label-structural-header {
+  background-color: #f3f4f6; /* gray-100 */
+  border: 1px solid #9ca3af; /* gray-400 */
+  color: #1f2937; /* gray-800 */
+}
+
+.annotation-label-structural-translator {
+  background-color: #d1fae5; /* emerald-100 */
+  border: 1px solid #34d399; /* emerald-400 */
+  color: #059669; /* emerald-600 */
+}
+
+.annotation-label-structural-topic {
+  background-color: #ede9fe; /* violet-100 */
+  border: 1px solid #a78bfa; /* violet-400 */
+  color: #7c3aed; /* violet-600 */
+}
+
+.annotation-label-structural-author {
+  background-color: #fee2e2; /* red-100 */
+  border: 1px solid #f87171; /* red-400 */
+  color: #dc2626; /* red-600 */
+}
+
+.annotation-label-structural-date {
+  background-color: #cffafe; /* cyan-100 */
+  border: 1px solid #67e8f9; /* cyan-300 */
+  color: #0891b2; /* cyan-600 */
+}
+
+.annotation-label-structural-location {
+  background-color: #fed7aa; /* orange-100 */
+  border: 1px solid #fdba74; /* orange-300 */
+  color: #ea580c; /* orange-600 */
+}
+
+.annotation-label-structural-citation {
+  background-color: #fef3c7; /* amber-100 */
+  border: 1px solid #fcd34d; /* amber-300 */
+  color: #7c2d12; /* amber-800 */
+}
+
+.annotation-label-structural-term {
+  background-color: #fce7f3; /* pink-100 */
+  border: 1px solid #f9a8d4; /* pink-300 */
+  color: #be185d; /* pink-700 */
+}
+
+.annotation-label-structural-person {
+  background-color: #ccfbf1; /* teal-100 */
+  border: 1px solid #5eead4; /* teal-300 */
+  color: #0f766e; /* teal-700 */
 }
 
 /* Base annotation label styles */

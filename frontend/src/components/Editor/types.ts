@@ -62,6 +62,8 @@ export interface BubbleMenuProps {
   annotationLevel: string;
   annotations: Annotation[];
   isCreatingAnnotation: boolean;
+
+  contextAnnotation?: Annotation; // The annotation being edited (if any)
   onAddAnnotation: (type: string, name?: string, level?: string) => void;
   onCancel: () => void;
   onAnnotationTextChange: (text: string) => void;
