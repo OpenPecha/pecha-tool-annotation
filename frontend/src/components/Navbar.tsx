@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/auth/use-auth-hook";
-import DocIcon from "@/assets/doc_icon.png";
 import ProfileArea from "./ProfileArea";
 
 const Navbar = () => {
@@ -15,7 +14,7 @@ const Navbar = () => {
         >
           <img
             alt="icon"
-            src={DocIcon}
+            src={'/favicon-32x32.png'}
             width={40}
             className=" object-contain"
           />
