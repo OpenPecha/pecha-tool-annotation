@@ -441,7 +441,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
         )}
 
         {/* Items list */}
-        {!loading && !error && (
+        {!loading && !error && !selectedErrorCategory && (
           <div className="max-h-60 overflow-y-auto overflow-x-hidden">
             <div className="space-y-1">
               {filteredItems.slice(0, 20).map((item) => {
