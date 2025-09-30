@@ -18,6 +18,7 @@ const Navbar = () => {
             width={40}
             className=" object-contain"
           />
+          <span className="text-2xl font-bold">MQM Annotator</span>
         </Link>
       </div>
       <div className="flex items-center gap-4">

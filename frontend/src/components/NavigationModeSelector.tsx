@@ -101,7 +101,7 @@ export const NavigationModeSelector = ({
               </div>
 
               {/* Mode selector tabs */}
-              <div className="flex gap-1 p-2 bg-gray-50 rounded-lg mx-2">
+              {/* <div className="flex gap-1 p-2 bg-gray-50 rounded-lg mx-2">
                 <button
                   onClick={() => handleModeChange("error-list")}
                   className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -114,6 +114,7 @@ export const NavigationModeSelector = ({
                   Errors
                 </button>
                 <button
+                  disabled={true}
                   onClick={() => handleModeChange("table-of-contents")}
                   className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                     currentMode === "table-of-contents"
@@ -124,7 +125,7 @@ export const NavigationModeSelector = ({
                   <IoList className="h-4 w-4" />
                   TOC
                 </button>
-              </div>
+              </div> */}
             </div>
 
             <div className="pt-0 flex-1 flex flex-col min-h-0 p-4">
