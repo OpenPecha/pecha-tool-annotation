@@ -1085,7 +1085,7 @@ const Index = () => {
     <div className="h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
       <Navbar />
 
-      <div className="flex gap-6 flex-1 px-6 pt-16 mx-auto overflow-hidden">
+      <div className="flex w-full gap-6 flex-1 px-6 pt-16 mx-auto overflow-hidden">
         {/* Navigation Panel - Left Sidebar (Error List + Table of Contents) */}
         <NavigationModeSelector
           isOpen={navigationOpen}
@@ -1104,7 +1104,7 @@ const Index = () => {
 
         {/* Main Content Area */}
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out min-w-0 max-w-5xl mx-auto ${
+          className={`flex-1 transition-all duration-300 ease-in-out min-w-0 mx-auto ${
             navigationOpen && sidebarOpen
               ? "mx-6"
               : navigationOpen || sidebarOpen

@@ -1,12 +1,16 @@
 import { Button } from "@/components/ui/button";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   IoChevronDown,
   IoChevronForward,
   IoSearch,
   IoWarning,
 } from "react-icons/io5";
-import { useState, useEffect, useMemo, useRef } from "react";
-import { createPortal } from "react-dom";
+import { useState, useEffect, useMemo } from "react";
 
 // Type definitions for error typology
 interface ErrorCategory {
@@ -45,18 +49,6 @@ export const ErrorList = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tooltipData, setTooltipData] = useState<{
-    visible: boolean;
-    category: ErrorCategory | null;
-    position: { x: number; y: number };
-  }>({
-    visible: false,
-    category: null,
-    position: { x: 0, y: 0 },
-  });
-
-  // Ref to store the auto-hide timeout
-  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load error list data
   useEffect(() => {
@@ -81,14 +73,6 @@ export const ErrorList = ({
     loadErrorData();
   }, []);
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (tooltipTimeoutRef.current) {
-        clearTimeout(tooltipTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Flatten the hierarchical structure for easier searching
   const flattenCategories = (categories: ErrorCategory[]): ErrorCategory[] => {
@@ -174,26 +158,28 @@ export const ErrorList = ({
   // Auto-expand root level nodes and matching nodes when searching
   useEffect(() => {
     if (filteredCategories.length > 0) {
-      const newExpanded = new Set(expandedNodes);
+      setExpandedNodes((prevExpanded) => {
+        const newExpanded = new Set(prevExpanded);
 
-      if (searchQuery.trim()) {
-        // Expand all nodes when searching to show results
-        const expandAll = (categories: ErrorCategory[]) => {
-          categories.forEach((cat) => {
-            newExpanded.add(cat.id);
-            if (cat.subcategories) {
-              expandAll(cat.subcategories);
-            }
-          });
-        };
-        expandAll(filteredCategories);
-      } else {
-        // Only expand root level by default
-        const rootNodeIds = filteredCategories.map((cat) => cat.id);
-        rootNodeIds.forEach((id) => newExpanded.add(id));
-      }
+        if (searchQuery.trim()) {
+          // Expand all nodes when searching to show results
+          const expandAll = (categories: ErrorCategory[]) => {
+            categories.forEach((cat) => {
+              newExpanded.add(cat.id);
+              if (cat.subcategories) {
+                expandAll(cat.subcategories);
+              }
+            });
+          };
+          expandAll(filteredCategories);
+        } else {
+          // Only expand root level by default
+          const rootNodeIds = filteredCategories.map((cat) => cat.id);
+          rootNodeIds.forEach((id) => newExpanded.add(id));
+        }
 
-      setExpandedNodes(newExpanded);
+        return newExpanded;
+      });
     }
   }, [filteredCategories, searchQuery]);
 
@@ -210,67 +196,6 @@ export const ErrorList = ({
     });
   };
 
-  // Tooltip handlers
-  const showTooltip = (event: React.MouseEvent, category: ErrorCategory) => {
-    // Clear any existing timeout
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current);
-      tooltipTimeoutRef.current = null;
-    }
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const tooltipWidth = 320; // w-80 = 320px
-    const tooltipHeight = 200; // approximate height
-    const margin = 10;
-
-    // Simple fixed positioning - use viewport coordinates directly
-    let x = rect.right + margin;
-    let y = rect.top;
-
-    // Check if tooltip would go off-screen horizontally
-    if (x + tooltipWidth > window.innerWidth - margin) {
-      x = rect.left - tooltipWidth - margin; // Show on the left side
-    }
-
-    // Check if tooltip would go off-screen vertically
-    if (y + tooltipHeight > window.innerHeight - margin) {
-      y = rect.bottom - tooltipHeight;
-    }
-
-    // Ensure tooltip doesn't go above viewport
-    if (y < margin) {
-      y = margin;
-    }
-
-    // Ensure tooltip doesn't go too far left
-    if (x < margin) {
-      x = margin;
-    }
-
-    setTooltipData({
-      visible: true,
-      category,
-      position: { x, y },
-    });
-  };
-
-  const hideTooltip = () => {
-    // Clear any existing timeout
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current);
-      tooltipTimeoutRef.current = null;
-    }
-
-    // Set timeout to hide tooltip after 4 seconds
-    tooltipTimeoutRef.current = setTimeout(() => {
-      setTooltipData({
-        visible: false,
-        category: null,
-        position: { x: 0, y: 0 },
-      });
-      tooltipTimeoutRef.current = null;
-    }, 4000);
-  };
 
   // Component to render individual error category
   const ErrorCategoryComponent = ({
@@ -377,13 +302,63 @@ export const ErrorList = ({
 
                 {/* Exclamation mark with tooltip */}
                 <div className="flex-shrink-0">
-                  <div
-                    className="w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold cursor-help hover:bg-orange-600 transition-colors border-2 border-white shadow-sm"
-                    onMouseEnter={(e) => showTooltip(e, category)}
-                    onMouseLeave={hideTooltip}
-                  >
-                    !
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold cursor-pointer hover:bg-orange-600 transition-colors border-2 border-white shadow-sm">
+                        !
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="right" 
+                      className="w-80 p-4 bg-gray-900 text-white text-xs border-gray-700"
+                      sideOffset={8}
+                    >
+                      <div className="space-y-2">
+                        <div>
+                          <p className="font-semibold text-gray-200">
+                            {category.name}
+                          </p>
+                          <p className="text-gray-300 font-mono">
+                            {category.mnemonic} • {category.id}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-gray-100 leading-relaxed">
+                            {category.description}
+                          </p>
+                        </div>
+
+                        {category.examples && category.examples.length > 0 && (
+                          <div>
+                            <p className="font-medium text-gray-200 mb-1">Examples:</p>
+                            <ul className="text-gray-300 space-y-1">
+                              {category.examples
+                                .slice(0, 2)
+                                .map((example, idx) => (
+                                  <li key={idx} className="italic">
+                                    "{example}"
+                                  </li>
+                                ))}
+                              {category.examples.length > 2 && (
+                                <li className="text-gray-400">
+                                  +{category.examples.length - 2} more examples
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+
+                        {category.notes && (
+                          <div>
+                            <p className="text-blue-300 italic">
+                              {category.notes}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             </div>
@@ -480,78 +455,6 @@ export const ErrorList = ({
         )}
       </div>
 
-      {/* Portal-based tooltip */}
-      {tooltipData.visible &&
-        tooltipData.category &&
-        createPortal(
-          <div
-            className="fixed w-80 p-4 bg-gray-900 text-white text-xs rounded-lg shadow-2xl border border-gray-700 z-[9999]"
-            style={{
-              left: `${tooltipData.position.x}px`,
-              top: `${tooltipData.position.y}px`,
-              transform: "translateY(-10px)",
-            }}
-            onMouseEnter={() => {
-              // Clear timeout when hovering over tooltip
-              if (tooltipTimeoutRef.current) {
-                clearTimeout(tooltipTimeoutRef.current);
-                tooltipTimeoutRef.current = null;
-              }
-            }}
-            onMouseLeave={hideTooltip}
-          >
-            <div className="space-y-2">
-              <div>
-                <p className="font-semibold text-gray-200">
-                  {tooltipData.category.name}
-                </p>
-                <p className="text-gray-300 font-mono">
-                  {tooltipData.category.mnemonic} • {tooltipData.category.id}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-gray-100 leading-relaxed">
-                  {tooltipData.category.description}
-                </p>
-              </div>
-
-              {tooltipData.category.examples &&
-                tooltipData.category.examples.length > 0 && (
-                  <div>
-                    <p className="font-medium text-gray-200 mb-1">Examples:</p>
-                    <ul className="text-gray-300 space-y-1">
-                      {tooltipData.category.examples
-                        .slice(0, 2)
-                        .map((example, idx) => (
-                          <li key={idx} className="italic">
-                            "{example}"
-                          </li>
-                        ))}
-                      {tooltipData.category.examples.length > 2 && (
-                        <li className="text-gray-400">
-                          +{tooltipData.category.examples.length - 2} more
-                          examples
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                )}
-
-              {tooltipData.category.notes && (
-                <div>
-                  <p className="text-blue-300 italic">
-                    {tooltipData.category.notes}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Tooltip arrow */}
-            <div className="absolute top-6 left-0 transform -translate-x-1/2 rotate-45 w-2 h-2 bg-gray-900 border-l border-t border-gray-700"></div>
-          </div>,
-          document.body
-        )}
     </div>
   );
 };

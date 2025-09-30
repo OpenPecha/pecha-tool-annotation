@@ -898,10 +898,11 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     }, [annotations.length, editorReady]); // Only when annotation count changes
 
     return (
-      <div className="h-full min-h-[200px] overflow-y-scroll bg-white rounded-lg shadow-lg relative">
+      <div className="h-full min-h-[200px] flex-1 overflow-y-scroll bg-white rounded-lg shadow-lg relative">
         <CodeMirror
           ref={editorRef}
           value={textRef.current}
+          className="h-full"
           height="100%"
           extensions={extensions}
           readOnly={readOnly}
