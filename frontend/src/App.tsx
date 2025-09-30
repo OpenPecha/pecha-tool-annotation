@@ -12,6 +12,7 @@ import {
   preloadByCurrentRoute,
 } from "./utils/appPreloader";
 import { injectUmami } from "./analytics";
+import { UserbackProvider } from "./providers/UserbackProvider";
 // Lazy load page components
 const Task = lazy(() => import("./pages/Task"));
 const Review = lazy(() => import("./pages/Review"));
@@ -133,10 +134,13 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
+        <UserbackProvider>
         <BrowserRouter>
+
           <AppContent />
           <Toaster />
         </BrowserRouter>
+        </UserbackProvider>
       </QueryClientProvider>
     </AuthProvider>
   );
