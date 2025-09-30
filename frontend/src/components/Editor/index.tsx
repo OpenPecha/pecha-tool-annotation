@@ -508,7 +508,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     );
 
     const handleAddAnnotation = useCallback(
-      (type: string) => {
+      (type: string, name?: string, level?: string) => {
         if (!currentSelection) return;
 
         // Save scroll position before adding annotation
@@ -523,8 +523,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         } else {
           onAddAnnotation(
             type,
-            annotationText || undefined,
-            annotationLevel || undefined
+            name || annotationText || undefined,
+            level || annotationLevel || undefined
           );
         }
 

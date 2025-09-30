@@ -112,15 +112,25 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     loadErrorData();
   }, [effectiveMode]);
 
-  // Reset selected items when text selection or mode changes
+  // Reset selected items when mode or context changes, but preserve level selection
   useEffect(() => {
     setSelectedErrorCategory(null);
     setSelectedStructuralType(null);
     setSearchQuery("");
     setIsSearchFocused(false);
+    // Reset level when mode or context changes
     setSelectedLevel("");
     setShowDropdown(false);
-  }, [currentSelection, annotationMode, contextAnnotation]);
+  }, [annotationMode, contextAnnotation]);
+
+  // Reset selected items when text selection changes (but preserve level)
+  useEffect(() => {
+    setSelectedErrorCategory(null);
+    setSelectedStructuralType(null);
+    setSearchQuery("");
+    setIsSearchFocused(false);
+    setShowDropdown(false);
+  }, [currentSelection]);
 
   // Helper function to flatten error categories
   const flattenCategories = (
@@ -170,7 +180,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   };
 
   // Filter items based on mode
-  const filteredItems = useMemo(() => {
+  const filteredItems = useMemo((): (StructuralAnnotationType | CategoryWithBreadcrumb)[] => {
     if (effectiveMode === "table-of-contents") {
       // Filter structural annotation types
       if (!searchQuery.trim()) {
@@ -446,13 +456,16 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
             <div className="space-y-1">
               {filteredItems.slice(0, 20).map((item) => {
                 const isStructural = annotationMode === "table-of-contents";
+                
+                // Type-safe access to item properties
+                const itemId = 'id' in item ? item.id : '';
                 const isSelected = isStructural
-                  ? selectedStructuralType?.id === item.id
-                  : selectedErrorCategory?.id === item.id;
+                  ? selectedStructuralType?.id === itemId
+                  : selectedErrorCategory?.id === itemId;
 
                 return (
                   <Button
-                    key={item.id}
+                    key={itemId}
                     onClick={() => {
                       if (isStructural) {
                         setSelectedStructuralType(
@@ -606,7 +619,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
           <div className="space-y-1">
             {filteredItems.slice(0, 20).map((item) => (
               <Button
-                key={item.id}
+                key={(item as CategoryWithBreadcrumb).id}
                 onClick={() =>
                   handleErrorSelection(item as CategoryWithBreadcrumb)
                 }
