@@ -1,3 +1,5 @@
+import { annotationListApi } from "@/api/annotation_list";
+
 export interface AnnotationOption {
   id: string;
   label: string;
@@ -19,13 +21,13 @@ export interface AnnotationConfig {
 
 // Interface for error category structure from error_list.json
 interface ErrorCategory {
-  id: string;
+  id?: string;
   name: string;
-  mnemonic: string;
-  description: string;
+  mnemonic?: string;
+  description?: string;
   examples?: string[];
   notes?: string;
-  level: number;
+  level?: number;
   parent?: string;
   subcategories?: ErrorCategory[];
 }
@@ -40,21 +42,24 @@ const extractLeafNodes = (
   for (const category of categories) {
     if (!category.subcategories || category.subcategories.length === 0) {
       // This is a leaf node - no subcategories
-      leafNodes.push({
-        id: category.id,
-        label: category.name,
-        mnemonic: category.mnemonic,
-        description: category.description,
-        examples: category.examples,
-        notes: category.notes,
-        level: category.level,
-        parent: category.parent,
-        // Color scheme based on error severity - using orange theme for errors
-        color: "#ffffff",
-        backgroundColor: "rgba(249, 115, 22, 0.2)",
-        borderColor: "#f97316",
-        icon: "⚠️",
-      });
+      // Only add if category has an id
+      if (category.id) {
+        leafNodes.push({
+          id: category.id,
+          label: category.name,
+          mnemonic: category.mnemonic || '',
+          description: category.description || '',
+          examples: category.examples,
+          notes: category.notes,
+          level: category.level,
+          parent: category.parent,
+          // Color scheme based on error severity - using orange theme for errors
+          color: "#ffffff",
+          backgroundColor: "rgba(249, 115, 22, 0.2)",
+          borderColor: "#f97316",
+          icon: "⚠️",
+        });
+      }
     } else {
       // Recursively process subcategories
       leafNodes.push(...extractLeafNodes(category.subcategories, level + 1));
@@ -65,16 +70,18 @@ const extractLeafNodes = (
 };
 
 // Function to load annotation configuration from error list
-export const loadAnnotationConfig = async (): Promise<AnnotationConfig> => {
+export const loadAnnotationConfig = async (type?: string): Promise<AnnotationConfig> => {
   try {
-    // Load error list from the public directory
-    const response = await fetch("/error_list.json");
-    if (!response.ok) {
-      throw new Error(`Failed to load error list: ${response.statusText}`);
+    const annotationListType = type || "";
+    
+    // Load error list from the server
+    const response = await annotationListApi.getByTypeHierarchical(annotationListType);
+    if (!response) {
+      throw new Error(`Failed to load error list for type: ${annotationListType}`);
     }
 
-    const errorData = await response.json();
-    const categories = errorData.error_typology?.categories || [];
+    const errorData = response;
+    const categories = errorData.categories || [];
 
     // Extract only leaf nodes (innermost categories) for annotation options
     const leafNodes = extractLeafNodes(categories);

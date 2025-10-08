@@ -33,10 +33,15 @@ const AdminExportSection = React.lazy(() =>
     default: module.AdminExportSection,
   }))
 );
+const AdminAnnotationListSection = React.lazy(() =>
+  import("./AdminAnnotationListSection").then((module) => ({
+    default: module.AdminAnnotationListSection,
+  }))
+);
 
 export const AdminDashboard: React.FC = () => {
   const [activeAdminTab, setActiveAdminTab] = useState<
-    "statistics" | "users" | "work" | "bulk-upload" | "tasks" | "export"
+    "statistics" | "users" | "work" | "bulk-upload" | "tasks" | "export" | "annotation-lists"
   >("work");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -49,6 +54,7 @@ export const AdminDashboard: React.FC = () => {
       import("./AdminUsersSection");
       import("./AdminBulkUploadSection");
       import("./AdminExportSection");
+      import("./AdminAnnotationListSection");
     }, 100);
 
     return () => clearTimeout(timeoutId);
@@ -71,6 +77,8 @@ export const AdminDashboard: React.FC = () => {
               return <AdminBulkUploadSection />;
             case "export":
               return <AdminExportSection />;
+            case "annotation-lists":
+              return <AdminAnnotationListSection />;
             default:
               return <AdminWorkSection />;
           }

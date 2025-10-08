@@ -8,6 +8,7 @@ import {
   IoCloudUpload,
   IoList,
   IoDownload,
+  IoFolderOpen,
 } from "react-icons/io5";
 
 interface AdminSidebarProps {
@@ -19,9 +20,10 @@ interface AdminSidebarProps {
     | "work"
     | "bulk-upload"
     | "tasks"
-    | "export";
+    | "export"
+    | "annotation-lists";
   setActiveAdminTab: (
-    tab: "statistics" | "users" | "work" | "bulk-upload" | "tasks" | "export"
+    tab: "statistics" | "users" | "work" | "bulk-upload" | "tasks" | "export" | "annotation-lists"
   ) => void;
 }
 
@@ -127,6 +129,18 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           >
             <IoDownload className="w-5 h-5" />
             {sidebarOpen && <span>Export Data</span>}
+          </button>
+
+          <button
+            onClick={() => setActiveAdminTab("annotation-lists")}
+            className={`w-full flex items-center gap-3 px-1  rounded-lg text-left transition-colors ${
+              activeAdminTab === "annotation-lists"
+                ? "bg-rose-100 text-rose-700 border-2 border-rose-200"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <IoFolderOpen className="w-5 h-5" />
+            {sidebarOpen && <span>Annotation Lists</span>}
           </button>
         </nav>
       </div>

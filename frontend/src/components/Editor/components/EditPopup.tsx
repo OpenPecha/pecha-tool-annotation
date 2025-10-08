@@ -17,6 +17,7 @@ import type { Annotation } from "@/pages/Task";
 import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 import { useAuth } from "@/auth/use-auth-hook";
 import { truncateText } from "@/lib/utils";
+import { useAnnotationStore } from "@/store/annotation";
 
 interface EditPopupProps {
   visible: boolean;
@@ -49,19 +50,20 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const { currentUser } = useAuth();
   const { trackButtonClicked } = useUmamiTracking();
+  const { selectedAnnotationListType } = useAnnotationStore();
 
-  // Load annotation configuration
+  // Load annotation configuration based on selected type
   useEffect(() => {
     const loadConfig = async () => {
       try {
-        const config = await loadAnnotationConfig();
+        const config = await loadAnnotationConfig(selectedAnnotationListType);
         setAnnotationConfig(config);
       } catch (error) {
         console.error("Failed to load annotation configuration:", error);
       }
     };
     loadConfig();
-  }, []);
+  }, [selectedAnnotationListType]); // Reload when type changes
 
   // Initialize form values when annotation changes
   useEffect(() => {

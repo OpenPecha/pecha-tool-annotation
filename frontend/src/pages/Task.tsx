@@ -55,6 +55,7 @@ const Index = () => {
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
   const { trackPageVisit } = useUmamiTracking();
+  const { selectedAnnotationListType } = useAnnotationStore();
 
   // React Query to fetch text data
   const {
@@ -509,7 +510,7 @@ const Index = () => {
         ) || type === "header";
     } else {
       // For error-list mode, check against error list configuration
-      const config = await loadAnnotationConfig();
+      const config = await loadAnnotationConfig(selectedAnnotationListType);
       isValidType = isValidAnnotationType(config, type) || type === "header";
     }
 

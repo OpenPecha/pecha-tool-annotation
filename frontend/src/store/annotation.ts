@@ -8,11 +8,15 @@ interface AnnotationState {
   navigationOpen: boolean;
   sidebarOpen: boolean;
   currentNavigationMode: NavigationMode;
+  
+  // Annotation list type selection
+  selectedAnnotationListType: string;
 
   // Actions to update state
   setNavigationOpen: (open: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
   setCurrentNavigationMode: (mode: NavigationMode) => void;
+  setSelectedAnnotationListType: (type: string) => void;
   toggleNavigation: () => void;
   toggleSidebar: () => void;
 }
@@ -24,12 +28,15 @@ export const useAnnotationStore = create<AnnotationState>()(
       navigationOpen: false,
       sidebarOpen: true,
       currentNavigationMode: "error-list",
+      selectedAnnotationListType: "",
 
       // Actions
       setNavigationOpen: (open: boolean) => set({ navigationOpen: open }),
       setSidebarOpen: (open: boolean) => set({ sidebarOpen: open }),
       setCurrentNavigationMode: (mode: NavigationMode) =>
         set({ currentNavigationMode: mode }),
+      setSelectedAnnotationListType: (type: string) =>
+        set({ selectedAnnotationListType: type }),
 
       toggleNavigation: () =>
         set((state) => ({ navigationOpen: !state.navigationOpen })),
@@ -44,6 +51,7 @@ export const useAnnotationStore = create<AnnotationState>()(
         navigationOpen: state.navigationOpen,
         sidebarOpen: state.sidebarOpen,
         currentNavigationMode: state.currentNavigationMode,
+        selectedAnnotationListType: state.selectedAnnotationListType,
       }),
     }
   )
