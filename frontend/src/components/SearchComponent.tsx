@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { IoSearch, IoChevronUp, IoChevronDown } from "react-icons/io5";
-import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 import { useAuth } from "@/auth/use-auth-hook";
 
 interface SearchResult {
@@ -32,8 +31,6 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
   const [wholeWord, setWholeWord] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { currentUser } = useAuth();
-  const { trackSearchPerformed, trackSearchResultSelected } =
-    useUmamiTracking();
 
   // Focus search input when component becomes visible
   useEffect(() => {
@@ -114,30 +111,9 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
 
     setSearchResults(results);
     setCurrentResultIndex(0);
-
-    // Track search performed
-    if (results.length > 0) {
-      trackSearchPerformed(term, results.length, "text", {
-        ...getUserContext(currentUser),
-        text_id: window.location.pathname.split("/").pop() || "unknown",
-        metadata: {
-          case_sensitive: caseSensitive,
-          whole_word: wholeWord,
-        },
-      });
-    }
   };
 
   const handleResultClick = (result: SearchResult) => {
-    // Track search result selection
-    trackSearchResultSelected(result.index, searchTerm, {
-      ...getUserContext(currentUser),
-      text_id: window.location.pathname.split("/").pop() || "unknown",
-      metadata: {
-        line_number: result.line,
-      },
-    });
-
     onResultSelect(result.start, result.end);
     setCurrentResultIndex(result.index);
   };

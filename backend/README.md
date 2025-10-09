@@ -590,13 +590,11 @@ pytest --cov=.
 }
 ```
 
-### Annotation List JSON Format
+### Minimal Annotation List JSON Format
 
 ```json
 {
   "title": "Accuracy Annotations",
-  "version": "1.0",
-  "copyright": "Organization Name",
   "description": "Accuracy-related annotation categories",
   "categories": [
     {

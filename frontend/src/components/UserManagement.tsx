@@ -21,7 +21,6 @@ import {
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { usersApi } from "@/api/users";
 import type { UserRole } from "@/api/types";
-import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 import { useAuth } from "@/auth/use-auth-hook";
 
 interface UserManagementProps {
@@ -36,12 +35,6 @@ export function UserManagement({ className }: UserManagementProps) {
   >("all");
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
-  const {
-    trackUserRoleChanged,
-    trackUserStatusChanged,
-    trackUserDeleted,
-    trackSearchPerformed,
-  } = useUmamiTracking();
 
   // Fetch users
   const {
@@ -143,30 +136,10 @@ export function UserManagement({ className }: UserManagementProps) {
     newRole: UserRole,
     oldRole: UserRole
   ) => {
-    // Track user role change
-    trackUserRoleChanged(userId.toString(), oldRole, newRole, {
-      ...getUserContext(currentUser),
-      metadata: {
-        target_user_id: userId.toString(),
-      },
-    });
-
     updateUserMutation.mutate({ userId, role: newRole });
   };
 
   const handleStatusToggle = (userId: number, currentStatus: boolean) => {
-    // Track user status change
-    trackUserStatusChanged(
-      userId.toString(),
-      currentStatus ? "active" : "inactive",
-      currentStatus ? "inactive" : "active",
-      {
-        ...getUserContext(currentUser),
-        metadata: {
-          target_user_id: userId.toString(),
-        },
-      }
-    );
 
     toggleUserStatusMutation.mutate({ userId, isActive: !currentStatus });
   };
@@ -177,33 +150,12 @@ export function UserManagement({ className }: UserManagementProps) {
         "Are you sure you want to delete this user? This action cannot be undone."
       )
     ) {
-      // Track user deletion
-      trackUserDeleted(userId.toString(), {
-        ...getUserContext(currentUser),
-        metadata: {
-          target_user_id: userId.toString(),
-        },
-      });
-
       deleteUserMutation.mutate(userId);
     }
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (query.trim()) {
-      trackSearchPerformed(
-        query,
-        0, // We don't have results count yet
-        "users",
-        {
-          ...getUserContext(currentUser),
-          metadata: {
-            search_type: "user_search",
-          },
-        }
-      );
-    }
   };
 
   const getRoleIcon = (role: UserRole) => {

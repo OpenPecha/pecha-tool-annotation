@@ -146,7 +146,7 @@ class AnnotationListCRUD:
                 meta_fields.update(root_metadata)
             
             # Create the record
-            record_id = str(uuid.uuid4())
+            record_id = category.id or str(uuid.uuid4())
             db_obj = AnnotationList(
                 id=record_id,
                 type=root_type,
@@ -227,8 +227,9 @@ class AnnotationListCRUD:
                 subcategories = [build_category(child) for child in children]
             
             # Build category output
+            id = meta.get('original_id') or item.id
             category_data = {
-                'id': meta.get('original_id'),
+                'id': id,
                 'name': item.title,
                 'description': item.description,
                 'level': int(item.level) if item.level and item.level.isdigit() else None,

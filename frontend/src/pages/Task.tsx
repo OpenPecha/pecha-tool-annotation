@@ -26,7 +26,6 @@ import {
 import { SkipConfirmationDialog } from "@/components/SkipConfirmationDialog";
 import { AnnotationColorSettings } from "@/components/AnnotationColorSettings";
 import { useAuth } from "@/auth/use-auth-hook";
-import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 
 export type Annotation = {
   id: string;
@@ -54,7 +53,7 @@ const Index = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
-  const { trackPageVisit } = useUmamiTracking();
+
   const { selectedAnnotationListType, selectedAnnotationTypes, setSelectedAnnotationTypes } = useAnnotationStore();
 
   // React Query to fetch text data
@@ -250,23 +249,6 @@ const Index = () => {
       }
     }
   }, [targetAnnotationId, annotations, hasScrolledToTarget, toast]);
-
-  // Track page visit when component mounts
-  useEffect(() => {
-    if (textId) {
-      trackPageVisit(
-        `/task/${textId}`,
-        document.referrer ? new URL(document.referrer).pathname : undefined,
-        {
-          ...getUserContext(currentUser),
-          text_id: textId,
-          metadata: {
-            annotations_count: annotations.length,
-          },
-        }
-      );
-    }
-  }, [textId, trackPageVisit, currentUser, annotations.length]);
   // Mutation for creating annotations
   const createAnnotationMutation = useMutation({
     mutationFn: async (annotationData: AnnotationCreate) => {
@@ -897,7 +879,7 @@ const Index = () => {
       onSuccess: () => {
         // Invalidate annotations query to update the filter
         queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
-        
+
       },
       onError: (error) => {
         // Restore the annotation on error

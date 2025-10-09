@@ -11,7 +11,6 @@ import {
   preloadByAuthState,
   preloadByCurrentRoute,
 } from "./utils/appPreloader";
-import { injectUmami } from "./analytics";
 import { UserbackProvider } from "./providers/UserbackProvider";
 // Lazy load page components
 const Task = lazy(() => import("./pages/Task"));
@@ -21,10 +20,6 @@ const Login = lazy(() => import("./pages/Login"));
 const Callback = lazy(() => import("./pages/Callback"));
 
 const queryClient = new QueryClient();
-
-if (import.meta.env.VITE_ENVIRONMENT === "production") {
-  injectUmami();
-}
 
 function Layout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, login, isLoading, getToken } = useAuth();

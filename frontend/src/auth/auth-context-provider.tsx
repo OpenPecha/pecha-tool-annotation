@@ -9,7 +9,6 @@ import type { ReactNode } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import type { AuthContextType } from "./types";
 import { usersApi } from "../api/users";
-import { clearUmamiUser, setUmamiUser } from "@/analytics";
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -128,22 +127,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       : null);
   // Track silent auth attempts to prevent infinite loops
   const [silentAuthAttempted, setSilentAuthAttempted] = useState(false);
-
- useEffect(() => {
-    if (isAuthenticated && user) {
-      // Set user for Umami identification
-      setUmamiUser({
-        email: user.email,
-        id: user.id,
-        name: user.name,
-        // Add additional properties if available
-        sub: user?.sub,
-      });
-    } else if (!isAuthenticated) {
-      // Clear user identification when logged out
-      clearUmamiUser();
-    }
-  }, [isAuthenticated,  user]);
 
 
   const login = useCallback(

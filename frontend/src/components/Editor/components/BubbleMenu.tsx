@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { IoClose, IoSearch } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import type { BubbleMenuProps } from "../types";
-import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 import { useAuth } from "@/auth/use-auth-hook";
 import {
   STRUCTURAL_ANNOTATION_TYPES,
@@ -52,7 +51,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [showDropdown, setShowDropdown] = useState(false);
   const { currentUser } = useAuth();
-  const { trackAnnotationCreated } = useUmamiTracking();
 
   // Get annotation mode from Zustand store
   const { currentNavigationMode: annotationMode, selectedAnnotationListType } = useAnnotationStore();
@@ -207,16 +205,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     console.log("add annotation")
     if (currentSelection) {
       if (effectiveMode === "table-of-contents" && selectedStructuralType) {
-        // Track structural annotation creation
-        trackAnnotationCreated(
-          selectedStructuralType.id,
-          window.location.pathname.split("/").pop() || "unknown",
-          currentSelection.text.length,
-          {
-            ...getUserContext(currentUser),
-            annotation_id: `temp-${Date.now()}`,
-          }
-        );
 
         onAddAnnotation(
           selectedStructuralType.id,
@@ -224,17 +212,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
           annotationLevel || undefined
         );
       } else if (selectedErrorCategory) {
-        // Track error annotation creation
-        trackAnnotationCreated(
-          selectedErrorCategory.id || "unknown",
-          window.location.pathname.split("/").pop() || "unknown",
-          currentSelection.text.length,
-          {
-            ...getUserContext(currentUser),
-            annotation_id: `temp-${Date.now()}`,
-          }
-        );
-
         onAddAnnotation(
           selectedErrorCategory.name,
           undefined,

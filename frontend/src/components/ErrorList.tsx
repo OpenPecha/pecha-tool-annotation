@@ -329,9 +329,6 @@ export const ErrorList = ({
                   <h4 className="text-sm font-semibold text-gray-900 leading-tight truncate">
                     {highlightText(category.name, searchQuery)}
                   </h4>
-                  <p className="text-xs text-gray-600 font-mono">
-                    {category.mnemonic || 'N/A'} • {category.id || 'N/A'}
-                  </p>
                 </div>
 
                 {/* Exclamation mark with tooltip */}
