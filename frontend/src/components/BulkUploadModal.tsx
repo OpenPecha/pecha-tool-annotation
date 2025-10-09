@@ -13,7 +13,6 @@ import {
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { toast } from "sonner";
 import { bulkUploadApi } from "@/api/bulk-upload";
-import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 import { useAuth } from "@/auth/use-auth-hook";
 
 interface FileValidationResult {
@@ -75,21 +74,6 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
   >("select");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { currentUser } = useAuth();
-  const {
-    trackBulkUploadStarted,
-    trackBulkUploadCompleted,
-    trackModalOpened,
-    trackModalClosed,
-  } = useUmamiTracking();
-
-  // Track modal open/close
-  React.useEffect(() => {
-    if (isOpen) {
-      trackModalOpened("bulk-upload", {
-        ...getUserContext(currentUser),
-      });
-    }
-  }, [isOpen, trackModalOpened, currentUser]);
 
   // Validation mutation
   const validateMutation = useMutation({
@@ -118,19 +102,7 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
     },
     onSuccess: (data) => {
       // Track bulk upload completion
-      trackBulkUploadCompleted(
-        data.total_files,
-        data.successful_files,
-        data.failed_files,
-        data.summary.total_annotations_created,
-        {
-          ...getUserContext(currentUser),
-          metadata: {
-            success_rate: data.summary.success_rate,
-            texts_created: data.summary.total_texts_created,
-          },
-        }
-      );
+
 
       setUploadResults(data);
       setCurrentStep("results");
@@ -210,15 +182,6 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
   const handleUpload = () => {
     if (selectedFiles.length === 0) return;
 
-    // Track bulk upload start
-    trackBulkUploadStarted(selectedFiles.length, {
-      ...getUserContext(currentUser),
-      metadata: {
-        file_types: selectedFiles.map((f) => f.type).join(", "),
-        total_size: selectedFiles.reduce((sum, f) => sum + f.size, 0),
-      },
-    });
-
     setCurrentStep("upload");
     uploadMutation.mutate(selectedFiles);
   };
@@ -234,16 +197,6 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
   };
 
   const handleClose = () => {
-    // Track modal close
-    trackModalClosed("bulk-upload", {
-      ...getUserContext(currentUser),
-      metadata: {
-        step: currentStep,
-        files_selected: selectedFiles.length,
-        completed: currentStep === "results",
-      },
-    });
-
     handleReset();
     onClose();
   };

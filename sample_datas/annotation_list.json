@@ -1,0 +1,1439 @@
+{
+      "version": "2024-03-07",
+      "title": "MQM-Core Error Typology",
+      "description": "Multidimensional Quality Metrics (MQM) Core Error Typology for translation quality assessment",
+      "copyright": "© 2024 MQM, content created by The MQM Council. Openly licensed via CC",
+      "categories": [
+        {
+          "id": "MQMC_000000",
+          "name": "Terminology",
+          "mnemonic": "terminology",
+          "description": "Errors arising when a term does not conform to normative subject field or organizational terminology standards or when a term in the target content is not the correct, normative equivalent of the corresponding term in the source content.",
+          "level": 0,
+          "subcategories": [
+            {
+              "id": "MQMC_001000",
+              "name": "Inconsistent with terminology resource",
+              "mnemonic": "termbase",
+              "description": "Use of a term that differs from term usage required by a specified termbase or other resource.",
+              "examples": [
+                "A termbase specifies that the term 'USB memory stick' should be used, but the text uses 'USB flash drive'.",
+                "A French text translates English 'e-mail' as 'e-mail' but terminology guidelines mandated that 'courriel' be used.",
+                "The English musicological term 'dog' is translated (literally) into German as 'Hund' instead of as 'Schnarre', as specified in a termbase."
+              ],
+              "notes": "Discussion–In some languages and for some text types and subject fields, terminological variety is acceptable and even desirable, but this must be clarified in job specifications.",
+              "level": 1,
+              "parent": "terminology",
+              "subcategories": [
+                {
+                  "id": "MQMN_001010",
+                  "name": "Organization terminology",
+                  "mnemonic": "terminology-company",
+                  "description": "Error that violates company/organization-specific terminology guidelines as specified in a terminology resource.",
+                  "examples": [
+                    "Company-specific terminology guidelines specify that a product be called the \"Acme Turbo2000™\", but the text calls it the \"Acme Turbo\" or the \"Turbo200\"."
+                  ],
+                  "level": 2,
+                  "parent": "termbase"
+                },
+                {
+                  "id": "MQMN_001020",
+                  "name": "Third-party terminology",
+                  "mnemonic": "terminology-third-party",
+                  "description": "Error that violates terminology guidelines as specified in a terminology resource from a third-party.",
+                  "examples": [
+                    "Specifications for translation of a software application specify that UI terms be translated according to the public glossaries provided by the developers of the platforms upon which it will be deployed, but certain terms are not translated consistently with these specifications."
+                  ],
+                  "notes": "Discussion–Typical third-party resources might include glossaries published by professional organizations or by major companies in a field.",
+                  "level": 2,
+                  "parent": "termbase"
+                }
+              ]
+            },
+            {
+              "id": "MQMC_002000",
+              "name": "Inconsistent use of terminology",
+              "mnemonic": "term-inconsistency",
+              "description": "Use of multiple terms for the same concept in cases where consistency is desirable.",
+              "examples": [
+                "The text refers to a component as the 'brake release lever', 'brake disengagement lever', 'manual brake release', and 'manual disengagement release'."
+              ],
+              "notes": "Discussion–Assuming that consistency is the default, specifications and language pair conventions for a given use case should clearly indicate whether synonym usage is allowable or even desirable. For instance, in Spanish social-science documents, authors often favor a high level of terminological variation, whereas English plain language requirements generally specify consistent usage throughout. Some fields, such as legal documents, require very consistent usage, regardless of language pair.",
+              "level": 1,
+              "parent": "terminology",
+              "subcategories": [
+                {
+                  "id": "MQMN_002010",
+                  "name": "Multiple terms in source (deprecated to root cause)",
+                  "mnemonic": "multiple-terms-for-concept",
+                  "description": "Error where the translator fails to spot incorrect term usage in source content.",
+                  "examples": [
+                    "A source text inconsistently uses \"dog\", \"buzzing bridge\", and \"buzzer\" for a component of a musical instrument.",
+                    "A source text inconsistently uses \"hot dog\", \"weiner\", and \"frank\" for a long, thin sausage served in a split roll."
+                  ],
+                  "notes": "Discussion–If variation in usage is desirable for stylistic reasons, the relationship between potential near synonyms should be very clear from the context of translation output.",
+                  "level": 2,
+                  "parent": "term-inconsistency"
+                },
+                {
+                  "id": "MQMN_002020",
+                  "name": "Multiple terms in translation (deprecated to root cause)",
+                  "mnemonic": "multiple-translations-of-term",
+                  "description": "Error where source content terminology is correct, but target content terms are not used consistently.",
+                  "examples": [
+                    "German source content uses one term for a component of a vehicle, but the target content uses \"brake release lever\", \"brake disengagement lever\", \"manual brake release\", and \"manual disengagement release\" for this term in English."
+                  ],
+                  "notes": "Discussion–Specifications for a given use case should stipulate if variation is desirable.",
+                  "level": 2,
+                  "parent": "term-inconsistency"
+                },
+                {
+                  "id": "MQMN_002030",
+                  "name": "Multiple abbreviations for term in translation",
+                  "mnemonic": "inconsistent-abbreviations",
+                  "description": "Abbreviation form inconsistent in text.",
+                  "examples": [
+                    "A text uses both \"app.\" and \"approx.\" for approximately."
+                  ],
+                  "notes": "Discussion–Variation in abbreviated form is never desirable.",
+                  "level": 2,
+                  "parent": "term-inconsistency"
+                }
+              ]
+            },
+            {
+              "id": "MQMC_003000",
+              "name": "Wrong term",
+              "mnemonic": "wrong-term",
+              "description": "Use of term that it is not the term a domain expert would use or because it gives rise to a conceptual mismatch.",
+              "examples": [
+                "The word 'river' in an English source text is translated into French as 'rivière'. But the river in question flows into the sea, not into a lake or another river, so the correct French translation should have been 'fleuve'."
+              ],
+              "level": 1,
+              "parent": "terminology",
+              "subcategories": [
+                {
+                  "id": "MQMN_003010",
+                  "name": "Terminological collocation",
+                  "mnemonic": "term-collocation",
+                  "description": "Habitual juxtaposition of a particular term with another term or words with a co-occurrence frequency greater than chance.",
+                  "examples": [
+                    "submit an application (not give it or do it)",
+                    "commit a crime (not do a crime)",
+                    "sue for damages (not request damages)"
+                  ],
+                  "notes": "Discussion 1–Typical collocations involve the combination of a verb with a preposition, where the verb component of the collocation is a content word and the preposition component acts as a function word. Collocations are often subject to dialectal variation: in the street vs on the street; stand on line vs. stand in line. Discussion 2–In terminology management, collocations and co-occurrences are treated as terminological phrases. Discussion 3–Collocation errors in special languages are terminology errors. In general language, they can be viewed as fluency errors.",
+                  "level": 2,
+                  "parent": "wrong-term"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "MQMC_100000",
+          "name": "Accuracy",
+          "mnemonic": "accuracy",
+          "description": "Errors occurring when the target content does not accurately correspond to the propositional content of the source text because of distortion, omission, or addition to the message.",
+          "level": 0,
+          "subcategories": [
+            {
+              "id": "MQMC_101000",
+              "name": "Mistranslation",
+              "mnemonic": "mistranslation",
+              "description": "Error occurring when the target content that does not accurately represent the source content.",
+              "examples": [
+                "A source text states that a medicine should not be administered in doses greater than 200 mg, but the translation states that it should be administered in doses greater than 200 mg (i.e., negation has been omitted)."
+              ],
+              "level": 1,
+              "parent": "accuracy",
+              "subcategories": [
+                {
+                  "id": "MQMN_101010",
+                  "name": "Mistranslation of technical relationship",
+                  "mnemonic": "technical-relationship",
+                  "description": "Target content inaccurate with respect to technical knowledge (even if the translation otherwise appears plausible).",
+                  "examples": [
+                    "The translation of a physics text describing the interaction of subatomic particles in a medical scanning device seems plausible, but incorrectly conveys the relationship of two particles and is therefore incorrect.",
+                    "A source text describes how a piano action (the mechanism connecting a piano key to the hammer that strikes a string) is translated in a way that incorrectly conveys the relationship between two components."
+                  ],
+                  "level": 2,
+                  "parent": "mistranslation"
+                },
+                {
+                  "id": "MQMN_101020",
+                  "name": "Ambiguous target content",
+                  "mnemonic": "ambiguous-target",
+                  "description": "Target content that introduces an ambiguity that is not present in the source content.",
+                  "examples": [
+                    "A text that means that someone is highly recommended is translated as \"I cannot recommend him too highly.\" (The meaning can be either that the speaker cannot make a good recommendation or that he is highly recommended.)"
+                  ],
+                  "level": 2,
+                  "parent": "mistranslation"
+                },
+                {
+                  "id": "MQMN_101030",
+                  "name": "Ambiguous source content",
+                  "mnemonic": "ambiguous-source",
+                  "description": "Ambiguous source content that is rendered in the target content inappropriately with respect to specifications.",
+                  "examples": [
+                    "Unintentional ambiguity that poses potential for serious misunderstanding: retention of ambiguity in the target content is an error, but it may be considered a root cause and not the fault of the translator.",
+                    "Unintentional ambiguity, but the specifications indicate that the target content shall reflect all aspects of the original (highly source-oriented translation, so-called verbatim translation), in which case disambiguating the ambiguity would be an error.",
+                    "Intentional ambiguity, in which case the specifications should indicate that ambiguities in the source content shall be retained in the target content."
+                  ],
+                  "notes": "Discussion–Specifications should clarify approaches involving the treatment of ambiguities in source text content.",
+                  "level": 2,
+                  "parent": "mistranslation"
+                },
+                {
+                  "id": "MQMN_101040",
+                  "name": "False friend",
+                  "mnemonic": "false-friend",
+                  "description": "Incorrect use in target content of a word that is superficially similar to a source word.",
+                  "examples": [
+                    "The Italian word simpatico has been translated as sympathetic in English.",
+                    "The German word sogenannt is not equivalent to English so-called."
+                  ],
+                  "level": 2,
+                  "parent": "mistranslation"
+                },
+                {
+                  "id": "MQMN_101050",
+                  "name": "Unit conversion",
+                  "mnemonic": "unit-conversion",
+                  "description": "Incorrect conversion of numeric values as needed to adjust for different units (e.g., currencies, metric vs. U.S. measurement systems).",
+                  "examples": [
+                    "A source text specifies that an item is 25 centimeters (~10 inches) long, but the target text states that it is 25 inches (63.5 cm) long."
+                  ],
+                  "level": 2,
+                  "parent": "mistranslation"
+                },
+                {
+                  "id": "MQMN_101060",
+                  "name": "Number",
+                  "mnemonic": "number",
+                  "description": "Numbers inconsistent between source and target content.",
+                  "examples": [
+                    "The source text specifies that a part is 124 mm long but the target text specifies that it is 135 mm long."
+                  ],
+                  "level": 2,
+                  "parent": "mistranslation"
+                },
+                {
+                  "id": "MQMN_101070",
+                  "name": "Date/time",
+                  "mnemonic": "date-time",
+                  "description": "Inconsistent match in dates or times between source and target content.",
+                  "examples": [
+                    "German source content provides the date 09.02.09 (=February 9, 2009) but the English target renders it as September 2, 2009.",
+                    "English source content specifies a time of \"4:40 PM\" but this is rendered as 04:40 (=4:40 AM) in the German target content."
+                  ],
+                  "level": 2,
+                  "parent": "mistranslation"
+                },
+                {
+                  "id": "MQMN_101080",
+                  "name": "Entity",
+                  "mnemonic": "entity",
+                  "description": "Error where a name, place, or other named entity does not match the proper target language form.",
+                  "examples": [
+                    "The source content refers to Dublin, Ohio, but the target content incorrectly refers to Dublin, Ireland."
+                  ],
+                  "level": 2,
+                  "parent": "mistranslation"
+                },
+                {
+                  "id": "MQMN_101090",
+                  "name": "Overly literal",
+                  "mnemonic": "overly-literal",
+                  "description": "Word-for-word equivalent in target content instead of idiomatic translation.",
+                  "examples": [
+                    "A Hungarian text contains the phrase Tele van a hocipőd?, which has been translated as \"Are your snow boots full?\" rather than with the idiomatic meaning of \"Feeling overwhelmed?\""
+                  ],
+                  "level": 2,
+                  "parent": "mistranslation"
+                },
+                {
+                  "id": "MQMN_111100",
+                  "name": "MT hallucination",
+                  "mnemonic": "mt-hallucination",
+                  "description": "Machine translation that is completely decoupled from the sense of the input sentence.",
+                  "examples": [
+                    "Ides viajar num cacilheiro eléctrico? → Would you travel in an electric locksmith? (correct: Would you cross the river on an electric ferry?)"
+                  ],
+                  "notes": "Discussion–The hallucination can result from something in the source content that the MT model is not expecting, such as a mistake, a typo, or simply some unusual word or unusual capitalization in the input, but the cause is often unknown.",
+                  "level": 2,
+                  "parent": "mistranslation"
+                }
+              ]
+            },
+            {
+              "id": "MQMC_102000",
+              "name": "Overtranslation",
+              "mnemonic": "over-translation",
+              "description": "Error occurring in the target content that is inappropriately more specific than the source content.",
+              "examples": [
+                "The source text refers to a boy, but is translated with a word that applies only to young boys rather than the more general term."
+              ],
+              "notes": "Discussion–A distinction exists between the error subtype overtranslation and the translation strategy explicitation (expansion), where it may be appropriate to provide a bit of information known to the source language audience that must be made explicit for the target language audience.",
+              "level": 1,
+              "parent": "accuracy"
+            },
+            {
+              "id": "MQMC_103000",
+              "name": "Undertranslation",
+              "mnemonic": "under-translation",
+              "description": "Error occurring in the target content that is inappropriately less specific than the source content.",
+              "examples": [
+                "The source content uses words that refer to a specific type of military officer, but the target content refers to military officers in general."
+              ],
+              "notes": "Discussion– A distinction exists between the error subtype undertranslation and the translation strategy implicitation, where it may be appropriate to omit a bit of information known to the target language audience that must be made explicit for the source language audience.",
+              "level": 1,
+              "parent": "accuracy"
+            },
+            {
+              "id": "MQMC_104000",
+              "name": "Addition",
+              "mnemonic": "addition",
+              "description": "Error occurring in the target content that includes content not present in the source.",
+              "examples": [
+                "A translation includes portions of another translation that were inadvertently pasted into the document."
+              ],
+              "level": 1,
+              "parent": "accuracy"
+            },
+            {
+              "id": "MQMC_105000",
+              "name": "Omission",
+              "mnemonic": "omission",
+              "description": "Error where content present in the source is missing in the target.",
+              "examples": [
+                "A paragraph present in the source is missing in the translation."
+              ],
+              "level": 1,
+              "parent": "accuracy",
+              "subcategories": [
+                {
+                  "id": "MQMN_105010",
+                  "name": "Omitted variable",
+                  "mnemonic": "omitted-variable",
+                  "description": "Variable placeholder omitted from a translated text.",
+                  "examples": [
+                    "A translated text should read \"Number of lives remaining: $lifeNumber\" but is rendered as \"Number of lives remaining:\", with the variable $lifeNumber omitted."
+                  ],
+                  "level": 2,
+                  "parent": "omission"
+                }
+              ]
+            },
+            {
+              "id": "MQMN_106000",
+              "name": "Unjustified euphemism",
+              "mnemonic": "euphemism",
+              "description": "Target content that is potentially offensive in some way in the source language, but that has been inappropriately \"watered down\" in the translation.",
+              "examples": [
+                "Unplanned rapid disassembly, describing the explosion of a space rocket",
+                "A racial slur in a legal transcript submitted as evidence is watered down."
+              ],
+              "notes": "Discussion–Decision to introduce euphemism can in some cases reflect intentional adherence to translation specifications, or it can reflect a serious loss in meaning.",
+              "level": 1,
+              "parent": "accuracy"
+            },
+            {
+              "id": "MQMC_107000",
+              "name": "Do not translate",
+              "mnemonic": "no-translate",
+              "description": "Error occurring when a text segment marked \"Do not translate!\" is translated in the target text or a text feature specified to be kept in the source language is translated in the target text.",
+              "examples": [
+                "Meaningful brand names, which are intended to remain in the SL form.",
+                "A marketing slogan for worldwide use is intended to remain in English.",
+                "A Japanese translation refers to \"Apple Computers\" as アップルコンピュータ when the English expression should have been left untranslated."
+              ],
+              "level": 1,
+              "parent": "accuracy"
+            },
+            {
+              "id": "MQMC_108000",
+              "name": "Untranslated",
+              "mnemonic": "untranslated",
+              "description": "Error occurring when a text segment that was intended for translation is left untranslated in the target content.",
+              "examples": [
+                "A sentence in a Japanese document translated into English is left in Japanese."
+              ],
+              "level": 1,
+              "parent": "accuracy",
+              "subcategories": [
+                {
+                  "id": "MQMN_108010",
+                  "name": "Untranslated graphic",
+                  "mnemonic": "untranslated-graphic",
+                  "description": "Text in a graphic left untranslated.",
+                  "examples": [
+                    "Part labels in a graphic were left untranslated even though running text was translated."
+                  ],
+                  "level": 2,
+                  "parent": "untranslated"
+                }
+              ]
+            },
+            {
+              "id": "MQMN_109000",
+              "name": "Retained factual error",
+              "mnemonic": "retained-factual-error",
+              "description": "Untrue statement or an incorrect data value present in the source content and retained in the target content.",
+              "examples": [
+                "Instead of prescribing 2.5 cc of a particular drug under specified circumstances, dosing instructions indicate that 25 cc should be administered, which is a potentially life-threatening overdose.",
+                "A marketing brochure states that a particular feature of a software application was first supported in Release 4.0, when in fact it was introduced with Release 4.1."
+              ],
+              "notes": "Discussion 1–This \"error type\" is strongly dependent on specifications. It is often treated as a root cause. The issue is only handled as a translation error if the translator has received instructions to identify factual errors and account for them.",
+              "level": 1,
+              "parent": "accuracy"
+            },
+            {
+              "id": "MQMN_110000",
+              "name": "Completeness",
+              "mnemonic": "completeness",
+              "description": "Source text incomplete, resulting in instances where needed content is missing in the source language.",
+              "examples": [
+                "A process description leaves out key steps needed to complete the process, resulting in an incomplete description of the process."
+              ],
+              "notes": "Discussion 1–Completeness refers to instances in which needed content is missing in the source language. For cases where material present in the source language is not present in a translation, omission should be used instead. Discussion 2–Specifications determine whether completeness counts as an error or a root cause, depending on the degree of responsibility assigned to the translator.",
+              "level": 1,
+              "parent": "accuracy",
+              "subcategories": [
+                {
+                  "id": "MQMN_110010",
+                  "name": "Incomplete list",
+                  "mnemonic": "incomplete-list",
+                  "description": "Source [or target?] List missing necessary items.",
+                  "examples": [
+                    "A list of items included in a retail package omits a crucial component in the target text."
+                  ],
+                  "notes": "Discussion–In cases where content is missing from the target text that is present in the source text, omission should be used instead.",
+                  "level": 2,
+                  "parent": "completeness"
+                },
+                {
+                  "id": "MQMN_110120",
+                  "name": "Incomplete procedure",
+                  "mnemonic": "incomplete-procedure",
+                  "description": "Procedure missing necessary steps.",
+                  "examples": [
+                    "A document describing a procedure to restart a diesel generator omits a crucial step that must be completed prior to performing additional steps."
+                  ],
+                  "notes": "Discussion–In cases where content is missing from the target text that is present in the source text, omission should be used instead.",
+                  "level": 2,
+                  "parent": "completeness"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "MQMC_200000",
+          "name": "Linguistic conventions",
+          "mnemonic": "fluency",
+          "description": "Errors related to the linguistic well-formedness of the text, including problems with grammaticality, idiomaticity, and mechanical correctness.",
+          "notes": "Discussion–This dimension covers errors that are undisputedly incorrect according to well-established language norms as opposed to Style.",
+          "level": 0,
+          "subcategories": [
+            {
+              "id": "MQMC_201000",
+              "name": "Grammar",
+              "mnemonic": "grammar",
+              "description": "Error that occurs when a text string (sentence, phrase, other) in the translation violates the grammatical rules of the target language.",
+              "examples": [
+                "An English text reads \"The man was seeing the his wife.\""
+              ],
+              "notes": "Discussion–Grammar errors include lack of agreement between subject and verb, incorrect verb tenses or verb forms, and incorrect declension of nouns, pronouns, or adjectives.",
+              "level": 1,
+              "parent": "fluency",
+              "subcategories": [
+                {
+                  "id": "MQMN_201010",
+                  "name": "Word form",
+                  "mnemonic": "word-form",
+                  "description": "Error in selecting the appropriate morphological variant of a word.",
+                  "examples": ["Had became for had become, sheeps for sheep."],
+                  "level": 2,
+                  "parent": "grammar",
+                  "subcategories": [
+                    {
+                      "id": "MQMN_201011",
+                      "name": "Part of speech",
+                      "mnemonic": "part-of-speech",
+                      "description": "Incorrect part of speech reflective of target language norms.",
+                      "examples": [
+                        "A text reads \"Read these instructions careful\" instead of \"Read these instructions carefully.\""
+                      ],
+                      "level": 3,
+                      "parent": "word-form"
+                    },
+                    {
+                      "id": "MQMN_201012",
+                      "name": "Tense/mood/aspect",
+                      "mnemonic": "tense-mood-aspect",
+                      "description": "Error where a verb form displays the wrong tense, mood, or aspect.",
+                      "examples": [
+                        "An English text reads \"After the button is pushing\" (present progressive) instead of \"After the button has been pushed\" (past passive)."
+                      ],
+                      "level": 3,
+                      "parent": "word-form"
+                    },
+                    {
+                      "id": "MQMN_201013",
+                      "name": "Agreement",
+                      "mnemonic": "agreement",
+                      "description": "Error where two or more words do not agree with respect to case, number, person, or other grammatical features.",
+                      "examples": [
+                        "A text reads \"They was expecting a report.\""
+                      ],
+                      "level": 3,
+                      "parent": "word-form"
+                    }
+                  ]
+                },
+                {
+                  "id": "MQMN_201020",
+                  "name": "Word order",
+                  "mnemonic": "word-order",
+                  "description": "Word order non-compliant with target language norms.",
+                  "examples": [
+                    "A German text reads \"Er hat gesehen den Mann\" instead of \"Er hat den Mann gesehen.\""
+                  ],
+                  "level": 2,
+                  "parent": "grammar"
+                },
+                {
+                  "id": "MQMN_201030",
+                  "name": "Function words",
+                  "mnemonic": "function-words",
+                  "description": "Error in a word that serves to connect important information and is critical for understanding because it defines the relationships between other content words such as nouns, verbs, and the like.",
+                  "examples": [
+                    "A text reads \"Check the part number as given in the screen\" instead of \"on the screen\".",
+                    "A text reads \"The graphic is then copied into an internal memory\" instead of \"The graphic is copied to internal memory.\""
+                  ],
+                  "notes": "Discussion 1–Function words include auxiliary verbs, prepositions, articles, conjunctions, and pronouns. Discussion 2–The use of function words can involve agreement (particularly of auxiliary verbs and articles in some languages) and in some cases collocational and co-occurrence patterns, with variation among language varieties.",
+                  "level": 2,
+                  "parent": "grammar"
+                },
+                {
+                  "id": "MQMN_201040",
+                  "name": "General language collocation",
+                  "mnemonic": "general-collocation",
+                  "description": "Error in usage that violates well-established co-occurrence of a particular word with another word or words.",
+                  "examples": [
+                    "He threw a petition at the court, as opposed to he submitted a petition to the court.",
+                    "Butter and bread, as opposed to bread and butter."
+                  ],
+                  "notes": "Discussion 1–Typical collocations involve the combination of a verb with a preposition, where the verb component of the collocation is a content word and the preposition component acts as a function word. Discussion 2–Collocations are often subject to dialectal variation: in the street vs on the street; stand on line vs. stand in line.",
+                  "level": 2,
+                  "parent": "grammar"
+                }
+              ]
+            },
+            {
+              "id": "MQMC_202000",
+              "name": "Punctuation",
+              "mnemonic": "punctuation",
+              "description": "Punctuation incorrect according to target language conventions.",
+              "examples": [
+                "An English text uses a semicolon where a comma should be used.",
+                "A two-digit year reference begins with an open single quote instead of a close single quote (apostrophe).",
+                "A Greek text uses a question mark instead of the anticipated semicolon to express a question.",
+                "German quotation marks are carried over into English or French target content."
+              ],
+              "level": 1,
+              "parent": "fluency",
+              "subcategories": [
+                {
+                  "id": "MQMN_202010",
+                  "name": "Unpaired quote marks or parentheses",
+                  "mnemonic": "unpaired-marks",
+                  "description": "Missing mark from a set of paired punctuation marks, such as a missing parenthesis or quote mark.",
+                  "examples": [
+                    "A text reads \"King Ludwig of Bavaria (1845–1896 was deposed on account of his supposed madness,\" omitting the closing parenthesis around the dates."
+                  ],
+                  "notes": "Discussion–Other errors in paired punctuation marks sometimes occur in extended segments involving multiple sentences or paragraphs.",
+                  "level": 2,
+                  "parent": "punctuation"
+                }
+              ]
+            },
+            {
+              "id": "MQMN_203000",
+              "name": "Whitespace",
+              "mnemonic": "whitespace",
+              "description": "Error in the production of whitespace (spacebar marks instead of tabs) or incorrect spacing after full stop, etc.",
+              "examples": [
+                "A document uses a string of space characters instead of tabs.",
+                "Extra spaces are added at the start of a string.",
+                "The space before question marks or colons in French is carried over into German or English target content."
+              ],
+              "level": 1,
+              "parent": "fluency"
+            },
+            {
+              "id": "MQMC_204000",
+              "name": "Spelling",
+              "mnemonic": "spelling",
+              "description": "Error occurring when a word is misspelled.",
+              "examples": ["The German word Zustellung is spelled Zustetlugn."],
+              "level": 1,
+              "parent": "fluency",
+              "subcategories": [
+                {
+                  "id": "MQMN_204010",
+                  "name": "Diacritics",
+                  "mnemonic": "diacritics",
+                  "description": "Errors related to the misuse of diacritical marks added to base fonts, such as accents, umlauts, and the like.",
+                  "examples": [
+                    "The Hungarian word bőven (using o with a double acute (˝)) is spelled as bõven, using a tilde (˜), which is not found in Hungarian."
+                  ],
+                  "notes": "Discussion–Diacritics can be considered a component of spelling, but some target texts are inadvertently stripped of essential diacritics, which is an editing or localization error more than simple misspelling.",
+                  "level": 2,
+                  "parent": "spelling"
+                },
+                {
+                  "id": "MQMN_204020",
+                  "name": "Transliteration",
+                  "mnemonic": "transliteration",
+                  "description": "Strings transliterated into the script of the target language using the wrong transliteration system or using the preferred transliteration system but applying it incorrectly.",
+                  "examples": [
+                    "The capital of China is translated as Peking, following the now-dated Wade-Giles romanization system, rather than Beijing, following the ISO and PRC standard pinyin.",
+                    "The name of the final president of the Soviet Union, Михаи́л Горбачёв, is transliterated into English as Mikhail Gorbachev. It is transliterated into Spanish as Mijaíl Gorbachov."
+                  ],
+                  "notes": "Discussion–A common transliteration error involves the retention of a transliterated form in the source language when representing that term or name in the target language, for instance, retaining Spanish transliteration for a Russian term in English target content.",
+                  "level": 2,
+                  "parent": "spelling"
+                },
+                {
+                  "id": "MQMN_204030",
+                  "name": "Capitalization",
+                  "mnemonic": "capitalization",
+                  "description": "Error where one or more letters in a word are written with nonstandard upper- and lowercase letter forms, considering the textual setting and applicable locale conventions.",
+                  "examples": [
+                    "The name of the Canadian comedian Norm Macdonald is written incorrectly as Norm MacDonald.",
+                    "The company name eBay is incorrectly styled as EBay at the beginning of a sentence, rather than the preferred form eBay.",
+                    "The extinct whale Leviathan melvillei, named for Moby Dick author Herman Melville, was styled as Leviathan Melvillei, contrary to the capitalization conventions for genus and species names."
+                  ],
+                  "notes": "Discussion–An extreme capitalization error can be the result of an overzealous copy editor removing \"extraneous\" capitalizations from German target content or adding capitalizations to French content.",
+                  "level": 2,
+                  "parent": "spelling"
+                },
+                {
+                  "id": "MQMN_204040",
+                  "name": "Compounding",
+                  "mnemonic": "compounding",
+                  "description": "Error where compounding conventions are not observed.",
+                  "examples": [
+                    "For instance, in English, make-work project appears incorrectly as makework project."
+                  ],
+                  "notes": "Discussion–Compounding conventions vary among agglutinative languages. For individual languages, consult authoritative references on compounding practice.",
+                  "level": 2,
+                  "parent": "spelling"
+                }
+              ]
+            },
+            {
+              "id": "MQMN_205000",
+              "name": "Title style",
+              "mnemonic": "title-style",
+              "description": "Error involving incorrect adherence to specified title style.",
+              "examples": [
+                "Violation of an ISO rule, which specifies lowercase for all but the first word in a title, as opposed to common US English style.",
+                "A title is enclosed in quotes when it should be in italics with no quotes."
+              ],
+              "notes": "Discussion 1–\"Title style\" in this context is limited to the capitalization, font, and punctuation rules required of book, article, and chapter headings, as well as subject headings for sections and subsections of running text. Discussion 2–Title style conventions differ in American and British English, and preferences can also differ significantly from one publication to another.",
+              "level": 1,
+              "parent": "fluency"
+            },
+            {
+              "id": "MQMN_206000",
+              "name": "Corpus conformance",
+              "mnemonic": "corpus-conformance",
+              "description": "Content fails to conform to a reference corpus.",
+              "examples": [
+                "A project uses a corpus of plain-language text against which a text is compared. When checked against the corpus, it is flagged as non-conforming because sentences are too long and complex, even though it is otherwise grammatical."
+              ],
+              "level": 1,
+              "parent": "fluency"
+            },
+            {
+              "id": "MQMN_207000",
+              "name": "Pattern problem",
+              "mnemonic": "pattern-problem",
+              "description": "Error where text contains a pattern (e.g., text that matches a regular expression) that is not allowed.",
+              "examples": [
+                "The regular expression [\"'][,\\.;] (i.e., a quote mark followed by a comma, full stop, or semicolon) is defined as not allowed for a project, but a text contains the string \", (closing quote followed by a comma)."
+              ],
+              "level": 1,
+              "parent": "fluency"
+            },
+            {
+              "id": "MQMN_208000",
+              "name": "Duplication",
+              "mnemonic": "duplication",
+              "description": "Content (e.g., a word or longer portion of text) repeated unintentionally.",
+              "examples": [
+                "\"The man the man whom she saw…\"",
+                "A paragraph appears verbatim twice in a row.",
+                "Changes in sentence structure and the like when rendering the target language can result in inappropriate tagging in the target content."
+              ],
+              "notes": "Discussion–As opposed to Accuracy or Addition errors, for instance, Duplication errors are often the result of text processing errors.",
+              "level": 1,
+              "parent": "fluency"
+            },
+            {
+              "id": "MQMN_209000",
+              "name": "Sorting",
+              "mnemonic": "sorting",
+              "description": "Inappropriately collated sequence.",
+              "examples": [
+                "A listing of definitions in a translation of a legal document should be in alphabetical order in Spanish but appears in the order of the source English document.",
+                "A Japanese listing of names uses Kanji sorting rather than telephone book sorting."
+              ],
+              "level": 1,
+              "parent": "fluency"
+            },
+            {
+              "id": "MQMN_210000",
+              "name": "Unclear reference",
+              "mnemonic": "unclear-reference",
+              "description": "Relative pronouns or other referential mechanisms unclear in their reference.",
+              "examples": [
+                "A text reads \"After completing this, move to the next step,\" but there are a number of possible referents for \"this\" in the text."
+              ],
+              "level": 1,
+              "parent": "fluency"
+            },
+            {
+              "id": "MQMC_211000",
+              "name": "Unintelligible",
+              "mnemonic": "unintelligible",
+              "description": "Text garbled or incomprehensible.",
+              "examples": [
+                "The following text appears in an English translation of a German automotive manual: \"The brake from whe this કુતારો િસ S149235 part numbr,,.\"",
+                "A UTF8 text is processed by a tool that expects ISO Latin-1 encoding and produces unreadable output."
+              ],
+              "notes": "Discussion 1–Unintelligible text may be due to conversion or other processing errors. Discussion 2–If unintelligibility results from a font that does not support all needed characters or uses the wrong encoding, classify the error as Font.",
+              "level": 1,
+              "parent": "fluency"
+            },
+            {
+              "id": "MQMC_212000",
+              "name": "Character encoding",
+              "mnemonic": "character-encoding",
+              "description": "Error occurring when characters garbled due to incorrect application of an encoding.",
+              "examples": [
+                "A text document in UTF-8 encoding is opened as ISO Latin-1, resulting in all \"upper ASCII\" characters being garbled."
+              ],
+              "level": 1,
+              "parent": "fluency"
+            },
+            {
+              "id": "MQMN_213000",
+              "name": "Non-allowed characters",
+              "mnemonic": "nonallowed-characters",
+              "description": "Error where text include colons or forward- or back-slashes, which might cause confusion with path names on some computer systems.",
+              "examples": [
+                "Example: This term is standardized/harmonized. If a text is being written for translation, it is wise to write: This term is standardized or harmonized."
+              ],
+              "notes": "Discussion–Some languages, for instance, do not use any character comparable to the backslash to separate alternate readings in a text.",
+              "level": 1,
+              "parent": "fluency"
+            },
+            {
+              "id": "MQMC_214000",
+              "name": "Textual conventions",
+              "mnemonic": "textual-conventions",
+              "description": "Error that occurs when a text string (word, phrase, sentence, phrase, other) violates the text-building (discourse) norms of the target language.",
+              "examples": [
+                "Differences between languages that affect the sequencing of information in sentences or even in the overall structure of documents can result in violations of textual conventions, even though grammatical and core stylistic rules are not necessarily violated."
+              ],
+              "notes": "Discussion–At the local level—often called cohesion—text-building requires connecting incoming text to previous text through related content or transitional phrases. At the global level—often called coherence—text-building requires adhering to the message and filtering information so as to help readers elicit content from working memory, other texts, or their own world knowledge to make sense of the text.",
+              "level": 1,
+              "parent": "fluency",
+              "subcategories": [
+                {
+                  "id": "MQMN_214010",
+                  "name": "Index or TOC",
+                  "mnemonic": "index-toc",
+                  "description": "Index/TOC items structured incorrectly or missing.",
+                  "examples": [
+                    "A Table of Contents lacks needed headers at some levels."
+                  ],
+                  "level": 2,
+                  "parent": "textual-conventions",
+                  "subcategories": [
+                    {
+                      "id": "MQMN_214011",
+                      "name": "Missing or incorrect item",
+                      "mnemonic": "missing-incorrect-toc-item",
+                      "description": "Index/TOC items incorrect or missing.",
+                      "examples": [
+                        "A chapter heading is not listed in a Table of Contents."
+                      ],
+                      "level": 3,
+                      "parent": "index-toc"
+                    },
+                    {
+                      "id": "MQMN_214012",
+                      "name": "Page references",
+                      "mnemonic": "page-references",
+                      "description": "Index/TOC refers to incorrect page numbers.",
+                      "examples": [
+                        "A table of contents refers to page numbers from the source document that do not apply to the translated text."
+                      ],
+                      "level": 3,
+                      "parent": "index-toc"
+                    },
+                    {
+                      "id": "MQMN_214013",
+                      "name": "Index or TOC formatting",
+                      "mnemonic": "index-toc-format",
+                      "description": "Index/TOC formatted incorrectly.",
+                      "examples": [
+                        "Specifications indicate that a table of contents should be formatted with variable (hierarchical) indenting and tab leader characters, but is instead displayed as a \"run-in\" list."
+                      ],
+                      "level": 3,
+                      "parent": "index-toc"
+                    }
+                  ]
+                },
+                {
+                  "id": "MQMN_214020",
+                  "name": "Images vs. text",
+                  "mnemonic": "images-vs-text",
+                  "description": "Phrasing/wording inconsistent between text shown in images and running text.",
+                  "examples": [
+                    "A screen shot shows a button with the text \"Open other…\" but the text referring to the screen shot tells the user to click on the \"Open alternative…\" button."
+                  ],
+                  "notes": "Discussion–Evaluating conformance of call-outs with wording cited in text involves an aspect of textual coherence that can best be identified at the bilingual review level.",
+                  "level": 2,
+                  "parent": "textual-conventions"
+                },
+                {
+                  "id": "MQMN_214030",
+                  "name": "Cohesion",
+                  "mnemonic": "cohesion",
+                  "description": "Portions of the text needed to connect it into an understandable whole (e.g., reference, substitution, ellipsis, conjunction, and lexical cohesion) missing or incorrect.",
+                  "examples": [
+                    "The contact tracing tool the external team the health department hired developed has caused a privacy breach."
+                  ],
+                  "notes": "Discussion–Cohesion errors may manifest as accuracy, agreement, terminology, and other kinds of errors that are extra-segmental in nature.",
+                  "level": 2,
+                  "parent": "textual-conventions"
+                },
+                {
+                  "id": "MQMN_214040",
+                  "name": "Coherence",
+                  "mnemonic": "coherence",
+                  "description": "Text lacking a clear semantic relationship between its parts, i.e., the different parts don't hang together, don't follow the discourse conventions of the target language, or don't \"make sense.\"",
+                  "notes": "Discussion 1–Coherence errors may manifest as accuracy, agreement, terminology, and other kinds of errors of extra-segmental nature. Discussion 2–Classifying Coherence versus other issues such as Accuracy or Audience Appropriateness can be challenging.",
+                  "level": 2,
+                  "parent": "textual-conventions"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "MQMC_300000",
+          "name": "Style",
+          "mnemonic": "style",
+          "description": "Errors occurring in a text that are grammatically acceptable but are inappropriate because they deviate from organizational style guides or exhibit inappropriate language style.",
+          "notes": "Discussion–Style errors manifest themselves in translations that are grammatically acceptable and correct at face value, but inappropriate because of style guides or specifications. Without style guides and proper specifications, such errors can give rise to discussions on subjectivity, as opposed to errors in Linguistic Conventions that are undisputedly right or wrong.",
+          "level": 0,
+          "subcategories": [
+            {
+              "id": "MQMC_301000",
+              "name": "Organization style",
+              "mnemonic": "company-style",
+              "description": "Errors occurring where text violates third-party style guidelines.",
+              "examples": [
+                "Company style states that passive sentences may not be used, but the text uses passive sentences."
+              ],
+              "level": 1,
+              "parent": "style"
+            },
+            {
+              "id": "MQMC_302000",
+              "name": "Third-party style",
+              "mnemonic": "third-party-style",
+              "description": "Errors occurring where text violates third-party style guidelines.",
+              "examples": [
+                "Specifications stated that English text was to be formatted according to the Chicago Manual of Style, but the text delivered followed the American Psychological Association style guide."
+              ],
+              "level": 1,
+              "parent": "style"
+            },
+            {
+              "id": "MQMC_303000",
+              "name": "Inconsistent with external reference",
+              "mnemonic": "inconsistent-external-reference",
+              "description": "Errors occurring when text fails to conform with a declared external style reference.",
+              "examples": [
+                "Translation specifications state that quotes in a text must match the 1957 edition of a book, but the translator used the 1943 edition, which was substantially different.",
+                "Original English: Pursuant to Article 5(1) of Decision (CFSP) 2021/1143, the Council authorised the Political and Security Committee (PSC) to take decisions…",
+                "Example of translating a hidden quote instead of using the original: Ist dies schon Tollheit, hat es doch Methode. → If this is already insanity, it nevertheless has method. (Should be: Though this be madness, yet there is method in 't.)"
+              ],
+              "notes": "Discussion–Such errors occur when an explicit or implicit quotation in the source text is translated without taking into account either the original text in the target language or for an existing official version.",
+              "level": 1,
+              "parent": "style"
+            },
+            {
+              "id": "MQMC_304000",
+              "name": "Language register",
+              "mnemonic": "register",
+              "description": "Characteristic of text that uses a level of formality higher or lower than required by the specifications or general language conventions.",
+              "examples": [
+                "A formal letter uses contractions, colloquialisms, and expressions characteristic of spoken rather than written language, and those elements come across as less serious than intended."
+              ],
+              "level": 1,
+              "parent": "style",
+              "subcategories": [
+                {
+                  "id": "MQMN_304010",
+                  "name": "Grammatical register",
+                  "mnemonic": "grammatical-register",
+                  "description": "Incorrect grammatical register, such as using informal pronouns or verb forms when their formal counterparts are required.",
+                  "examples": [
+                    "A text used for a highly formal announcement uses the German du form instead of the expected Sie."
+                  ],
+                  "level": 2,
+                  "parent": "register"
+                },
+                {
+                  "id": "MQMN_304020",
+                  "name": "Slang varieties",
+                  "mnemonic": "variants-slang",
+                  "description": "Highly informal, often conversational, words used in text that should be more formal.",
+                  "examples": [
+                    "In a formal legal document: The dude representing the complainant stated his case."
+                  ],
+                  "level": 2,
+                  "parent": "register"
+                }
+              ]
+            },
+            {
+              "id": "MQMC_305000",
+              "name": "Awkward style",
+              "mnemonic": "awkward",
+              "description": "Style involving excessive wordiness or overly embedded clauses, often due to inappropriate retention of source text style in the target text.",
+              "examples": [
+                "A text is written with many embedded clauses and an excessively wordy style. While the intended meaning can be understood, and the text is grammatically correct, the text is very awkward and difficult to follow.",
+                "However, a personal language variety (in such approaches called \"idiolect\") usually is internally heterogeneous (it varies in particular according to different situations and/or media) and therefore not suitable to serve as the smallest unit of linguistic variation, whereby in contrast, idiolects according to the framework developed in this document, are homogeneous by definition, whereas personal varieties are sets of idiolects."
+              ],
+              "notes": "Discussion 1–Some languages provide grammatical and stylistic features that support complex, embedded ideas, which can result in awkward style if a target text retains these features.",
+              "level": 1,
+              "parent": "style"
+            },
+            {
+              "id": "MQMC_306000",
+              "name": "Unidiomatic style",
+              "mnemonic": "unidiomatic",
+              "description": "Style that is grammatical, but unnatural.",
+              "examples": [
+                "The following text appears in an English translation of a German letter: \"We thanked him with heart\" where \"with heart\" is an understandable, but non-idiomatic rendering, better stated as \"heartily\"."
+              ],
+              "notes": "Discussion–Unidiomatic style often occurs due to inappropriate retention of source content style in the target content.",
+              "level": 1,
+              "parent": "style"
+            },
+            {
+              "id": "MQMC_307000",
+              "name": "Inconsistent style",
+              "mnemonic": "inconsistent-style",
+              "description": "Style that varies inconsistently throughout the text.",
+              "examples": [
+                "One part of a text is written in a clear, \"terse\" style, while other sections are written in a more wordy style.",
+                "The same text recurs at several points in a large document that has been divided up and submitted to multiple translators, with the result that that text is translated in three different ways, which can involve different style as well as terminology or register differences."
+              ],
+              "notes": "Discussion–Inconsistent style often occurs due to multiple translators contributing to the target content.",
+              "level": 1,
+              "parent": "style"
+            }
+          ]
+        },
+        {
+          "id": "MQMC_500000",
+          "name": "Audience appropriateness",
+          "mnemonic": "verity",
+          "description": "Errors arising from the use of target content that is invalid or inappropriate for the target locale or target audience.",
+          "notes": "Discussion–Audience appropriateness errors depend on extra-linguistic, often cultural values and can in most cases be judged to be correct in terms of, for instance, accuracy, spelling, and grammatical usage.",
+          "level": 0,
+          "subcategories": [
+            {
+              "id": "MQMC_501000",
+              "name": "Culture-specific reference",
+              "mnemonic": "culture-specific",
+              "description": "Error where content inappropriately uses a culture-specific reference that will not be understandable to the intended audience.",
+              "examples": [
+                "An English text refers to touchdown, end run or even the term football itself. These prove difficult to translate and confuse the target audience in Germany, for whom Fußball is a different game.",
+                "A marketing text in Greek includes reference to popular Greek music. When translated into English these references are not understandable to the target audience."
+              ],
+              "notes": "Discussion–In cases where texts are written with the intention that they will be translated, this error may indicate a broader conceptual or internationalization root cause.",
+              "level": 1,
+              "parent": "verity",
+              "subcategories": [
+                {
+                  "id": "MQMN_501010",
+                  "name": "End-user suitability",
+                  "mnemonic": "end-user-suitability",
+                  "description": "Content unsuitable for use by the end user, excluding problems related to suitability for the target locale [or specified target audience].",
+                  "examples": [
+                    "Repair manual content was originally written for experts and assumes a certain level of experience and knowledge, but marketing strategies have changed and end users need more detailed instructions."
+                  ],
+                  "level": 2,
+                  "parent": "culture-specific"
+                },
+                {
+                  "id": "MQMN_501020",
+                  "name": "Locale-specific content",
+                  "mnemonic": "locale-specific-content",
+                  "description": "Content specific to the source locale inappropriate for intended target locale, audience, or purpose.",
+                  "examples": [
+                    "An advertising text translated for Sweden refers to special offers available only in Germany and is therefore misleading.",
+                    "A manual for a printer sold in Spain describes features that apply only to versions of the printer sold in Japan and thus will confuse purchasers."
+                  ],
+                  "level": 2,
+                  "parent": "culture-specific"
+                },
+                {
+                  "id": "MQMN_501030",
+                  "name": "Language-dependent logic",
+                  "mnemonic": "language-dependent-logic",
+                  "description": "Content language- or locale-dependent logical assumptions impossible to appropriately localize.",
+                  "examples": [
+                    "A technical text uses a 'deductive' reasoning style that cannot be easily adapted to areas expecting an 'inductive' reasoning style. The text needs to be localized to address the conflict in cultural logic."
+                  ],
+                  "notes": "Discussion–Errors involving language-dependent logic are more common when translating between markets that reflect significant cultural differences. In some cases, texts that are perfectly clear in one market may be difficult to follow in another due to culture-specific differences in logic.",
+                  "level": 2,
+                  "parent": "culture-specific"
+                },
+                {
+                  "id": "MQMN_501040",
+                  "name": "Legal requirements",
+                  "mnemonic": "legal-requirements",
+                  "description": "Text non-compliant with legal requirements as set forth in the specifications.",
+                  "examples": [
+                    "Specifications stated that US FCC regulatory notices be replaced by European CE notices rather than translated, but they were translated instead, rendering the text legally problematic for use in Europe."
+                  ],
+                  "level": 2,
+                  "parent": "culture-specific"
+                }
+              ]
+            },
+            {
+              "id": "MQMC_502000",
+              "name": "Offensive",
+              "mnemonic": "offensive",
+              "description": "Content that breaches commonly accepted standards of decent and proper speech, and is hence likely to offend the intended audience or other likely readers.",
+              "examples": [
+                "A source text refers to bacon as an example of a tasty food, but the reference is offensive when translated into Arabic."
+              ],
+              "notes": "Discussion 1–Offensive expressions, especially when voiced in oral discourse, are often represented in print using euphemisms or euphemistic abbreviations. (See also: Accuracy, Unjustified euphemism.) Discussion 2–The relation between offensive content and error status is heavily dependent on specifications. Depending on translation requirements and the intent of a translation, offensive language and expressions can be intentionally translated using comparable target content.",
+              "level": 1,
+              "parent": "verity",
+              "subcategories": [
+                {
+                  "id": "MQMN_502010",
+                  "name": "Obscenity",
+                  "mnemonic": "obscenity",
+                  "description": "Content that is likely to be considered offensive or disgusting by accepted standards of morality and decency as perceived by the intended audience.",
+                  "examples": [
+                    "Obscene expressions often involve the use of sexual vulgarities."
+                  ],
+                  "level": 2,
+                  "parent": "offensive"
+                },
+                {
+                  "id": "MQMN_502020",
+                  "name": "Profanity",
+                  "mnemonic": "profanity",
+                  "description": "Content or expressions likely to be offensive or blasphemous on religious grounds as perceived by the intended audience.",
+                  "examples": [
+                    "Profane expressions invoke the names of the deity or saints. Many profane expressions possess commonly used euphemisms, such as the use of darn instead of damn, or interjections, such as Judas Priest!"
+                  ],
+                  "level": 2,
+                  "parent": "offensive"
+                },
+                {
+                  "id": "MQMN_502030",
+                  "name": "Non-inclusivity",
+                  "mnemonic": "non-inclusivity",
+                  "description": "Content that does not meet legal, organization, or audience requirements for diversity, equity, or inclusion (DEI).",
+                  "examples": [
+                    "Offensive expressions associated with non-inclusivity often include unacceptable use of derogatory terms reflecting differences in gender, ethnic or national identity.",
+                    "Non-inclusivity can also manifest itself in the use of gender-based pronouns or terms, such as masculine pronouns or terms, where non-gendered terms would be the inclusive choice."
+                  ],
+                  "level": 2,
+                  "parent": "offensive"
+                },
+                {
+                  "id": "MQMN_502040",
+                  "name": "Stereotype",
+                  "mnemonic": "stereotype",
+                  "description": "Content that reflects set, possibly prejudiced, ideas about what someone or something is like, especially an idea that is wrong.",
+                  "examples": [
+                    "A text that uses the derogatory term \"frog\" to refer to a French person could lead to a confusion in target content, where the reader assumes the text is actually about frogs.",
+                    "Original content can in some cases be totally inappropriate in translation or even in other locales. For instance, a Mexican episode of the Great British Bake Off TV series invoked \"cringe-worthy\" wordplay and stereotypical costumes, along with totally inappropriate cooking techniques, which offended North Americans in general, not just Mexicans."
+                  ],
+                  "notes": "Discussion–Stereotypes frequently reflect inappropriate, but commonly held beliefs about ethnicity, gender, professions, or any other group.",
+                  "level": 2,
+                  "parent": "offensive"
+                },
+                {
+                  "id": "MQMN_502050",
+                  "name": "Insult",
+                  "mnemonic": "insult",
+                  "description": "Insults often draw on other offensive expressions to address them directly at another person.",
+                  "level": 2,
+                  "parent": "offensive"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "MQMC_600000",
+          "name": "Design and markup",
+          "mnemonic": "design",
+          "description": "Errors related to the physical design or presentation of a translation product, including character, paragraph, and UI element formatting and markup, integration of text with graphical elements, and overall page or window layout.",
+          "level": 0,
+          "subcategories": [
+            {
+              "id": "MQMC_601000",
+              "name": "Character formatting",
+              "mnemonic": "local-formatting",
+              "description": "Inappropriate application of any glyph variation that is applied to a character or string of characters, such as font, font style, font color, or font size.",
+              "examples": [
+                "An industry style guide specifies that ordinal numbers written with figures should use superscript ordinal indicators (1st, 2nd), but adscript (lining) ordinal indicators (1st, 2nd) were used instead.",
+                "A corporate style guide specifies that body text in technical publications should be set in a serif font, but body text in advertising and public reports should be set in a sans serif font.",
+                "The body text for an annual report was incorrectly set using the serif font specified for technical publications."
+              ],
+              "level": 1,
+              "parent": "design",
+              "subcategories": [
+                {
+                  "id": "MQMN_601010",
+                  "name": "Font",
+                  "mnemonic": "font",
+                  "description": "Errors related to local font usage (i.e., font choices that impact a span of content rather than the global choice of the document)",
+                  "examples": [
+                    "Warning texts are set in sans serif, but one of them appears in a serif font.",
+                    "A portion of Japanese text is set with an oblique face (corresponding to italics in the source text) when dot accents should have been used with a non-oblique face."
+                  ],
+                  "level": 2,
+                  "parent": "local-formatting",
+                  "subcategories": [
+                    {
+                      "id": "MQMN_601011",
+                      "name": "Wrong size",
+                      "mnemonic": "wrong-font-size",
+                      "description": "Incorrect font point size",
+                      "examples": [
+                        "A legal notice should be set in a 9 pt size, but was instead set in 7 pt."
+                      ],
+                      "level": 3,
+                      "parent": "font"
+                    },
+                    {
+                      "id": "MQMN_601012",
+                      "name": "Bold-italic",
+                      "mnemonic": "bold-italic",
+                      "description": "Incorrect use of bold or italic font style",
+                      "examples": [
+                        "A book title should have been italicized, but the italics were omitted."
+                      ],
+                      "level": 3,
+                      "parent": "font"
+                    },
+                    {
+                      "id": "MQMN_601013",
+                      "name": "Font, single/double-width",
+                      "mnemonic": "single-double-width",
+                      "description": "Single-width characters used when double-width are intended, or vice versa. (CJK only)",
+                      "examples": [
+                        "A Japanese text includes カタカナ (full-width kana) when specifications required ｶﾀｶﾅ (half-width kana) instead, due to a limited display size."
+                      ],
+                      "level": 3,
+                      "parent": "font"
+                    }
+                  ]
+                },
+                {
+                  "id": "MQMN_601020",
+                  "name": "Kerning",
+                  "mnemonic": "kerning",
+                  "description": "incorrect kerning (inter-character spacing)",
+                  "examples": [
+                    "The letters T and A in the word TAMPA are spaced too close together and collide."
+                  ],
+                  "level": 2,
+                  "parent": "local-formatting"
+                }
+              ]
+            },
+            {
+              "id": "MQMC_602000",
+              "name": "Layout",
+              "mnemonic": "overall-design",
+              "description": "Inappropriate presentation format of paragraphs, headings, graphical elements, and user interface elements and their arrangement on a form, page, website, or application screen.",
+              "examples": [
+                "A fully justified paragraph was copied from one document and pasted into another where surrounding paragraphs were flush left, ragged right, creating a visual mismatch.",
+                "By design, text was intended to wrap around images, but an image was created as an inline image rather than a floating image, so it was repositioned below the paragraph as more text was added."
+              ],
+              "notes": "Discussion–Layout includes the justification, tabs, line indents, line spacing, and page breaking behavior of paragraphs and lists; the formatting and placement of graphical elements (tables, figures, boxes, sidebars, etc.) and user interface elements (taskbars, ribbons, menus, dialog boxes, error messages, etc.); and the size, margins, orientation, headers, footers, and columns of pages.",
+              "level": 1,
+              "parent": "design",
+              "subcategories": [
+                {
+                  "id": "MQMN_602010",
+                  "name": "Global font choice",
+                  "mnemonic": "global-font-choice",
+                  "description": "Incorrect or inappropriate overall font choice.",
+                  "examples": [
+                    "An English source text uses a normal-weight serif font for body text but the Japanese translation uses a heavy-weight 'gothic' (roughly, sans serif) font appropriate for headlines only."
+                  ],
+                  "notes": "Discussion–While this error may apply to both source and target texts, it is most likely to apply to the target text.",
+                  "level": 2,
+                  "parent": "overall-design"
+                },
+                {
+                  "id": "MQMN_602020",
+                  "name": "Color",
+                  "mnemonic": "color",
+                  "description": "Incorrect colors or colors that are inappropriate for the intended audience.",
+                  "examples": ["Headings should be blue but are green instead."],
+                  "level": 2,
+                  "parent": "overall-design"
+                },
+                {
+                  "id": "MQMN_602030",
+                  "name": "Margins",
+                  "mnemonic": "margins",
+                  "description": "Incorrect text margins",
+                  "examples": [
+                    "Specifications called for 4 cm inside margins, but 2.5 cm margins were used instead."
+                  ],
+                  "level": 2,
+                  "parent": "overall-design"
+                },
+                {
+                  "id": "MQMN_602040",
+                  "name": "Page breaks",
+                  "mnemonic": "page-breaks",
+                  "description": "Page breaks in inappropriate locations",
+                  "examples": [
+                    "There is a page break between a figure and its caption."
+                  ],
+                  "level": 2,
+                  "parent": "overall-design"
+                },
+                {
+                  "id": "MQMN_602050",
+                  "name": "Footnote/endnote format",
+                  "mnemonic": "footnote-format",
+                  "description": "Footnotes or endnotes placed inappropriately or use incorrect in-text symbols.",
+                  "examples": [
+                    "Specifications state that endnotes should be used with roman numerals but footnotes were used with in-text symbols (*, †, ‡, etc.)."
+                  ],
+                  "level": 2,
+                  "parent": "overall-design"
+                },
+                {
+                  "id": "MQMN_602060",
+                  "name": "Headers and footers",
+                  "mnemonic": "headers-and-footers",
+                  "description": "Headers or footers formatted incorrectly.",
+                  "examples": [
+                    "Headers should appear on every page but have been omitted on odd-numbered pages."
+                  ],
+                  "level": 2,
+                  "parent": "overall-design"
+                }
+              ]
+            },
+            {
+              "id": "MQMN_603000",
+              "name": "Graphics and tables",
+              "mnemonic": "graphics-tables",
+              "description": "Errors related to the formatting of graphics and tables.",
+              "examples": [
+                "A graphic is garbled, or the wrong version is shown."
+              ],
+              "level": 1,
+              "parent": "design",
+              "subcategories": [
+                {
+                  "id": "MQMN_603010",
+                  "name": "Missing graphic/table",
+                  "mnemonic": "graphics-tables-missing",
+                  "description": "Graphic or table missing",
+                  "examples": [
+                    "An HTML file is missing an <img> tag, so no graphic is shown."
+                  ],
+                  "level": 2,
+                  "parent": "graphics-tables"
+                },
+                {
+                  "id": "MQMN_603020",
+                  "name": "Position of graphic/table",
+                  "mnemonic": "graphics-tables-position",
+                  "description": "Graphic or table positioned incorrectly",
+                  "examples": [
+                    "A text refers to Figure 1, but Figure 1 appears six pages after the point where it was referenced."
+                  ],
+                  "level": 2,
+                  "parent": "graphics-tables"
+                },
+                {
+                  "id": "MQMN_603030",
+                  "name": "Callouts and captions",
+                  "mnemonic": "call-outs-captions",
+                  "description": "Call-out errors; incorrect or misplaced captions",
+                  "examples": [
+                    "During localization the location of numbers used for call-outs has been shifted and the call-outs are no longer usable."
+                  ],
+                  "level": 2,
+                  "parent": "graphics-tables"
+                }
+              ]
+            },
+            {
+              "id": "MQMC_604000",
+              "name": "Markup tag",
+              "mnemonic": "markup",
+              "description": "Incorrect markup tag or tag component.",
+              "examples": [
+                "The specifications for an HTML document translation project require full tag closure, but the translator has deleted closing </p> tags. Formatting will not be affected in browsers, but it fails the target content markup requirement.",
+                "Typically, microdata in tag elements should not be translated, but a translator has \"translated\" <span itemprop=\"operatingSystem\"> ANDROID</span> to <span itemprop=\"ऑपरेटिंगसिस्टम\"> ANDROID</span>."
+              ],
+              "level": 1,
+              "parent": "design",
+              "subcategories": [
+                {
+                  "id": "MQMN_604010",
+                  "name": "Questionable markup",
+                  "mnemonic": "questionable-markup",
+                  "description": "Markup present, but malformed or inappropriate for context",
+                  "examples": [
+                    "A text has opening tags but no closing tags for formatting."
+                  ],
+                  "level": 2,
+                  "parent": "markup"
+                },
+                {
+                  "id": "MQMN_604020",
+                  "name": "Missing markup",
+                  "mnemonic": "missing-markup",
+                  "description": "Markup in source content missing in target content",
+                  "examples": [
+                    "A source segment has a set of italic tags, but the target segment does not have any tags."
+                  ],
+                  "notes": "Discussion–In cases where tagging is added or subtracted in the target content, it can be wise to double check whether there is some difference in technical requirements that might dictate an intentional difference.",
+                  "level": 2,
+                  "parent": "markup"
+                },
+                {
+                  "id": "MQMN_604030",
+                  "name": "Added markup",
+                  "mnemonic": "added-markup",
+                  "description": "Target content markup with no corresponding source content markup",
+                  "examples": [
+                    "A source segment has no formatting tags, but the target segment has a set of italic tags."
+                  ],
+                  "level": 2,
+                  "parent": "markup"
+                },
+                {
+                  "id": "MQMN_604040",
+                  "name": "Misplaced markup",
+                  "mnemonic": "misplaced-markup",
+                  "description": "Markup present but misplaced",
+                  "examples": [
+                    "A target segment has three sets of paired formatting tags at the end, after the final full stop (.)."
+                  ],
+                  "level": 2,
+                  "parent": "markup"
+                },
+                {
+                  "id": "MQMN_604050",
+                  "name": "Inconsistent markup",
+                  "mnemonic": "inconsistent-markup",
+                  "description": "Markup elements inconsistent between source content and target content",
+                  "examples": [
+                    "A target segment has a set of tags for bold face in the same location where the source segment has tags for italics."
+                  ],
+                  "level": 2,
+                  "parent": "markup"
+                }
+              ]
+            },
+            {
+              "id": "MQMC_605000",
+              "name": "Truncation/text expansion",
+              "mnemonic": "truncation-text-expansion",
+              "description": "Target content that is longer or shorter than allowed or where there is a significant and inappropriate discrepancy between the source and the target content lengths.",
+              "examples": [
+                "A German translation is 403 characters long and no longer fits in a space intended for a text 250 characters long."
+              ],
+              "notes": "Discussion–This error may indicate an underlying internationalization root cause. GUI interface design should account for typical expansion and contraction factors, although extreme situations can occur.",
+              "level": 1,
+              "parent": "design"
+            },
+            {
+              "id": "MQMC_606000",
+              "name": "Missing text",
+              "mnemonic": "missing-text",
+              "description": "Existing text missing in the final laid-out version",
+              "examples": [
+                "A translation is complete, but during DTP a text box was inadvertently moved off the page and so the translated text does not appear in a rendered PDF version."
+              ],
+              "level": 1,
+              "parent": "design"
+            },
+            {
+              "id": "MQMC_607000",
+              "name": "Link/cross-reference",
+              "mnemonic": "broken-link",
+              "description": "Incorrect or invalid (no longer active) link or URI.",
+              "examples": [
+                "An HTML document has an href that points to a file that does not exist."
+              ],
+              "level": 1,
+              "parent": "design",
+              "subcategories": [
+                {
+                  "id": "MQMN_607010",
+                  "name": "Document-internal link",
+                  "mnemonic": "document-internal-link",
+                  "description": "Link or cross reference to an incorrect or nonexistent location within the same document within which it occurs",
+                  "examples": [
+                    "An internal link refers to the location \"#section5\" but there is no anchor \"section5\" in the document."
+                  ],
+                  "level": 2,
+                  "parent": "broken-link"
+                },
+                {
+                  "id": "MQMN_607020",
+                  "name": "Document-external link",
+                  "mnemonic": "document-external-link",
+                  "description": "Link or cross reference to an incorrect or nonexistent location outside of the same document within which it occurs",
+                  "examples": [
+                    "A link in an HTML document points to a U.S. government URL that has moved and no longer exists."
+                  ],
+                  "level": 2,
+                  "parent": "broken-link"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+
+  

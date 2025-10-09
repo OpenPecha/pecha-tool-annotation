@@ -14,9 +14,9 @@ import {
   type AnnotationOption,
 } from "@/config/annotation-options";
 import type { Annotation } from "@/pages/Task";
-import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 import { useAuth } from "@/auth/use-auth-hook";
 import { truncateText } from "@/lib/utils";
+import { useAnnotationStore } from "@/store/annotation";
 
 interface EditPopupProps {
   visible: boolean;
@@ -47,21 +47,20 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   const [selectedType, setSelectedType] = useState<string>("");
   const [annotationText, setAnnotationText] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
-  const { currentUser } = useAuth();
-  const { trackButtonClicked } = useUmamiTracking();
+  const { selectedAnnotationListType } = useAnnotationStore();
 
-  // Load annotation configuration
+  // Load annotation configuration based on selected type
   useEffect(() => {
     const loadConfig = async () => {
       try {
-        const config = await loadAnnotationConfig();
+        const config = await loadAnnotationConfig(selectedAnnotationListType);
         setAnnotationConfig(config);
       } catch (error) {
         console.error("Failed to load annotation configuration:", error);
       }
     };
     loadConfig();
-  }, []);
+  }, [selectedAnnotationListType]); // Reload when type changes
 
   // Initialize form values when annotation changes
   useEffect(() => {
@@ -188,26 +187,11 @@ export const EditPopup: React.FC<EditPopupProps> = ({
 
   const handleUpdate = () => {
     if (selectedType) {
-      trackButtonClicked("update-annotation", "edit-popup-update", {
-        ...getUserContext(currentUser),
-        metadata: {
-          annotation_id: annotation.id,
-          old_type: annotation.type,
-          new_type: selectedType,
-        },
-      });
       onUpdate(annotation.id, selectedType, annotationText, selectedLevel);
     }
   };
 
   const handleDelete = () => {
-    trackButtonClicked("delete-annotation", "edit-popup-delete", {
-      ...getUserContext(currentUser),
-      metadata: {
-        annotation_id: annotation.id,
-        annotation_type: annotation.type,
-      },
-    });
     onDelete();
   };
 

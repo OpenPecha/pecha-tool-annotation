@@ -11,28 +11,25 @@ import {
   IoWarning,
 } from "react-icons/io5";
 import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { annotationListApi, type CategoryOutput } from "@/api/annotation_list";
+import { useAnnotationStore } from "@/store/annotation";
+import { annotationsApi } from "@/api/annotations";
+import type { AnnotationResponse } from "@/api/types";
+import { AnnotationTypesFilter } from "./AnnotationTypesFilter";
+import { useParams } from "react-router-dom";
 
-// Type definitions for error typology
-interface ErrorCategory {
-  id: string;
+// Type definitions for error typology (using API types)
+interface ErrorCategory extends CategoryOutput {
+  id?: string;
   name: string;
-  mnemonic: string;
-  description: string;
+  mnemonic?: string;
+  description?: string;
   examples?: string[];
   notes?: string;
-  level: number;
+  level?: number;
   parent?: string;
   subcategories?: ErrorCategory[];
-}
-
-interface ErrorTypology {
-  error_typology: {
-    version: string;
-    title: string;
-    description: string;
-    copyright: string;
-    categories: ErrorCategory[];
-  };
 }
 
 interface ErrorListProps {
@@ -44,35 +41,58 @@ export const ErrorList = ({
   onErrorSelect,
   searchable = true,
 }: ErrorListProps) => {
-  const [errorData, setErrorData] = useState<ErrorTypology | null>(null);
+  const { textId } = useParams<{ textId: string }>();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLeafFilterOpen, setIsLeafFilterOpen] = useState(false);
+  
+  // Get state from store
+  const { 
+    selectedAnnotationListType, 
+    setSelectedAnnotationListType,
+    selectedAnnotationTypes,
+    setSelectedAnnotationTypes,
+  } = useAnnotationStore();
 
-  // Load error list data
-  useEffect(() => {
-    const loadErrorData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/error_list.json");
-        if (!response.ok) {
-          throw new Error("Failed to load error list");
-        }
-        const data: ErrorTypology = await response.json();
-        setErrorData(data);
-        setError(null);
-      } catch (err) {
-        console.error("Error loading error list:", err);
-        setError("Failed to load error list");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fetch all available annotation list types from the backend
+  const {
+    data: availableTypes = [],
+    isLoading: loadingTypes,
+  } = useQuery({
+    queryKey: ["annotationListTypes", selectedAnnotationTypes],
+    queryFn: () => annotationListApi.getTypes(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+  // Load error list data from server using React Query
+  const {
+    data: errorData,
+    isLoading: loading,
+    error,
+  } = useQuery({
+    queryKey: ["annotationList", selectedAnnotationListType],
+    queryFn: () => annotationListApi.getByTypeHierarchical(selectedAnnotationListType),
+    staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
+    retry: 2, // Retry failed requests twice
+    enabled: !!selectedAnnotationListType, // Only fetch if type is selected
+  });
 
-    loadErrorData();
-  }, []);
-
+  // Fetch Annotations by text
+  const {
+    data: annotationsByText = [],
+    isLoading: loadingLeaves,
+  } = useQuery<AnnotationResponse[]>({
+    queryKey: ["annotationsByText", textId],
+    queryFn: () => {
+      if (!textId) return Promise.resolve([]);
+      const textIdNumber = parseInt(textId, 10);
+      if (isNaN(textIdNumber)) return Promise.resolve([]);
+      return annotationsApi.getAnnotationsByText(textIdNumber);
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+    enabled: !!textId,
+  });
 
   // Flatten the hierarchical structure for easier searching
   const flattenCategories = (categories: ErrorCategory[]): ErrorCategory[] => {
@@ -95,20 +115,20 @@ export const ErrorList = ({
   // Filter categories based on search query
   const filteredCategories = useMemo(() => {
     if (!errorData || !searchQuery.trim()) {
-      return errorData?.error_typology.categories || [];
+      return errorData?.categories || [];
     }
 
     const query = searchQuery.toLowerCase();
     const allCategories = flattenCategories(
-      errorData.error_typology.categories
+      errorData.categories
     );
 
     // Find matching categories
     const matchingCategories = allCategories.filter(
       (cat) =>
         cat.name.toLowerCase().includes(query) ||
-        cat.description.toLowerCase().includes(query) ||
-        cat.mnemonic.toLowerCase().includes(query) ||
+        cat.description?.toLowerCase().includes(query) ||
+        cat.mnemonic?.toLowerCase().includes(query) ||
         (cat.examples &&
           cat.examples.some((ex) => ex.toLowerCase().includes(query)))
     );
@@ -117,12 +137,16 @@ export const ErrorList = ({
     const relevantIds = new Set<string>();
 
     matchingCategories.forEach((cat) => {
-      relevantIds.add(cat.id);
+      if (cat.id) {
+        relevantIds.add(cat.id);
+      }
 
       // Add ancestors
       let current = allCategories.find((c) => c.id === cat.parent);
       while (current) {
-        relevantIds.add(current.id);
+        if (current.id) {
+          relevantIds.add(current.id);
+        }
         current = allCategories.find((c) => c.id === current?.parent);
       }
 
@@ -131,11 +155,15 @@ export const ErrorList = ({
         allCategories
           .filter((c) => c.parent === categoryId)
           .forEach((child) => {
-            relevantIds.add(child.id);
-            addDescendants(child.id);
+            if (child.id) {
+              relevantIds.add(child.id);
+              addDescendants(child.id);
+            }
           });
       };
-      addDescendants(cat.id);
+      if (cat.id) {
+        addDescendants(cat.id);
+      }
     });
 
     // Rebuild the tree structure with only relevant categories
@@ -143,7 +171,7 @@ export const ErrorList = ({
       categories: ErrorCategory[]
     ): ErrorCategory[] => {
       return categories
-        .filter((cat) => relevantIds.has(cat.id))
+        .filter((cat) => cat.id && relevantIds.has(cat.id))
         .map((cat) => ({
           ...cat,
           subcategories: cat.subcategories
@@ -152,7 +180,7 @@ export const ErrorList = ({
         }));
     };
 
-    return buildFilteredTree(errorData.error_typology.categories);
+    return buildFilteredTree(errorData.categories);
   }, [errorData, searchQuery]);
 
   // Auto-expand root level nodes and matching nodes when searching
@@ -165,7 +193,9 @@ export const ErrorList = ({
           // Expand all nodes when searching to show results
           const expandAll = (categories: ErrorCategory[]) => {
             categories.forEach((cat) => {
-              newExpanded.add(cat.id);
+              if (cat.id) {
+                newExpanded.add(cat.id);
+              }
               if (cat.subcategories) {
                 expandAll(cat.subcategories);
               }
@@ -174,7 +204,9 @@ export const ErrorList = ({
           expandAll(filteredCategories);
         } else {
           // Only expand root level by default
-          const rootNodeIds = filteredCategories.map((cat) => cat.id);
+          const rootNodeIds = filteredCategories
+            .map((cat) => cat.id)
+            .filter((id): id is string => id !== undefined);
           rootNodeIds.forEach((id) => newExpanded.add(id));
         }
 
@@ -209,7 +241,7 @@ export const ErrorList = ({
   }) => {
     const hasChildren =
       category.subcategories && category.subcategories.length > 0;
-    const isExpanded = expandedNodes.has(category.id);
+    const isExpanded = category.id ? expandedNodes.has(category.id) : false;
 
     const indentColors = [
       "border-red-200 bg-red-50 hover:bg-red-100",
@@ -261,7 +293,9 @@ export const ErrorList = ({
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  toggleNodeExpansion(category.id);
+                  if (category.id) {
+                    toggleNodeExpansion(category.id);
+                  }
                 }}
                 className="h-4 w-4 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-sm flex-shrink-0 mt-0.5"
                 title={isExpanded ? "Collapse" : "Expand"}
@@ -295,9 +329,6 @@ export const ErrorList = ({
                   <h4 className="text-sm font-semibold text-gray-900 leading-tight truncate">
                     {highlightText(category.name, searchQuery)}
                   </h4>
-                  <p className="text-xs text-gray-600 font-mono">
-                    {category.mnemonic} • {category.id}
-                  </p>
                 </div>
 
                 {/* Exclamation mark with tooltip */}
@@ -319,15 +350,17 @@ export const ErrorList = ({
                             {category.name}
                           </p>
                           <p className="text-gray-300 font-mono">
-                            {category.mnemonic} • {category.id}
+                            {category.mnemonic || 'N/A'} • {category.id || 'N/A'}
                           </p>
                         </div>
 
-                        <div>
-                          <p className="text-gray-100 leading-relaxed">
-                            {category.description}
-                          </p>
-                        </div>
+                        {category.description && (
+                          <div>
+                            <p className="text-gray-100 leading-relaxed">
+                              {category.description}
+                            </p>
+                          </div>
+                        )}
 
                         {category.examples && category.examples.length > 0 && (
                           <div>
@@ -398,7 +431,9 @@ export const ErrorList = ({
       <div className="flex items-center justify-center p-8">
         <div className="text-center text-red-600">
           <IoWarning className="w-8 h-8 mx-auto mb-2" />
-          <p className="text-sm">{error}</p>
+          <p className="text-sm">
+            {error instanceof Error ? error.message : 'Failed to load error list'}
+          </p>
         </div>
       </div>
     );
@@ -412,8 +447,56 @@ export const ErrorList = ({
     );
   }
 
+  // Toggle annotation type selection
+  const toggleAnnotationTypeSelection = (annotationType: string) => {
+    const newSet = new Set(selectedAnnotationTypes);
+    if (newSet.has(annotationType)) {
+      newSet.delete(annotationType);
+    } else {
+      newSet.add(annotationType);
+    }
+    setSelectedAnnotationTypes(newSet);
+  };
+
   return (
     <div className="h-full flex flex-col overflow-visible pt-6">
+      {/* Annotation List Type Dropdown */}
+      <div className="mb-3 flex-shrink-0">
+        <label className="block text-xs font-medium text-gray-700 mb-1">
+          Annotation List Type
+        </label>
+        <select
+          value={selectedAnnotationListType}
+          onChange={(e) => setSelectedAnnotationListType(e.target.value)}
+          disabled={loadingTypes}
+          className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent bg-white"
+        >
+          {loadingTypes ? (
+            <option>Loading types...</option>
+          ) : availableTypes.length === 0 ? (
+            <option>No types available</option>
+          ) : (
+            availableTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))
+          )}
+        </select>
+      </div>
+
+      {/* Collapsible Annotation Types Filter */}
+      <AnnotationTypesFilter
+        isOpen={isLeafFilterOpen}
+        onToggle={() => setIsLeafFilterOpen(!isLeafFilterOpen)}
+        annotationsByText={annotationsByText}
+        loadingLeaves={loadingLeaves}
+        selectedAnnotationTypes={selectedAnnotationTypes}
+        onToggleAnnotationType={toggleAnnotationTypeSelection}
+        onSelectAllAnnotationTypes={(types) => setSelectedAnnotationTypes(new Set(types))}
+        onDeselectAllAnnotationTypes={() => setSelectedAnnotationTypes(new Set<string>())}
+      />
+
       {/* Search box */}
       {searchable && (
         <div className="mb-3 flex-shrink-0">

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { IoClose, IoSearch } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import type { BubbleMenuProps } from "../types";
-import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 import { useAuth } from "@/auth/use-auth-hook";
 import {
   STRUCTURAL_ANNOTATION_TYPES,
@@ -12,28 +11,20 @@ import {
   type StructuralAnnotationType,
 } from "@/config/structural-annotations";
 import { useAnnotationStore } from "@/store/annotation";
+import { useQuery } from "@tanstack/react-query";
+import { annotationListApi, type CategoryOutput } from "@/api/annotation_list";
 
-// Type definitions for error typology
-interface ErrorCategory {
-  id: string;
+// Type definitions for error typology (using API types)
+interface ErrorCategory extends CategoryOutput {
+  id?: string;
   name: string;
-  mnemonic: string;
-  description: string;
+  mnemonic?: string;
+  description?: string;
   examples?: string[];
   notes?: string;
-  level: number;
+  level?: number;
   parent?: string;
   subcategories?: ErrorCategory[];
-}
-
-interface ErrorTypology {
-  error_typology: {
-    version: string;
-    title: string;
-    description: string;
-    copyright: string;
-    categories: ErrorCategory[];
-  };
 }
 
 interface CategoryWithBreadcrumb extends ErrorCategory {
@@ -51,10 +42,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   onAddAnnotation,
   onCancel,
 }) => {
-  const [errorData, setErrorData] = useState<ErrorTypology | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedErrorCategory, setSelectedErrorCategory] =
     useState<CategoryWithBreadcrumb | null>(null);
   const [selectedStructuralType, setSelectedStructuralType] =
@@ -63,10 +51,9 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [showDropdown, setShowDropdown] = useState(false);
   const { currentUser } = useAuth();
-  const { trackAnnotationCreated } = useUmamiTracking();
 
   // Get annotation mode from Zustand store
-  const { currentNavigationMode: annotationMode } = useAnnotationStore();
+  const { currentNavigationMode: annotationMode, selectedAnnotationListType } = useAnnotationStore();
 
   // Determine the effective annotation mode based on context
   const getEffectiveAnnotationMode = (): "error-list" | "table-of-contents" => {
@@ -84,33 +71,18 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
 
   const effectiveMode = getEffectiveAnnotationMode();
 
-  // Load error list data only when in error-list mode
-  useEffect(() => {
-    if (effectiveMode !== "error-list") {
-      setLoading(false);
-      return;
-    }
-
-    const loadErrorData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/error_list.json");
-        if (!response.ok) {
-          throw new Error("Failed to load error list");
-        }
-        const data: ErrorTypology = await response.json();
-        setErrorData(data);
-        setError(null);
-      } catch (err) {
-        console.error("Error loading error list:", err);
-        setError("Failed to load error list");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadErrorData();
-  }, [effectiveMode]);
+  // Load error list data from server using React Query (only when in error-list mode)
+  const {
+    data: errorData,
+    isLoading: loading,
+    error,
+  } = useQuery({
+    queryKey: ["annotationList", selectedAnnotationListType],
+    queryFn: () => annotationListApi.getByTypeHierarchical(selectedAnnotationListType),
+    enabled: effectiveMode === "error-list", // Only fetch when in error-list mode
+    staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
+    retry: 2, // Retry failed requests twice
+  });
 
   // Reset selected items when mode or context changes, but preserve level selection
   useEffect(() => {
@@ -121,7 +93,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     // Reset level when mode or context changes
     setSelectedLevel("");
     setShowDropdown(false);
-  }, [annotationMode, contextAnnotation]);
+  }, [annotationMode, contextAnnotation, selectedAnnotationListType]);
 
   // Reset selected items when text selection changes (but preserve level)
   useEffect(() => {
@@ -130,7 +102,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     setSearchQuery("");
     setIsSearchFocused(false);
     setShowDropdown(false);
-  }, [currentSelection]);
+  }, [currentSelection, selectedAnnotationListType]);
 
   // Helper function to flatten error categories
   const flattenCategories = (
@@ -158,10 +130,10 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
 
   // Helper function to build breadcrumb
   const buildBreadcrumb = (category: ErrorCategory): string => {
-    if (!errorData) return category.name;
+    if (!errorData?.categories) return category.name;
 
     const allCategories = flattenCategories(
-      errorData.error_typology.categories
+      errorData.categories
     );
     const breadcrumbParts: string[] = [category.name];
     let current = category;
@@ -197,10 +169,10 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
       );
     } else {
       // Filter error categories
-      if (!errorData) return [];
+      if (!errorData?.categories) return [];
 
       const innermostCategories = getInnermostCategories(
-        errorData.error_typology.categories
+        errorData.categories
       );
 
       if (!searchQuery.trim()) {
@@ -214,8 +186,8 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
       const matchingCategories = innermostCategories.filter(
         (cat) =>
           cat.name.toLowerCase().includes(query) ||
-          cat.description.toLowerCase().includes(query) ||
-          cat.mnemonic.toLowerCase().includes(query) ||
+          cat.description?.toLowerCase().includes(query) ||
+          cat.mnemonic?.toLowerCase().includes(query) ||
           (cat.examples &&
             cat.examples.some((ex) => ex.toLowerCase().includes(query)))
       );
@@ -230,18 +202,9 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   if (!visible || !currentSelection) return null;
 
   const handleAddAnnotation = () => {
+    console.log("add annotation")
     if (currentSelection) {
       if (effectiveMode === "table-of-contents" && selectedStructuralType) {
-        // Track structural annotation creation
-        trackAnnotationCreated(
-          selectedStructuralType.id,
-          window.location.pathname.split("/").pop() || "unknown",
-          currentSelection.text.length,
-          {
-            ...getUserContext(currentUser),
-            annotation_id: `temp-${Date.now()}`,
-          }
-        );
 
         onAddAnnotation(
           selectedStructuralType.id,
@@ -249,17 +212,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
           annotationLevel || undefined
         );
       } else if (selectedErrorCategory) {
-        // Track error annotation creation
-        trackAnnotationCreated(
-          selectedErrorCategory.id,
-          window.location.pathname.split("/").pop() || "unknown",
-          currentSelection.text.length,
-          {
-            ...getUserContext(currentUser),
-            annotation_id: `temp-${Date.now()}`,
-          }
-        );
-
         onAddAnnotation(
           selectedErrorCategory.name,
           undefined,
@@ -270,6 +222,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   };
 
   const handleErrorSelection = (errorCategory: CategoryWithBreadcrumb) => {
+    console.log("errorCategory", errorCategory);
     setSelectedErrorCategory(errorCategory);
     setSearchQuery("");
     setIsSearchFocused(false);
@@ -446,22 +399,27 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
 
         {error && effectiveMode === "error-list" && (
           <div className="text-center py-4">
-            <p className="text-xs text-red-500">{error}</p>
+            <p className="text-xs text-red-500">
+              {error instanceof Error ? error.message : 'Failed to load error list'}
+            </p>
           </div>
         )}
 
         {/* Items list */}
-        {!loading && !error && !selectedErrorCategory && (
+        {!loading && !error && !selectedErrorCategory && !selectedStructuralType && (
           <div className="max-h-60 overflow-y-auto overflow-x-hidden">
             <div className="space-y-1">
               {filteredItems.slice(0, 20).map((item) => {
-                const isStructural = annotationMode === "table-of-contents";
+                const isStructural = effectiveMode === "table-of-contents";
                 
-                // Type-safe access to item properties
-                const itemId = 'id' in item ? item.id : '';
-                const isSelected = isStructural
-                  ? selectedStructuralType?.id === itemId
-                  : selectedErrorCategory?.id === itemId;
+                // Type-safe access to item properties based on mode
+                const itemId: string = isStructural 
+                  ? (item as StructuralAnnotationType).id 
+                  : ((item as CategoryWithBreadcrumb).id ?? '');
+                
+                // Since this block only renders when both selections are null, 
+                // no item is selected
+                const isSelected: boolean = false;
 
                 return (
                   <Button

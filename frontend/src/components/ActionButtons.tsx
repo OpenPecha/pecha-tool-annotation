@@ -7,7 +7,6 @@ import {
   IoRefresh,
 } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
-import { useUmamiTracking, getUserContext } from "@/hooks/use-umami-tracking";
 import { useAuth } from "@/auth/use-auth-hook";
 
 function ActionButtons({
@@ -33,91 +32,26 @@ function ActionButtons({
 }) {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const {
-    trackTaskSubmitted,
-    trackTaskSkipped,
-    trackTaskReverted,
-    trackButtonClicked,
-  } = useUmamiTracking();
 
   const handleSkip = () => {
     if (onSkipText) {
-      trackTaskSkipped(
-        window.location.pathname.split("/").pop() || "unknown",
-        "user_skip",
-        {
-          ...getUserContext(currentUser),
-          annotations_count: annotations.length,
-        }
-      );
-
-      trackButtonClicked("skip", "skip-button", {
-        ...getUserContext(currentUser),
-        metadata: {
-          annotations_count: annotations.length,
-        },
-      });
-
       onSkipText();
     }
   };
 
   const handleRevert = () => {
     if (onRevertWork) {
-      trackTaskReverted(
-        window.location.pathname.split("/").pop() || "unknown",
-        annotations.length,
-        {
-          ...getUserContext(currentUser),
-          task_type: "revert",
-        }
-      );
-
-      trackButtonClicked("revert", "revert-button", {
-        ...getUserContext(currentUser),
-        metadata: {
-          annotations_count: annotations.length,
-        },
-      });
-
       onRevertWork();
     }
   };
 
   const handleUndo = () => {
     if (onUndoAnnotations) {
-      trackButtonClicked("undo", "undo-button", {
-        ...getUserContext(currentUser),
-        metadata: {
-          annotations_count: userAnnotationsCount,
-        },
-      });
-
       onUndoAnnotations();
     }
   };
 
   const handleSubmit = () => {
-    // Track task submission
-    trackTaskSubmitted(
-      window.location.pathname.split("/").pop() || "unknown",
-      annotations.length,
-      Date.now(), // Simple timestamp - in real implementation you'd track start time
-      {
-        ...getUserContext(currentUser),
-        task_type: isCompletedTask ? "update" : "submit",
-        completion_status: isCompletedTask ? "updated" : "completed",
-      }
-    );
-
-    trackButtonClicked("submit", "submit-button", {
-      ...getUserContext(currentUser),
-      metadata: {
-        is_completed_task: isCompletedTask,
-        annotations_count: annotations.length,
-      },
-    });
-
     onSubmitTask();
     if (isCompletedTask) {
       navigate("/");
