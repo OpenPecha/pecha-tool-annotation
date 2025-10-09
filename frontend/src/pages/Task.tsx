@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAnnotationStore } from "@/store/annotation";
 import { TextAnnotator } from "@/components/TextAnnotator";
@@ -55,7 +55,7 @@ const Index = () => {
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
   const { trackPageVisit } = useUmamiTracking();
-  const { selectedAnnotationListType } = useAnnotationStore();
+  const { selectedAnnotationListType, selectedAnnotationTypes, setSelectedAnnotationTypes } = useAnnotationStore();
 
   // React Query to fetch text data
   const {
@@ -595,6 +595,16 @@ const Index = () => {
               : ann
           )
         );
+
+        // Invalidate annotations query to update the filter
+        queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
+
+        // Automatically check the annotation type in the filter
+        if (data.annotation_type && !selectedAnnotationTypes.has(data.annotation_type)) {
+          const newSelectedTypes = new Set(selectedAnnotationTypes);
+          newSelectedTypes.add(data.annotation_type);
+          setSelectedAnnotationTypes(newSelectedTypes);
+        }
       },
       onError: () => {
         // Remove the optimistic annotation on error
@@ -687,6 +697,16 @@ const Index = () => {
               : ann
           )
         );
+
+        // Invalidate annotations query to update the filter
+        queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
+
+        // Automatically check the annotation type in the filter
+        if (data.annotation_type && !selectedAnnotationTypes.has(data.annotation_type)) {
+          const newSelectedTypes = new Set(selectedAnnotationTypes);
+          newSelectedTypes.add(data.annotation_type);
+          setSelectedAnnotationTypes(newSelectedTypes);
+        }
       },
       onError: () => {
         // Remove the optimistic annotation on error
@@ -822,6 +842,16 @@ const Index = () => {
                 : ann
             )
           );
+
+          // Invalidate annotations query to update the filter
+          queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
+
+          // Automatically check the annotation type in the filter
+          if (data.annotation_type && !selectedAnnotationTypes.has(data.annotation_type)) {
+            const newSelectedTypes = new Set(selectedAnnotationTypes);
+            newSelectedTypes.add(data.annotation_type);
+            setSelectedAnnotationTypes(newSelectedTypes);
+          }
         },
         onError: () => {
           // Restore the original annotation on error
@@ -864,6 +894,10 @@ const Index = () => {
 
     // Delete from database
     deleteAnnotationMutation.mutate(annotationIdNumber, {
+      onSuccess: () => {
+        // Invalidate annotations query to update the filter
+        queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
+      },
       onError: (error) => {
         // Restore the annotation on error
         if (annotationToRemove) {
@@ -1010,6 +1044,16 @@ const Index = () => {
     }, 3000);
   };
 
+  // Filter annotations based on selected annotation types
+  const filteredAnnotations = useMemo(() => {
+    
+    // Otherwise, filter based on selected types
+    // Always include headers (table of contents) regardless of filter
+    return annotations.filter(
+      (ann) => ann.type === "header" || selectedAnnotationTypes.has(ann.type)
+    );
+  }, [annotations, selectedAnnotationTypes]);
+
   const annotationsWithoutHeader = annotations.filter(
     (ann) => ann.type !== "header"
   );
@@ -1095,7 +1139,7 @@ const Index = () => {
             console.log("Selected error:", error);
           }}
           searchable={true}
-          annotations={annotations}
+          annotations={filteredAnnotations}
           onHeaderClick={handleHeaderClick}
           onRemoveAnnotation={removeAnnotation}
           pendingHeader={pendingHeader}
@@ -1123,7 +1167,7 @@ const Index = () => {
               text={text}
               translation={translation}
               hasTranslation={hasTranslation}
-              annotations={annotations}
+              annotations={filteredAnnotations}
               selectedText={selectedText}
               onTextSelect={setSelectedText}
               onAddAnnotation={addAnnotation}

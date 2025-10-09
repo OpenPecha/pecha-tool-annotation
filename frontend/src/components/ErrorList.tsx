@@ -14,6 +14,10 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { annotationListApi, type CategoryOutput } from "@/api/annotation_list";
 import { useAnnotationStore } from "@/store/annotation";
+import { annotationsApi } from "@/api/annotations";
+import type { AnnotationResponse } from "@/api/types";
+import { AnnotationTypesFilter } from "./AnnotationTypesFilter";
+import { useParams } from "react-router-dom";
 
 // Type definitions for error typology (using API types)
 interface ErrorCategory extends CategoryOutput {
@@ -37,23 +41,29 @@ export const ErrorList = ({
   onErrorSelect,
   searchable = true,
 }: ErrorListProps) => {
+  const { textId } = useParams<{ textId: string }>();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLeafFilterOpen, setIsLeafFilterOpen] = useState(false);
   
-  // Get selected annotation list type from store
-  const { selectedAnnotationListType, setSelectedAnnotationListType } = useAnnotationStore();
+  // Get state from store
+  const { 
+    selectedAnnotationListType, 
+    setSelectedAnnotationListType,
+    selectedAnnotationTypes,
+    setSelectedAnnotationTypes,
+  } = useAnnotationStore();
 
   // Fetch all available annotation list types from the backend
   const {
     data: availableTypes = [],
     isLoading: loadingTypes,
   } = useQuery({
-    queryKey: ["annotationListTypes"],
+    queryKey: ["annotationListTypes", selectedAnnotationTypes],
     queryFn: () => annotationListApi.getTypes(),
     staleTime: 5 * 60 * 1000,
     retry: 2,
   });
-
   // Load error list data from server using React Query
   const {
     data: errorData,
@@ -67,6 +77,22 @@ export const ErrorList = ({
     enabled: !!selectedAnnotationListType, // Only fetch if type is selected
   });
 
+  // Fetch Annotations by text
+  const {
+    data: annotationsByText = [],
+    isLoading: loadingLeaves,
+  } = useQuery<AnnotationResponse[]>({
+    queryKey: ["annotationsByText", textId],
+    queryFn: () => {
+      if (!textId) return Promise.resolve([]);
+      const textIdNumber = parseInt(textId, 10);
+      if (isNaN(textIdNumber)) return Promise.resolve([]);
+      return annotationsApi.getAnnotationsByText(textIdNumber);
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+    enabled: !!textId,
+  });
 
   // Flatten the hierarchical structure for easier searching
   const flattenCategories = (categories: ErrorCategory[]): ErrorCategory[] => {
@@ -424,6 +450,17 @@ export const ErrorList = ({
     );
   }
 
+  // Toggle annotation type selection
+  const toggleAnnotationTypeSelection = (annotationType: string) => {
+    const newSet = new Set(selectedAnnotationTypes);
+    if (newSet.has(annotationType)) {
+      newSet.delete(annotationType);
+    } else {
+      newSet.add(annotationType);
+    }
+    setSelectedAnnotationTypes(newSet);
+  };
+
   return (
     <div className="h-full flex flex-col overflow-visible pt-6">
       {/* Annotation List Type Dropdown */}
@@ -450,6 +487,18 @@ export const ErrorList = ({
           )}
         </select>
       </div>
+
+      {/* Collapsible Annotation Types Filter */}
+      <AnnotationTypesFilter
+        isOpen={isLeafFilterOpen}
+        onToggle={() => setIsLeafFilterOpen(!isLeafFilterOpen)}
+        annotationsByText={annotationsByText}
+        loadingLeaves={loadingLeaves}
+        selectedAnnotationTypes={selectedAnnotationTypes}
+        onToggleAnnotationType={toggleAnnotationTypeSelection}
+        onSelectAllAnnotationTypes={(types) => setSelectedAnnotationTypes(new Set(types))}
+        onDeselectAllAnnotationTypes={() => setSelectedAnnotationTypes(new Set<string>())}
+      />
 
       {/* Search box */}
       {searchable && (
