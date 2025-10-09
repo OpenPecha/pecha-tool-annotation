@@ -897,6 +897,7 @@ const Index = () => {
       onSuccess: () => {
         // Invalidate annotations query to update the filter
         queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
+        
       },
       onError: (error) => {
         // Restore the annotation on error
@@ -1054,7 +1055,7 @@ const Index = () => {
     );
   }, [annotations, selectedAnnotationTypes]);
 
-  const annotationsWithoutHeader = annotations.filter(
+  const annotationsWithoutHeader = filteredAnnotations.filter(
     (ann) => ann.type !== "header"
   );
 

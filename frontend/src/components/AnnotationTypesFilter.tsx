@@ -55,7 +55,7 @@ export const AnnotationTypesFilter = ({
         className="w-full px-3 py-2 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors rounded"
       >
         <span className="text-xs font-medium text-gray-700">
-          Filter by Annotation Types {selectedAnnotationTypes.size > 0 && `(${selectedAnnotationTypes.size})`}
+          Filter by Annotation Types
         </span>
         {isOpen ? (
           <IoChevronDown className="w-4 h-4 text-gray-500" />
@@ -83,11 +83,13 @@ export const AnnotationTypesFilter = ({
                 />
                 <label
                   htmlFor="select-all-annotation-types"
-                  className="text-xs font-medium text-gray-700 cursor-pointer"
+                  className="flex-1 cursor-pointer flex items-center justify-between"
                 >
+                  <div className="text-xs font-medium text-gray-700">
                   {selectedAnnotationTypes.size === annotationTypesWithCounts.length && annotationTypesWithCounts.length > 0
                     ? "Deselect All"
-                    : "Select All"}
+                    : "Select All"}</div>
+                  <span className="text-xs text-gray-500 mr-3">[{annotationsByText.length}]</span>
                 </label>
               </div>
 
@@ -112,8 +114,8 @@ export const AnnotationTypesFilter = ({
                       <div className="text-xs font-medium text-gray-900">
                         {type}
                       </div>
-                      <span className="text-sm text-gray-500 ml-2">
-                        ({count})
+                      <span className="text-xs text-gray-500 ml-2">
+                        {`[${count}]`}
                       </span>
                     </label>
                   </div>
