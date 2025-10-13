@@ -45,7 +45,7 @@ export const AdminAnnotationListSection: React.FC = () => {
 
   // Fetch hierarchical data for selected type
   const { data: hierarchicalData } = useQuery({
-    queryKey: ["annotation-list-hierarchy", selectedType],
+    queryKey: ["annotationList", selectedType],
     queryFn: () =>
       selectedType
         ? annotationListApi.getByTypeHierarchical(selectedType)

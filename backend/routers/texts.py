@@ -72,7 +72,12 @@ def create_text(
     """Create new text."""
     # Set the uploaded_by field to the current user
     text_in.uploaded_by = current_user.id
-    return text_crud.create(db=db, obj_in=text_in)
+    created_text = text_crud.create(db=db, obj_in=text_in)
+    # For USER role, automatically assign them as annotator and set status to PROGRESS
+    if current_user.role.value == "user":
+        created_text = text_crud.assign_text_to_user(db=db, text_id=created_text.id, user_id=current_user.id)
+    
+    return created_text
 
 
 @router.post("/upload-file", response_model=TextResponse, status_code=status.HTTP_201_CREATED)
