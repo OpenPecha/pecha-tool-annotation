@@ -32,15 +32,15 @@ interface ErrorCategory extends CategoryOutput {
   subcategories?: ErrorCategory[];
 }
 
-interface ErrorListProps {
+interface  AnnotationListProps {
   onErrorSelect?: (error: ErrorCategory) => void;
   searchable?: boolean;
 }
 
-export const ErrorList = ({
+export const AnnotationList = ({
   onErrorSelect,
   searchable = true,
-}: ErrorListProps) => {
+}: AnnotationListProps) => {
   const { textId } = useParams<{ textId: string }>();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,7 +53,6 @@ export const ErrorList = ({
     selectedAnnotationTypes,
     setSelectedAnnotationTypes,
   } = useAnnotationStore();
-
   // Fetch all available annotation list types from the backend
   const {
     data: availableTypes = [],
@@ -64,17 +63,17 @@ export const ErrorList = ({
     staleTime: 5 * 60 * 1000,
     retry: 2,
   });
-  // Load error list data from server using React Query
+  const ListType =selectedAnnotationListType.length > 0 ? selectedAnnotationListType : availableTypes[0];
   const {
     data: errorData,
     isLoading: loading,
     error,
   } = useQuery({
-    queryKey: ["annotationList", selectedAnnotationListType],
-    queryFn: () => annotationListApi.getByTypeHierarchical(selectedAnnotationListType),
+    queryKey: ["annotationList", ListType],
+    queryFn: () => annotationListApi.getByTypeHierarchical(ListType),
     staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
     retry: 2, // Retry failed requests twice
-    enabled: !!selectedAnnotationListType, // Only fetch if type is selected
+    enabled: !!ListType, // Only fetch if type is selected
   });
 
   // Fetch Annotations by text
@@ -425,6 +424,7 @@ export const ErrorList = ({
       </div>
     );
   }
+   
 
   if (error) {
     return (
