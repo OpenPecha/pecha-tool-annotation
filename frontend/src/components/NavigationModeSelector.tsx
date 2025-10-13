@@ -1,16 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
-  IoList,
   IoWarning,
   IoChevronBack,
-  IoChevronForward,
 } from "react-icons/io5";
 
-import { ErrorList } from "./ErrorList";
-import { TableOfContents } from "./TOC/TableOfContents";
-import type { Annotation } from "@/pages/Task";
-import { useAnnotationStore, type NavigationMode } from "@/store/annotation";
+import { useAnnotationStore } from "@/store/annotation";
+import { AnnotationList } from "./AnnotationList";
 
 interface NavigationModeSelectorProps {
   // Common props
@@ -21,14 +15,7 @@ interface NavigationModeSelectorProps {
   onErrorSelect?: (error: unknown) => void;
   searchable?: boolean;
 
-  // TableOfContents props
-  annotations: Annotation[];
-  onHeaderClick: (annotation: Annotation) => void;
-  onRemoveAnnotation: (id: string) => void;
-  pendingHeader?: { text: string; start: number; end: number } | null;
-  onHeaderNameSubmit?: (name: string) => void;
-  onHeaderNameCancel?: () => void;
-  readOnly?: boolean;
+
 
   // Mode selector props (removed - using Zustand now)
 }
@@ -38,38 +25,21 @@ export const NavigationModeSelector = ({
   onToggle,
   onErrorSelect,
   searchable = true,
-  annotations,
-  onHeaderClick,
-  onRemoveAnnotation,
-  pendingHeader,
-  onHeaderNameSubmit,
-  onHeaderNameCancel,
-  readOnly = false,
+ 
 }: NavigationModeSelectorProps) => {
   // Use Zustand store for navigation mode
-  const { currentNavigationMode: currentMode, setCurrentNavigationMode } =
+  const { currentNavigationMode: currentMode } =
     useAnnotationStore();
 
-  const handleModeChange = (mode: NavigationMode) => {
-    setCurrentNavigationMode(mode);
-  };
+ 
 
   const modeConfig = {
-    "error-list": {
-      title: "Error List",
+      title: "Annotations",
       icon: IoWarning,
       iconColor: "text-orange-600",
       bgColor: "hover:bg-orange-50",
-    },
-    "table-of-contents": {
-      title: "Table of Contents",
-      icon: IoList,
-      iconColor: "text-blue-600",
-      bgColor: "hover:bg-blue-50",
-    },
   };
 
-  const currentConfig = modeConfig[currentMode];
 
   return (
     <div
@@ -88,13 +58,13 @@ export const NavigationModeSelector = ({
             <div className="pb-3 border-b">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 p-2">
-                  <currentConfig.icon className={currentConfig.iconColor} />
-                  {currentConfig.title}
+                  <modeConfig.icon className={modeConfig.iconColor} />
+                  {modeConfig.title}
                 </h3>
                 <button
                   onClick={onToggle}
                   className="h-8 w-8 p-0 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center rounded"
-                  title={`Close ${currentConfig.title}`}
+                  title={`Close ${modeConfig.title}`}
                 >
                   <IoChevronBack className="text-gray-600" />
                 </button>
@@ -129,26 +99,11 @@ export const NavigationModeSelector = ({
             </div>
 
             <div className="pt-0 flex-1 flex flex-col min-h-0 p-4">
-              {currentMode === "error-list" ? (
-                <ErrorList
+                <AnnotationList
                   onErrorSelect={onErrorSelect}
                   searchable={searchable}
                 />
-              ) : (
-                <div className="flex-1 overflow-hidden">
-                  <TableOfContents
-                    annotations={annotations}
-                    onHeaderClick={onHeaderClick}
-                    onRemoveAnnotation={onRemoveAnnotation}
-                    isOpen={true} // Always open when in this mode
-                    onToggle={() => {}} // No-op since we handle the toggle at this level
-                    pendingHeader={pendingHeader}
-                    onHeaderNameSubmit={onHeaderNameSubmit}
-                    onHeaderNameCancel={onHeaderNameCancel}
-                    readOnly={readOnly}
-                  />
-                </div>
-              )}
+        
             </div>
           </>
         ) : (
@@ -156,11 +111,11 @@ export const NavigationModeSelector = ({
           <div className="p-3 flex flex-col items-center justify-center gap-2">
             <button
               onClick={onToggle}
-              className={`h-10 w-10 p-0 ${currentConfig.bgColor} rounded-full shadow-sm border border-gray-200 transition-all duration-200 flex items-center justify-center`}
-              title={`Open ${currentConfig.title}`}
+              className={`h-10 w-10 p-0 ${modeConfig.bgColor} rounded-full shadow-sm border border-gray-200 transition-all duration-200 flex items-center justify-center`}
+              title={`Open ${modeConfig.title}`}
             >
-              <currentConfig.icon
-                className={`${currentConfig.iconColor} text-lg`}
+              <modeConfig.icon
+                className={`${modeConfig.iconColor} text-lg`}
               />
             </button>
 
