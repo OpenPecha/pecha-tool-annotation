@@ -11,8 +11,9 @@ import {
   type StructuralAnnotationType,
 } from "@/config/structural-annotations";
 import { useAnnotationStore } from "@/store/annotation";
-import { useQuery } from "@tanstack/react-query";
-import { annotationListApi, type CategoryOutput } from "@/api/annotation_list";
+import type { CategoryOutput } from "@/api/annotation_list";
+import { useAnnotationListHierarchical } from "@/hooks/useAnnotationListHierarchical";
+import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 
 // Type definitions for error typology (using API types)
 interface ErrorCategory extends CategoryOutput {
@@ -53,7 +54,8 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   const { currentUser } = useAuth();
 
   // Get annotation mode from Zustand store
-  const { currentNavigationMode: annotationMode, selectedAnnotationListType } = useAnnotationStore();
+  const { currentNavigationMode: annotationMode } = useAnnotationStore();
+  const { selectedAnnotationListType } = useAnnotationFiltersStore();
 
   // Determine the effective annotation mode based on context
   const getEffectiveAnnotationMode = (): "error-list" | "table-of-contents" => {
@@ -71,17 +73,14 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
 
   const effectiveMode = getEffectiveAnnotationMode();
 
-  // Load error list data from server using React Query (only when in error-list mode)
+  // Load error list data from server using custom hook (only when in error-list mode)
   const {
     data: errorData,
     isLoading: loading,
     error,
-  } = useQuery({
-    queryKey: ["annotationList", selectedAnnotationListType],
-    queryFn: () => annotationListApi.getByTypeHierarchical(selectedAnnotationListType),
-    enabled: effectiveMode === "error-list", // Only fetch when in error-list mode
-    staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
-    retry: 2, // Retry failed requests twice
+  } = useAnnotationListHierarchical({
+    type_id: selectedAnnotationListType || "",
+    enabled: effectiveMode === "error-list" && !!selectedAnnotationListType,
   });
 
   // Reset selected items when mode or context changes, but preserve level selection

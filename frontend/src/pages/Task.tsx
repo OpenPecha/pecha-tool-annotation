@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAnnotationStore } from "@/store/annotation";
 import { TextAnnotator } from "@/components/TextAnnotator";
 import type { TextAnnotatorRef } from "@/components/TextAnnotator";
+import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 import { AnnotationSidebar } from "@/components/AnnotationSidebar/AnnotationSidebar";
 import { NavigationModeSelector } from "@/components/NavigationModeSelector";
 import { useToast } from "@/hooks/use-toast";
@@ -21,11 +22,14 @@ import type {
 import type { AnnotationReviewResponse } from "@/api/reviews";
 import {
   loadAnnotationConfig,
+  extractLeafNodes,
   isValidAnnotationType,
 } from "@/config/annotation-options";
+import { useAnnotationListHierarchical } from "@/hooks/useAnnotationListHierarchical";
 import { SkipConfirmationDialog } from "@/components/SkipConfirmationDialog";
 import { AnnotationColorSettings } from "@/components/AnnotationColorSettings";
 import { useAuth } from "@/auth/use-auth-hook";
+import { queryKeys } from "@/constants/queryKeys";
 
 export type Annotation = {
   id: string;
@@ -54,7 +58,7 @@ const Index = () => {
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
 
-  const { selectedAnnotationListType, selectedAnnotationTypes, setSelectedAnnotationTypes } = useAnnotationStore();
+  const { selectedAnnotationListType, selectedAnnotationTypes, setSelectedAnnotationTypes } = useAnnotationFiltersStore();
 
   // React Query to fetch text data
   const {
@@ -157,6 +161,12 @@ const Index = () => {
   const translation = textData?.translation || "";
   const hasTranslation = Boolean(translation && translation.trim().length > 0);
 
+  const {
+    data: annotationList,
+  } = useAnnotationListHierarchical({
+    type_id: selectedAnnotationListType,
+    enabled: !!selectedAnnotationListType,
+  });
   // Update local state when textData is loaded
   useEffect(() => {
     if (textData) {
@@ -492,8 +502,11 @@ const Index = () => {
         ) || type === "header";
     } else {
       // For error-list mode, check against error list configuration
-      const config = await loadAnnotationConfig(selectedAnnotationListType);
-      isValidType = isValidAnnotationType(config, type) || type === "header";
+      // const config = await loadAnnotationConfig("44347a16-696e-444c-a1bf-1754556217f0");
+      
+      const config = extractLeafNodes(annotationList?.categories || [], 0);
+      console.log("config", config);
+      isValidType = isValidAnnotationType({options: config}, type) || type === "header";
     }
 
     if (!isValidType) {
@@ -579,7 +592,7 @@ const Index = () => {
         );
 
         // Invalidate annotations query to update the filter
-        queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.annotations.byText(textId) });
 
         // Automatically check the annotation type in the filter
         if (data.annotation_type && !selectedAnnotationTypes.has(data.annotation_type)) {
@@ -826,7 +839,7 @@ const Index = () => {
           );
 
           // Invalidate annotations query to update the filter
-          queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
+          queryClient.invalidateQueries({ queryKey: queryKeys.annotations.byText(textId) });
 
           // Automatically check the annotation type in the filter
           if (data.annotation_type && !selectedAnnotationTypes.has(data.annotation_type)) {
@@ -878,7 +891,7 @@ const Index = () => {
     deleteAnnotationMutation.mutate(annotationIdNumber, {
       onSuccess: () => {
         // Invalidate annotations query to update the filter
-        queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.annotations.byText(textId) });
 
       },
       onError: (error) => {

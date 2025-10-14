@@ -8,6 +8,9 @@ from .annotation_review import (
     AnnotationReviewCreate, AnnotationReviewUpdate, AnnotationReviewResponse,
     ReviewDecision, ReviewSubmission, ReviewStatus, ReviewSessionResponse, ReviewSubmissionResponse
 )
+from .annotation_type import (
+    AnnotationTypeBase, AnnotationTypeCreate, AnnotationTypeUpdate, AnnotationTypeResponse
+)
 from .annotationlist import (
     AnnotationListBase, AnnotationListCreate, AnnotationListResponse,
     CategoryInput, HierarchicalJSONInput, AnnotationListBulkCreateRequest, AnnotationListBulkCreateResponse,
@@ -23,6 +26,7 @@ __all__ = [
     "UserRejectedTextCreate", "UserRejectedTextResponse", "RejectedTextWithDetails",
     "AnnotationReviewCreate", "AnnotationReviewUpdate", "AnnotationReviewResponse",
     "ReviewDecision", "ReviewSubmission", "ReviewStatus", "ReviewSessionResponse", "ReviewSubmissionResponse",
+    "AnnotationTypeBase", "AnnotationTypeCreate", "AnnotationTypeUpdate", "AnnotationTypeResponse",
     "AnnotationListBase", "AnnotationListCreate", "AnnotationListResponse",
     "CategoryInput", "HierarchicalJSONInput", "AnnotationListBulkCreateRequest", "AnnotationListBulkCreateResponse",
     "CategoryOutput", "HierarchicalJSONOutput"

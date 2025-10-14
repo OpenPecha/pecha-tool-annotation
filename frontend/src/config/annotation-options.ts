@@ -1,5 +1,6 @@
 import { annotationListApi } from "@/api/annotation_list";
-
+import {useAnnotationFiltersStore} from "@/store/annotationFilters";
+import { useAnnotationListHierarchical } from "@/hooks/useAnnotationListHierarchical";
 export interface AnnotationOption {
   id: string;
   label: string;
@@ -33,7 +34,7 @@ interface ErrorCategory {
 }
 
 // Helper function to extract leaf nodes (innermost categories) from error list
-const extractLeafNodes = (
+export const extractLeafNodes = (
   categories: ErrorCategory[],
   level: number = 0
 ): AnnotationOption[] => {
@@ -73,9 +74,17 @@ const extractLeafNodes = (
 export const loadAnnotationConfig = async (type?: string): Promise<AnnotationConfig> => {
   try {
     const annotationListType = type || "";
-    
+    console.log("annotationListType", annotationListType);
+    const { selectedAnnotationListType } = useAnnotationFiltersStore();
+    console.log("selectedAnnotationListType ::", selectedAnnotationListType);
     // Load error list from the server
-    const response = await annotationListApi.getByTypeHierarchical(annotationListType);
+    const {
+      data: response
+    } = useAnnotationListHierarchical({
+      type_id: selectedAnnotationListType,
+      enabled: !!selectedAnnotationListType,
+    });
+    console.log("response", response);
     if (!response) {
       throw new Error(`Failed to load error list for type: ${annotationListType}`);
     }

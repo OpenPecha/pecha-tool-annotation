@@ -106,39 +106,20 @@ def get_annotation_lists_by_type_flat(
         )
     return items
 
-@router.get("/", response_model=List[AnnotationListResponse])
-def get_all_annotation_lists(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
-):
-    """Get all annotation lists."""
-    return annotation_list_crud.get_all(db=db)
-
-@router.get("/types", response_model=List[str])
-def get_annotation_list_types(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
-):
-    """Get all unique annotation list types."""
-    return annotation_list_crud.get_unique_types(db=db)
-
-@router.get("/type/{type_value}", response_model=HierarchicalJSONOutput)
+@router.get("/type/{type_id}", response_model=HierarchicalJSONOutput)
 def get_annotation_lists_by_type_hierarchical(
-    type_value: str,
+    type_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """
     Get annotation lists by type in original hierarchical format.
-    
-    Returns the data reconstructed as a hierarchical JSON structure,
-    matching the format that was originally uploaded.
     """
-    items = annotation_list_crud.get_by_type(db=db, type_value=type_value)
+    items = annotation_list_crud.get_by_type_id(db=db, type_id=type_id)
     if not items:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No annotation lists found with type '{type_value}'"
+            detail=f"No annotation lists found with type '{type_id}'"
         )
     
     # Reconstruct hierarchical structure
@@ -147,9 +128,9 @@ def get_annotation_lists_by_type_hierarchical(
     return hierarchical_data
 
 
-@router.delete("/type/{type_value}", status_code=status.HTTP_200_OK)
+@router.delete("/type/{type_id}", status_code=status.HTTP_200_OK)
 def delete_annotation_lists_by_type(
-    type_value: str,
+    type_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -161,7 +142,7 @@ def delete_annotation_lists_by_type(
             detail="Only admins can delete annotation lists"
         )
     
-    deleted_count = annotation_list_crud.delete_by_type(db=db, type_value=type_value)
+    deleted_count = annotation_list_crud.delete_by_type(db=db, type_id=type_id)
     return {
         "success": True,
         "message": f"Deleted {deleted_count} annotation list records",
