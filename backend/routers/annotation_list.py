@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 import json
 from deps import get_db
 from auth import get_current_active_user
-from crud.annotationlist import annotation_list_crud
-from schemas.annotationlist import (
+from crud.annotation_list import annotation_list_crud
+from schemas.annotation_list import (
     AnnotationListResponse,
     AnnotationListBulkCreateRequest,
     AnnotationListBulkCreateResponse,
@@ -43,7 +43,7 @@ async def upload_annotation_list_file(
         json_data = json.loads(contents)
         
         # Validate and parse using Pydantic
-        from schemas.annotationlist import HierarchicalJSONInput
+        from schemas.annotation_list import HierarchicalJSONInput
         hierarchical_data = HierarchicalJSONInput(**json_data)
         
         # Use the root title as the type for all records

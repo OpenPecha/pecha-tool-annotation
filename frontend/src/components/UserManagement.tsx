@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -19,9 +18,15 @@ import {
   IoTrash,
 } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import { usersApi } from "@/api/users";
 import type { UserRole } from "@/api/types";
 import { useAuth } from "@/auth/use-auth-hook";
+import {
+  useUsers,
+  useSearchUsers,
+  useUpdateUser,
+  useToggleUserStatus,
+  useDeleteUser,
+} from "@/hooks";
 
 interface UserManagementProps {
   className?: string;
@@ -33,7 +38,6 @@ export function UserManagement({ className }: UserManagementProps) {
   const [selectedStatus, setSelectedStatus] = useState<
     "all" | "active" | "inactive"
   >("all");
-  const queryClient = useQueryClient();
   const { currentUser } = useAuth();
 
   // Fetch users
@@ -41,107 +45,70 @@ export function UserManagement({ className }: UserManagementProps) {
     data: users = [],
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ["users", selectedRole, selectedStatus],
-    queryFn: () =>
-      usersApi.getAllUsers({
-        role: selectedRole === "all" ? undefined : selectedRole,
-        is_active:
-          selectedStatus === "all" ? undefined : selectedStatus === "active",
-      }),
+  } = useUsers({
+    role: selectedRole === "all" ? undefined : selectedRole,
+    is_active:
+      selectedStatus === "all" ? undefined : selectedStatus === "active",
   });
 
   // Search users
-  const { data: searchResults = [], isLoading: isSearching } = useQuery({
-    queryKey: ["users-search", searchQuery],
-    queryFn: () => usersApi.searchUsers(searchQuery),
-    enabled: searchQuery.length > 0,
-  });
+  const { data: searchResults = [], isLoading: isSearching } = useSearchUsers(
+    searchQuery
+  );
 
   // Update user role mutation
-  const updateUserMutation = useMutation({
-    mutationFn: async ({
-      userId,
-      role,
-    }: {
-      userId: number;
-      role: UserRole;
-    }) => {
-      return usersApi.updateUser(userId, { role });
-    },
-    onSuccess: (updatedUser) => {
-      toast.success("✅ User Updated", {
-        description: `Successfully updated ${updatedUser.username}'s role to ${updatedUser.role}`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-    onError: (error) => {
-      toast.error("❌ Update Failed", {
-        description:
-          error instanceof Error ? error.message : "Failed to update user role",
-      });
-    },
-  });
+  const updateUserMutation = useUpdateUser();
 
   // Toggle user status mutation
-  const toggleUserStatusMutation = useMutation({
-    mutationFn: async ({
-      userId,
-      isActive,
-    }: {
-      userId: number;
-      isActive: boolean;
-    }) => {
-      return usersApi.updateUser(userId, { is_active: isActive });
-    },
-    onSuccess: (updatedUser) => {
-      toast.success("✅ User Status Updated", {
-        description: `Successfully ${
-          updatedUser.is_active ? "activated" : "deactivated"
-        } ${updatedUser.username}`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-    onError: (error) => {
-      toast.error("❌ Status Update Failed", {
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to update user status",
-      });
-    },
-  });
+  const toggleUserStatusMutation = useToggleUserStatus();
 
   // Delete user mutation
-  const deleteUserMutation = useMutation({
-    mutationFn: async (userId: number) => {
-      return usersApi.deleteUser(userId);
-    },
-    onSuccess: () => {
-      toast.success("✅ User Deleted", {
-        description: "User has been successfully deleted",
-      });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-    onError: (error) => {
-      toast.error("❌ Delete Failed", {
-        description:
-          error instanceof Error ? error.message : "Failed to delete user",
-      });
-    },
-  });
+  const deleteUserMutation = useDeleteUser();
 
   const handleRoleChange = (
     userId: number,
     newRole: UserRole,
     oldRole: UserRole
   ) => {
-    updateUserMutation.mutate({ userId, role: newRole });
+    updateUserMutation.mutate(
+      { userId, userData: { role: newRole } },
+      {
+        onSuccess: (updatedUser) => {
+          toast.success("✅ User Updated", {
+            description: `Successfully updated ${updatedUser.username}'s role to ${updatedUser.role}`,
+          });
+        },
+        onError: (error) => {
+          toast.error("❌ Update Failed", {
+            description:
+              error instanceof Error ? error.message : "Failed to update user role",
+          });
+        },
+      }
+    );
   };
 
   const handleStatusToggle = (userId: number, currentStatus: boolean) => {
-
-    toggleUserStatusMutation.mutate({ userId, isActive: !currentStatus });
+    toggleUserStatusMutation.mutate(
+      { userId, isActive: !currentStatus },
+      {
+        onSuccess: (updatedUser) => {
+          toast.success("✅ User Status Updated", {
+            description: `Successfully ${
+              updatedUser.is_active ? "activated" : "deactivated"
+            } ${updatedUser.username}`,
+          });
+        },
+        onError: (error) => {
+          toast.error("❌ Status Update Failed", {
+            description:
+              error instanceof Error
+                ? error.message
+                : "Failed to update user status",
+          });
+        },
+      }
+    );
   };
 
   const handleDeleteUser = (userId: number) => {
@@ -150,7 +117,19 @@ export function UserManagement({ className }: UserManagementProps) {
         "Are you sure you want to delete this user? This action cannot be undone."
       )
     ) {
-      deleteUserMutation.mutate(userId);
+      deleteUserMutation.mutate(userId, {
+        onSuccess: () => {
+          toast.success("✅ User Deleted", {
+            description: "User has been successfully deleted",
+          });
+        },
+        onError: (error) => {
+          toast.error("❌ Delete Failed", {
+            description:
+              error instanceof Error ? error.message : "Failed to delete user",
+          });
+        },
+      });
     }
   };
 

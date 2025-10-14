@@ -1,5 +1,4 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -7,25 +6,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { textApi } from "@/api/text";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import { IoBarChart, IoPeople } from "react-icons/io5";
+import { IoBarChart } from "react-icons/io5";
 import { AdminStatisticsCharts } from "../AdminStatisticsCharts";
+import { useAdminTextStatistics, useUserStats } from "@/hooks";
 
 export const AdminStatisticsSection: React.FC = () => {
   // Fetch admin text statistics (only for admins)
-  const { data: adminStats, isLoading: isLoadingAdminStats } = useQuery({
-    queryKey: ["admin-text-statistics"],
-    queryFn: () => textApi.getAdminTextStatistics(),
-    refetchOnWindowFocus: false,
-  });
+  const { data: adminStats, isLoading: isLoadingAdminStats } = useAdminTextStatistics();
 
   // Fetch user statistics
-  const { data: userStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["user-stats"],
-    queryFn: () => textApi.getUserStats(),
-    refetchOnWindowFocus: false,
-  });
+  const { data: userStats, isLoading: isLoadingStats } = useUserStats();
 
   return (
     <div>

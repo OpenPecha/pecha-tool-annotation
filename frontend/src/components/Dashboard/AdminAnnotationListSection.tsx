@@ -24,10 +24,12 @@ import type {
   AnnotationListUploadResponse,
   CategoryOutput,
 } from "@/api/annotation_list";
-import { useAnnotationTypes } from "@/hooks/useAnnotationTypes";
-import { useAnnotationListHierarchical } from "@/hooks/useAnnotationListHierarchical";
-import { useUploadAnnotationList } from "@/hooks/useUploadAnnotationList";
-import { useDeleteAnnotationListByType } from "@/hooks/useDeleteAnnotationListByType";
+import { useAnnotationTypes } from "@/hooks";
+import {
+  useAnnotationListHierarchical,
+  useUploadAnnotationList,
+  useDeleteAnnotationListByType,
+} from "@/hooks";
 import { queryKeys } from "@/constants/queryKeys";
 import { useQueryClient } from "@tanstack/react-query";
 

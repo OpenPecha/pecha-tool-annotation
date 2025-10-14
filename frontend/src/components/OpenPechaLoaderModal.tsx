@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   Select,
@@ -12,12 +11,15 @@ import { Button } from "@/components/ui/button";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { IoClose, IoAlertCircle } from "react-icons/io5";
 import { toast } from "sonner";
-import { openPechaApi } from "@/api/openpecha";
 import type {
   OpenPechaText,
 } from "@/api/openpecha";
-import { textApi } from "@/api/text";
-import type { TextResponse } from "@/api/types";
+import {
+  useOpenPechaTexts,
+  useOpenPechaInstances,
+  useOpenPechaContent,
+  useCreateText,
+} from "@/hooks";
 
 interface OpenPechaLoaderModalProps {
   isOpen: boolean;
@@ -37,36 +39,21 @@ export const OpenPechaLoaderModal: React.FC<OpenPechaLoaderModalProps> = ({
     data: texts = [],
     isLoading: isLoadingTexts,
     error: textsError,
-  } = useQuery({
-    queryKey: ["openpecha-texts"],
-    queryFn: () => openPechaApi.getTexts(),
-    enabled: isOpen,
-    refetchOnWindowFocus: false,
-  });
+  } = useOpenPechaTexts();
 
   // Fetch instances for selected text
   const {
     data: instances = [],
     isLoading: isLoadingInstances,
     error: instancesError,
-  } = useQuery({
-    queryKey: ["openpecha-instances", selectedText?.id],
-    queryFn: () => openPechaApi.getInstances(selectedText?.id),
-    enabled: !!selectedText?.id && isOpen,
-    refetchOnWindowFocus: false,
-  });
+  } = useOpenPechaInstances(selectedText?.id || "", !!selectedText?.id);
 
   // Fetch text content for selected instance
   const {
     data: textContent,
     isLoading: isLoadingContent,
     error: contentError,
-  } = useQuery({
-    queryKey: ["openpecha-content", selectedInstanceId],
-    queryFn: () => openPechaApi.getInstanceContent(selectedInstanceId),
-    enabled: !!selectedInstanceId && isOpen,
-    refetchOnWindowFocus: false,
-  });
+  } = useOpenPechaContent(selectedInstanceId, !!selectedInstanceId);
 
   // Auto-select first instance when instances are loaded
   useEffect(() => {
@@ -75,60 +62,52 @@ export const OpenPechaLoaderModal: React.FC<OpenPechaLoaderModalProps> = ({
     }
   }, [instances, selectedInstanceId]);
 
-  // Auto-select first segmentation when content is loaded
-  useEffect(() => {
-    if (textContent) {
-    }
-  }, [textContent]);
-
   // Mutation to create text from OpenPecha content
-  const loadTextMutation = useMutation({
-    mutationFn: async (): Promise<TextResponse> => {
-      if (!textContent || !selectedText) {
-        throw new Error("No text content or text selected");
-      }
-
-      // Get the title in the appropriate language (prefer first available)
-      const titleKey = Object.keys(selectedText.title)[0];
-      const title = selectedText.title[titleKey] || "OpenPecha Text";
-
-      // Process the text with selected segmentation
-      const processedContent = getSegmentedText()
-
-      // Create text with OpenPecha content
-      return textApi.createText({
-        title: title,
-        content: processedContent,
-        source: `OpenPecha: ${selectedText.id} | Instance: ${selectedInstanceId}`,
-        language: selectedText.language,
-      });
-    },
-    onSuccess: (createdText) => {
-      toast.success("✅ Text Loaded from OpenPecha", {
-        description: `"${createdText.title}" is ready for annotation`,
-      });
-      onClose();
-      // Reset selections
-      resetSelections();
-      // Navigate to the task page
-      navigate(`/task/${createdText.id}`);
-    },
-    onError: (error) => {
-      toast.error("❌ Failed to load text", {
-        description:
-          error instanceof Error ? error.message : "Please try again",
-      });
-    },
-  });
+  const loadTextMutation = useCreateText();
 
   const handleLoadText = () => {
-    if (!selectedText?.id || !selectedInstanceId) {
+    if (!selectedText?.id || !selectedInstanceId || !textContent) {
       toast.error("Please select all options", {
         description: "You must select a text, version, and segmentation type",
       });
       return;
     }
-    loadTextMutation.mutate();
+
+    // Get the title in the appropriate language (prefer first available)
+    const titleKey = Object.keys(selectedText.title)[0];
+    const title = selectedText.title[titleKey] || "OpenPecha Text";
+
+    // Process the text with selected segmentation
+    const processedContent = getSegmentedText();
+
+    // Create text with OpenPecha content
+    loadTextMutation.mutate(
+      {
+        title: title,
+        content: processedContent,
+        source: `OpenPecha: ${selectedText.id} | Instance: ${selectedInstanceId}`,
+        language: selectedText.language,
+      },
+      {
+        onSuccess: (createdText) => {
+          toast.success("✅ Text Loaded from OpenPecha", {
+            description: `"${createdText.title}" is ready for annotation`,
+          });
+          onClose();
+          // Reset selections
+          resetSelections();
+          // Navigate to the task page
+          navigate(`/task/${createdText.id}`);
+        },
+        onError: (error) => {
+          console.log("error ::: ", error);
+          toast.error("❌ Failed to load text", {
+            description:
+              error instanceof Error ? error.message : "Please try again",
+          });
+        },
+      }
+    );
   };
 
   // Helper to format title display

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useCallback } from "react";
-import { useMutation } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -18,8 +17,8 @@ import {
   IoDocumentText,
 } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import { bulkUploadApi } from "@/api/bulk-upload";
 import type { BulkUploadResponse } from "@/api/bulk-upload";
+import { useValidateBulkUpload, useUploadBulk } from "@/hooks";
 
 interface FileValidationResult {
   filename: string;
@@ -53,49 +52,9 @@ export const AdminBulkUploadSection: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Bulk upload mutations
-  const validateMutation = useMutation({
-    mutationFn: async (files: File[]) => {
-      const formData = new FormData();
-      files.forEach((file) => formData.append("files", file));
-      return bulkUploadApi.validateFiles(formData);
-    },
-    onSuccess: (data) => {
-      setValidationResults(data.results);
-      setCurrentStep("validate");
-    },
-    onError: (error) => {
-      toast.error("Validation failed", {
-        description: error.message || "Failed to validate files",
-      });
-    },
-  });
+  const validateMutation = useValidateBulkUpload();
 
-  const uploadMutation = useMutation({
-    mutationFn: async (files: File[]) => {
-      const formData = new FormData();
-      files.forEach((file) => formData.append("files", file));
-      return bulkUploadApi.uploadFiles(formData);
-    },
-    onSuccess: (data) => {
-      setUploadResults(data);
-      setCurrentStep("results");
-
-      if (data.success) {
-        toast.success("Bulk upload completed!", {
-          description: `Successfully uploaded ${data.successful_files} out of ${data.total_files} files`,
-        });
-      } else {
-        toast.warning("Upload completed with errors", {
-          description: `${data.successful_files} successful, ${data.failed_files} failed`,
-        });
-      }
-    },
-    onError: (error) => {
-      toast.error("Upload failed", {
-        description: error.message || "Failed to upload files",
-      });
-    },
-  });
+  const uploadMutation = useUploadBulk();
 
   // Bulk upload handlers
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -149,13 +108,45 @@ export const AdminBulkUploadSection: React.FC = () => {
   const handleValidate = () => {
     if (selectedFiles.length === 0) return;
     setCurrentStep("upload");
-    validateMutation.mutate(selectedFiles);
+    validateMutation.mutate(selectedFiles, {
+      onSuccess: (data) => {
+        setValidationResults(data.results);
+        setCurrentStep("validate");
+      },
+      onError: (error) => {
+        toast.error("Validation failed", {
+          description: error.message || "Failed to validate files",
+        });
+        setCurrentStep("select");
+      },
+    });
   };
 
   const handleUploadFiles = () => {
     if (selectedFiles.length === 0) return;
     setCurrentStep("upload");
-    uploadMutation.mutate(selectedFiles);
+    uploadMutation.mutate(selectedFiles, {
+      onSuccess: (data) => {
+        setUploadResults(data);
+        setCurrentStep("results");
+
+        if (data.success) {
+          toast.success("Bulk upload completed!", {
+            description: `Successfully uploaded ${data.successful_files} out of ${data.total_files} files`,
+          });
+        } else {
+          toast.warning("Upload completed with errors", {
+            description: `${data.successful_files} successful, ${data.failed_files} failed`,
+          });
+        }
+      },
+      onError: (error) => {
+        toast.error("Upload failed", {
+          description: error.message || "Failed to upload files",
+        });
+        setCurrentStep("select");
+      },
+    });
   };
 
   const handleReset = () => {

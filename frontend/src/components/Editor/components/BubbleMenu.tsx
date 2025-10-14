@@ -12,7 +12,7 @@ import {
 } from "@/config/structural-annotations";
 import { useAnnotationStore } from "@/store/annotation";
 import type { CategoryOutput } from "@/api/annotation_list";
-import { useAnnotationListHierarchical } from "@/hooks/useAnnotationListHierarchical";
+import { useAnnotationListHierarchical } from "@/hooks/";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 
 // Type definitions for error typology (using API types)
@@ -201,7 +201,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   if (!visible || !currentSelection) return null;
 
   const handleAddAnnotation = () => {
-    console.log("add annotation")
     if (currentSelection) {
       if (effectiveMode === "table-of-contents" && selectedStructuralType) {
 

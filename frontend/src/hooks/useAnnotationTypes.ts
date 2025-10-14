@@ -4,14 +4,16 @@ import { queryKeys } from "@/constants/queryKeys";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 import { useEffect } from "react";
 
-/**
- * Hook to fetch all annotation types
- * 
- * @param skip - Number of records to skip (pagination)
- * @param limit - Maximum number of records to return (pagination)
- * @returns Query result with array of annotation types
- */
-export const useAnnotationTypes = (params?: { skip?: number; limit?: number }) => {
+// ============================================================================
+// Types
+// ============================================================================
+
+interface UseAnnotationTypesParams {
+  skip?: number;
+  limit?: number;
+}
+
+export const useAnnotationTypes = (params?: UseAnnotationTypesParams) => {
   const { setSelectedAnnotationListType } = useAnnotationFiltersStore();
   
   const query = useQuery({

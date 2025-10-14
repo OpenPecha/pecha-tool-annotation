@@ -1,9 +1,9 @@
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 import uuid
-from models.annotationlist import AnnotationList
+from models.annotation_list import AnnotationList
 from models.annotation_type import AnnotationType
-from schemas.annotationlist import AnnotationListCreate, CategoryInput, CategoryOutput, HierarchicalJSONOutput
+from schemas.annotation_list import AnnotationListCreate, CategoryInput, CategoryOutput, HierarchicalJSONOutput
 from crud.annotation_type import annotation_type_crud
 
 

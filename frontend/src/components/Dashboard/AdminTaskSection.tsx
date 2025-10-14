@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -21,10 +20,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { textApi } from "@/api/text";
 import { TextStatus } from "@/api/types";
 import type { TextFilters } from "@/api/types";
 import { toast } from "sonner";
+import { useTexts, useDeleteText } from "@/hooks";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import {
   IoDocumentText,
@@ -113,7 +112,6 @@ const ITEMS_PER_PAGE = 10;
 
 export const AdminTaskSection: React.FC = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<TextStatus | "all">("all");
   const [languageFilter, setLanguageFilter] = useState<string>("all");
   const [uploadedByFilter, setUploadedByFilter] = useState<
@@ -124,60 +122,36 @@ export const AdminTaskSection: React.FC = () => {
   // Calculate skip for pagination
   const skip = (currentPage - 1) * ITEMS_PER_PAGE;
 
+  // Build filters
+  const paginatedFilters: TextFilters = {
+    skip,
+    limit: ITEMS_PER_PAGE,
+  };
+  if (statusFilter !== "all") paginatedFilters.status = statusFilter;
+  if (languageFilter !== "all") paginatedFilters.language = languageFilter;
+  if (uploadedByFilter !== "all") paginatedFilters.uploaded_by = uploadedByFilter;
+
+  const countFilters: TextFilters = {};
+  if (statusFilter !== "all") countFilters.status = statusFilter;
+  if (languageFilter !== "all") countFilters.language = languageFilter;
+  if (uploadedByFilter !== "all") countFilters.uploaded_by = uploadedByFilter;
+
   // Fetch paginated texts with backend filtering
   const {
     data: textsData,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: [
-      "admin-paginated-texts",
-      statusFilter,
-      languageFilter,
-      uploadedByFilter,
-      currentPage,
-    ],
-    queryFn: () => {
-      const filters: TextFilters = {
-        skip,
-        limit: ITEMS_PER_PAGE,
-      };
-      if (statusFilter !== "all") filters.status = statusFilter;
-      if (languageFilter !== "all") filters.language = languageFilter;
-      if (uploadedByFilter !== "all") filters.uploaded_by = uploadedByFilter;
-      return textApi.getTexts(filters);
-    },
-    refetchOnWindowFocus: false,
-  });
+  } = useTexts(paginatedFilters);
 
   const texts = textsData || [];
 
   // Fetch total count for pagination (separate query without pagination)
-  const { data: allTextsForCountData } = useQuery({
-    queryKey: [
-      "admin-texts-count",
-      statusFilter,
-      languageFilter,
-      uploadedByFilter,
-    ],
-    queryFn: () => {
-      const filters: TextFilters = {};
-      if (statusFilter !== "all") filters.status = statusFilter;
-      if (languageFilter !== "all") filters.language = languageFilter;
-      if (uploadedByFilter !== "all") filters.uploaded_by = uploadedByFilter;
-      return textApi.getTexts(filters);
-    },
-    refetchOnWindowFocus: false,
-  });
+  const { data: allTextsForCountData } = useTexts(countFilters);
 
   const allTextsForCount = allTextsForCountData || [];
 
   // Fetch all texts for filter options (we need to get unique languages and status counts)
-  const { data: allTextsData } = useQuery({
-    queryKey: ["admin-all-texts-for-filters"],
-    queryFn: () => textApi.getTexts({}),
-    refetchOnWindowFocus: false,
-  });
+  const { data: allTextsData } = useTexts({});
 
   const allTexts = allTextsData || [];
 
@@ -265,29 +239,22 @@ export const AdminTaskSection: React.FC = () => {
   };
 
   // Delete task mutation
-  const deleteTaskMutation = useMutation({
-    mutationFn: textApi.deleteText,
-    onSuccess: () => {
-      toast.success("Task deleted successfully", {
-        description: "The task has been permanently removed from the system.",
-      });
-      // Invalidate and refetch all related queries
-      queryClient.invalidateQueries({ queryKey: ["admin-paginated-texts"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-texts-count"] });
-      queryClient.invalidateQueries({
-        queryKey: ["admin-all-texts-for-filters"],
-      });
-    },
-    onError: (error) => {
-      toast.error("Failed to delete task", {
-        description:
-          error instanceof Error ? error.message : "Please try again later",
-      });
-    },
-  });
+  const deleteTaskMutation = useDeleteText();
 
   const handleDeleteTask = (textId: number) => {
-    deleteTaskMutation.mutate(textId);
+    deleteTaskMutation.mutate(textId, {
+      onSuccess: () => {
+        toast.success("Task deleted successfully", {
+          description: "The task has been permanently removed from the system.",
+        });
+      },
+      onError: (error) => {
+        toast.error("Failed to delete task", {
+          description:
+            error instanceof Error ? error.message : "Please try again later",
+        });
+      },
+    });
   };
 
   const handleFilterChange = (

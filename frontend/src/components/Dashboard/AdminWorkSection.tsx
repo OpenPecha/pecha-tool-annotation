@@ -1,6 +1,5 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -9,12 +8,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { textApi } from "@/api/text";
 import { toast } from "sonner";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { IoDocumentText } from "react-icons/io5";
 import { useAuth } from "@/auth/use-auth-hook";
 import type { RecentActivityWithReviewCounts } from "@/api/types";
+import { useMyWorkInProgress, useRecentActivity, useStartWork } from "@/hooks";
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -64,65 +63,54 @@ export const AdminWorkSection: React.FC = () => {
   const { currentUser } = useAuth();
 
   // Fetch user's work in progress
-  const { data: workInProgress = [] } = useQuery({
-    queryKey: ["my-work-in-progress"],
-    queryFn: () => textApi.getMyWorkInProgress(),
-    refetchOnWindowFocus: false,
-  });
+  const { data: workInProgress = [] } = useMyWorkInProgress();
 
   // Fetch recent activity data from API
-  const { data: recentActivity = [], isLoading: isLoadingActivity } = useQuery({
-    queryKey: ["recent-activity"],
-    queryFn: () => textApi.getRecentActivity(10),
-    refetchOnWindowFocus: false,
-  });
+  const { data: recentActivity = [], isLoading: isLoadingActivity } = useRecentActivity(10);
 
   // Mutation to start work - find work in progress or assign new text
-  const startWorkMutation = useMutation({
-    mutationFn: async () => {
-      return textApi.startWork();
-    },
-    onSuccess: (text) => {
-      toast.success(`✅ Work Started`, {
-        description: `Starting work on: "${text.title}"`,
-      });
-      navigate(`/task/${text.id}`);
-      setIsLoadingText(false);
-    },
-    onError: (error) => {
-      let errorMessage = "Failed to start work";
-      let errorTitle = "❌ Error";
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (error && typeof error === "object" && "detail" in error) {
-        const apiError = error as { detail: string; status_code?: number };
-        errorMessage = apiError.detail || "Failed to start work";
-
-        if (apiError.status_code === 404) {
-          errorTitle = "📝 No Tasks Available";
-          errorMessage =
-            "No texts available for annotation at this time. Please contact your administrator to add more texts to the system.";
-        }
-      }
-
-      if (errorTitle.includes("No Tasks Available")) {
-        toast.info(errorTitle, {
-          description: errorMessage,
-        });
-      } else {
-        toast.error(errorTitle, {
-          description: errorMessage,
-        });
-      }
-
-      setIsLoadingText(false);
-    },
-  });
+  const startWorkMutation = useStartWork();
 
   const handleStartWork = () => {
     setIsLoadingText(true);
-    startWorkMutation.mutate();
+    startWorkMutation.mutate(undefined, {
+      onSuccess: (text) => {
+        toast.success(`✅ Work Started`, {
+          description: `Starting work on: "${text.title}"`,
+        });
+        navigate(`/task/${text.id}`);
+        setIsLoadingText(false);
+      },
+      onError: (error) => {
+        let errorMessage = "Failed to start work";
+        let errorTitle = "❌ Error";
+
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (error && typeof error === "object" && "detail" in error) {
+          const apiError = error as { detail: string; status_code?: number };
+          errorMessage = apiError.detail || "Failed to start work";
+
+          if (apiError.status_code === 404) {
+            errorTitle = "📝 No Tasks Available";
+            errorMessage =
+              "No texts available for annotation at this time. Please contact your administrator to add more texts to the system.";
+          }
+        }
+
+        if (errorTitle.includes("No Tasks Available")) {
+          toast.info(errorTitle, {
+            description: errorMessage,
+          });
+        } else {
+          toast.error(errorTitle, {
+            description: errorMessage,
+          });
+        }
+
+        setIsLoadingText(false);
+      },
+    });
   };
 
   return (
@@ -266,7 +254,7 @@ function RecentActivityItem({
 
   // Handle clicking on recent activity item
   const handleActivityClick = (textId: number) => {
-    navigate(`/task/${textId}`);
+    navigate(`/review/${textId}`);
   };
 
   return (

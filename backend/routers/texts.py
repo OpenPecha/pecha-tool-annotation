@@ -70,6 +70,14 @@ def create_text(
     current_user: User = Depends(get_current_active_user)
 ):
     """Create new text."""
+    # Check for duplicate title
+    existing_text = text_crud.get_by_title(db=db, title=text_in.title)
+    if existing_text:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Text with title '{text_in.title}' already exists"
+        )
+    
     # Set the uploaded_by field to the current user
     text_in.uploaded_by = current_user.id
     created_text = text_crud.create(db=db, obj_in=text_in)
@@ -94,6 +102,13 @@ def upload_text_file(
             detail="Only text files are allowed"
         )
     
+    # Check for duplicate filename
+    existing_text = text_crud.get_by_title(db=db, title=file.filename.rsplit('.', 1)[0])
+    if existing_text:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"A text with the filename '{file.filename}' has already been uploaded"
+        )
     try:
         # Read the file content
         content = file.file.read().decode('utf-8')

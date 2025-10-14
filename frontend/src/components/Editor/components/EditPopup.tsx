@@ -16,7 +16,7 @@ import {
 import type { Annotation } from "@/pages/Task";
 import { truncateText } from "@/lib/utils";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
-import { useAnnotationListHierarchical } from "@/hooks/useAnnotationListHierarchical";
+import { useAnnotationListHierarchical } from "@/hooks/";
 
 interface EditPopupProps {
   visible: boolean;

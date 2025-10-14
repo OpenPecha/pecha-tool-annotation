@@ -11,15 +11,14 @@ import {
   IoWarning,
 } from "react-icons/io5";
 import { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import type { CategoryOutput } from "@/api/annotation_list";
-import { annotationsApi } from "@/api/annotations";
-import type { AnnotationResponse } from "@/api/types";
 import { AnnotationTypesFilter } from "./AnnotationTypesFilter";
 import { useParams } from "react-router-dom";
-import { useAnnotationTypes } from "@/hooks/useAnnotationTypes";
-import { useAnnotationListHierarchical } from "@/hooks/useAnnotationListHierarchical";
-import { queryKeys } from "@/constants/queryKeys";
+import {
+  useAnnotationTypes,
+  useAnnotationListHierarchical,
+  useAnnotationsByText,
+} from "@/hooks";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 
 // Type definitions for error typology (using API types)
@@ -72,22 +71,17 @@ export const AnnotationList = ({
     enabled: !!selectedAnnotationListType,
   });
 
+  // Parse textId
+  const parsedTextId = textId ? parseInt(textId, 10) : undefined;
+  
   // Fetch Annotations by text
   const {
     data: annotationsByText = [],
     isLoading: loadingLeaves,
-  } = useQuery<AnnotationResponse[]>({
-    queryKey: queryKeys.annotations.byText(textId || ""),
-    queryFn: () => {
-      if (!textId) return Promise.resolve([]);
-      const textIdNumber = parseInt(textId, 10);
-      if (isNaN(textIdNumber)) return Promise.resolve([]);
-      return annotationsApi.getAnnotationsByText(textIdNumber);
-    },
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
-    enabled: !!textId,
-  });
+  } = useAnnotationsByText(
+    parsedTextId || 0,
+    !!parsedTextId && !isNaN(parsedTextId)
+  );
 
   // Flatten the hierarchical structure for easier searching
   const flattenCategories = (categories: ErrorCategory[]): ErrorCategory[] => {

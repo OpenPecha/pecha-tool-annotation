@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  reviewApi,
-  type ReviewDecision,
-  type ReviewSubmission,
-  type ReviewSessionResponse,
+import type {
+  ReviewDecision,
+  ReviewSubmission,
+  ReviewSessionResponse,
 } from "@/api/reviews";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +13,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TableOfContents } from "@/components/TOC";
 import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
+import {
+  useReviewSession,
+  useSubmitReview,
+  useAutoSaveReview,
+} from "@/hooks";
 import {
   IoCheckmarkCircle as CheckCircle,
   IoCloseCircle as XCircle,
@@ -42,7 +45,6 @@ export type Annotation = {
 const Review = () => {
   const { textId } = useParams<{ textId: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const [reviewDecisions, setReviewDecisions] = useState<
     Map<number, ReviewDecision>
@@ -54,20 +56,15 @@ const Review = () => {
   const [savedComments, setSavedComments] = useState<Set<number>>(new Set());
   const [pendingSave, setPendingSave] = useState<Set<number>>(new Set());
 
+  // Parse textId
+  const parsedTextId = textId ? parseInt(textId, 10) : 0;
+
   // Fetch review session data
   const {
     data: reviewSession,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ["review-session", textId],
-    queryFn: () => {
-      if (!textId) throw new Error("Text ID is required");
-      return reviewApi.startReviewSession(parseInt(textId, 10));
-    },
-    refetchOnWindowFocus: false,
-    enabled: !!textId,
-  });
+  } = useReviewSession(parsedTextId, !!textId);
 
   // Initialize review decisions from existing reviews
   useEffect(() => {
@@ -85,83 +82,10 @@ const Review = () => {
   }, [reviewSession]);
 
   // Submit review mutation
-  const submitReviewMutation = useMutation({
-    mutationFn: async (reviewData: ReviewSubmission) => {
-      return reviewApi.submitReview(reviewData);
-    },
-    onSuccess: (response) => {
-      toast.success("Review submitted successfully!", {
-        description: response.message,
-      });
-
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ["review-session"] });
-      queryClient.invalidateQueries({ queryKey: ["texts-for-review"] });
-
-      // Navigate to next review or back to dashboard
-      if (response.next_review_text) {
-        navigate(`/review/${response.next_review_text.id}`);
-      } else {
-        navigate("/dashboard");
-      }
-    },
-    onError: (error) => {
-      toast.error("Failed to submit review", {
-        description:
-          error instanceof Error ? error.message : "Please try again",
-      });
-    },
-    onSettled: () => {
-      setIsSubmitting(false);
-    },
-  });
+  const submitReviewMutation = useSubmitReview();
 
   // Auto-save individual review decisions
-  const autoSaveReviewMutation = useMutation({
-    mutationFn: async ({
-      annotationId,
-      decision,
-      comment,
-    }: {
-      annotationId: number;
-      decision: "agree" | "disagree";
-      comment?: string;
-    }) => {
-      return reviewApi.reviewAnnotation(annotationId, decision, comment);
-    },
-    onMutate: ({ annotationId }) => {
-      setSavingComments((prev) => new Set(prev).add(annotationId));
-      setSavedComments((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(annotationId);
-        return newSet;
-      });
-    },
-    onSuccess: (_, { annotationId }) => {
-      setSavingComments((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(annotationId);
-        return newSet;
-      });
-      setSavedComments((prev) => new Set(prev).add(annotationId));
-
-      // Remove the "saved" indicator after 2 seconds
-      setTimeout(() => {
-        setSavedComments((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(annotationId);
-          return newSet;
-        });
-      }, 2000);
-    },
-    onError: (_, { annotationId }) => {
-      setSavingComments((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(annotationId);
-        return newSet;
-      });
-    },
-  });
+  const autoSaveReviewMutation = useAutoSaveReview();
 
   // Ref to persist timeouts across renders
   const timeoutsRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
@@ -197,7 +121,43 @@ const Review = () => {
           newSet.delete(annotationId);
           return newSet;
         });
-        autoSaveReviewMutation.mutate({ annotationId, decision, comment });
+        autoSaveReviewMutation.mutate(
+          { annotationId, decision, comment },
+          {
+            onMutate: () => {
+              setSavingComments((prev) => new Set(prev).add(annotationId));
+              setSavedComments((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(annotationId);
+                return newSet;
+              });
+            },
+            onSuccess: () => {
+              setSavingComments((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(annotationId);
+                return newSet;
+              });
+              setSavedComments((prev) => new Set(prev).add(annotationId));
+
+              // Remove the "saved" indicator after 2 seconds
+              setTimeout(() => {
+                setSavedComments((prev) => {
+                  const newSet = new Set(prev);
+                  newSet.delete(annotationId);
+                  return newSet;
+                });
+              }, 2000);
+            },
+            onError: () => {
+              setSavingComments((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(annotationId);
+                return newSet;
+              });
+            },
+          }
+        );
         timeoutsRef.current.delete(annotationId);
       }, 1000); // Auto-save after 1 second of inactivity
 
@@ -268,7 +228,29 @@ const Review = () => {
       decisions,
     };
 
-    submitReviewMutation.mutate(reviewData);
+    submitReviewMutation.mutate(reviewData, {
+      onSuccess: (response) => {
+        toast.success("Review submitted successfully!", {
+          description: response.message,
+        });
+
+        // Navigate to next review or back to dashboard
+        if (response.next_review_text) {
+          navigate(`/review/${response.next_review_text.id}`);
+        } else {
+          navigate("/");
+        }
+      },
+      onError: (error) => {
+        toast.error("Failed to submit review", {
+          description:
+            error instanceof Error ? error.message : "Please try again",
+        });
+      },
+      onSettled: () => {
+        setIsSubmitting(false);
+      },
+    });
   };
 
   // Convert review session annotations to format expected by TableOfContents
@@ -392,7 +374,7 @@ const Review = () => {
                 ? error.message
                 : "Failed to load review session"}
             </p>
-            <Button onClick={() => navigate("/dashboard")}>
+            <Button onClick={() => navigate("/")}>
               Back to Dashboard
             </Button>
           </div>

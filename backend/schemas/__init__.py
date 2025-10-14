@@ -11,7 +11,7 @@ from .annotation_review import (
 from .annotation_type import (
     AnnotationTypeBase, AnnotationTypeCreate, AnnotationTypeUpdate, AnnotationTypeResponse
 )
-from .annotationlist import (
+from .annotation_list import (
     AnnotationListBase, AnnotationListCreate, AnnotationListResponse,
     CategoryInput, HierarchicalJSONInput, AnnotationListBulkCreateRequest, AnnotationListBulkCreateResponse,
     CategoryOutput, HierarchicalJSONOutput
