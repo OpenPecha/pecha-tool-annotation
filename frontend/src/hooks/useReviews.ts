@@ -206,3 +206,18 @@ export const useDeleteReview = () => {
  */
 export const useAutoSaveReview = useReviewAnnotation;
 
+/**
+ * Start reviewing - fetches the first available text for review
+ */
+export const useStartReviewing = () => {
+  return useMutation({
+    mutationFn: async (limit: number = 1) => {
+      const texts = await reviewApi.getTextsForReview({ limit });
+      if (texts.length === 0) {
+        throw new Error("No texts available for review at this time");
+      }
+      return texts[0];
+    },
+  });
+};
+

@@ -11,19 +11,20 @@ import {
   IoCheckmarkCircle,
 } from "react-icons/io5";
 import { toast } from "sonner";
-import { exportApi, type ExportStats } from "@/api/export";
-import { useAuth } from "@/auth/use-auth-hook";
+import type { ExportStats } from "@/api/export";
+import { useDownloadExport } from "@/hooks";
 
 export const AdminExportSection: React.FC = () => {
-  const { getToken } = useAuth();
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [filterType, setFilterType] = useState<"reviewed" | "annotated">(
     "annotated"
   );
-  const [isExporting, setIsExporting] = useState(false);
   const [exportStats, setExportStats] = useState<ExportStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
+
+  // Mutation to download export
+  const downloadExportMutation = useDownloadExport();
 
   // Get current date and 30 days ago as default range
   const getDefaultDates = () => {
@@ -50,14 +51,6 @@ export const AdminExportSection: React.FC = () => {
       return;
     }
 
-    // Ensure we have an auth token
-    try {
-      await getToken();
-    } catch {
-      toast.error("Authentication required");
-      return;
-    }
-
     if (new Date(fromDate) > new Date(toDate)) {
       toast.error("Start date must be before end date");
       return;
@@ -65,6 +58,8 @@ export const AdminExportSection: React.FC = () => {
 
     setIsLoadingStats(true);
     try {
+      // Use the export API directly for stats preview (lightweight operation)
+      const { exportApi } = await import("@/api/export");
       const stats = await exportApi.getExportStats(
         fromDate,
         toDate,
@@ -91,26 +86,20 @@ export const AdminExportSection: React.FC = () => {
       return;
     }
 
-    // Ensure we have an auth token
-    try {
-      await getToken();
-    } catch {
-      toast.error("Authentication required");
-      return;
-    }
-
-    setIsExporting(true);
-    try {
-      await exportApi.downloadExport(fromDate, toDate, filterType);
-      toast.success(
-        `Export completed! ${exportStats.total_texts} ${filterType} texts with ${exportStats.total_annotations} annotations downloaded.`
-      );
-    } catch (error) {
-      toast.error("Failed to export data");
-      console.error(error);
-    } finally {
-      setIsExporting(false);
-    }
+    downloadExportMutation.mutate(
+      { fromDate, toDate, filterType },
+      {
+        onSuccess: () => {
+          toast.success(
+            `Export completed! ${exportStats.total_texts} ${filterType} texts with ${exportStats.total_annotations} annotations downloaded.`
+          );
+        },
+        onError: (error) => {
+          toast.error("Failed to export data");
+          console.error(error);
+        },
+      }
+    );
   };
 
   const resetForm = () => {
@@ -242,7 +231,7 @@ export const AdminExportSection: React.FC = () => {
             <Button
               onClick={resetForm}
               variant="ghost"
-              disabled={isLoadingStats || isExporting}
+              disabled={isLoadingStats || downloadExportMutation.isPending}
             >
               Reset
             </Button>
@@ -370,11 +359,11 @@ export const AdminExportSection: React.FC = () => {
 
               <Button
                 onClick={handleExport}
-                disabled={isExporting}
+                disabled={downloadExportMutation.isPending}
                 className="w-full bg-indigo-600 hover:bg-indigo-700"
                 size="lg"
               >
-                {isExporting ? (
+                {downloadExportMutation.isPending ? (
                   <>
                     <Loading className="w-4 h-4 mr-2" />
                     Generating Export...
@@ -387,7 +376,7 @@ export const AdminExportSection: React.FC = () => {
                 )}
               </Button>
 
-              {isExporting && (
+              {downloadExportMutation.isPending && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                   <p className="text-sm text-yellow-800">
                     🔄 Please wait while we prepare your export. This may take a

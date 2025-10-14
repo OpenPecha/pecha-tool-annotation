@@ -56,6 +56,7 @@ export {
   useReviewAnnotation,
   useDeleteReview,
   useAutoSaveReview,
+  useStartReviewing,
 } from "./useReviews";
 
 // User Hooks
@@ -95,6 +96,13 @@ export {
   useUploadAnnotationList,
   useDeleteAnnotationListByType,
 } from "./useAnnotationLists";
+
+// Export Hooks
+export {
+  useExportStats,
+  useDownloadExport,
+  useExportData,
+} from "./useExport";
 
 // ============================================================================
 // Utility Hooks (Non-React Query)

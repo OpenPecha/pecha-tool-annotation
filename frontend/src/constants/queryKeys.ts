@@ -1,10 +1,3 @@
-/**
- * Centralized Query Keys for React Query
- * 
- * This file contains all query key factories for consistent caching and invalidation
- * across the application.
- */
-
 export const queryKeys = {
   // Annotation Lists
   annotationLists: {
@@ -76,6 +69,11 @@ export const queryKeys = {
   // Bulk Upload
   bulkUpload: {
     validate: (file: string) => ["bulk-validate", file] as const,
+  },
+
+  // Export
+  export: {
+    stats: ["export-stats"] as const,
   },
 } as const;
 

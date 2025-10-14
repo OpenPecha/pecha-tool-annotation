@@ -23,6 +23,7 @@ import {
   useMyReviewProgress,
   useCancelWorkWithRevertAndSkip,
   useUploadTextFile,
+  useStartReviewing,
 } from "@/hooks";
 
 const formatDate = (dateString: string) => {
@@ -125,6 +126,9 @@ export const RegularUserDashboard: React.FC = () => {
   // Mutation to start work - find work in progress or assign new text
   const startWorkMutation = useStartWork();
 
+  // Mutation to start reviewing
+  const startReviewingMutation = useStartReviewing();
+
   // Mutation to upload text file
   const uploadTextFileMutation = useUploadTextFile({
     onSuccess: (uploadedText) => {
@@ -185,29 +189,28 @@ export const RegularUserDashboard: React.FC = () => {
     });
   };
 
-  const handleReviewWork = async () => {
-    try {
-      const textsForReview = await reviewApi.getTextsForReview({ limit: 1 });
-
-      if (textsForReview.length === 0) {
-        toast.info("📝 No Reviews Available", {
-          description: "No texts are ready for review at this time.",
+  const handleReviewWork = () => {
+    startReviewingMutation.mutate(1, {
+      onSuccess: (firstText) => {
+        toast.success("Starting Review", {
+          description: `Starting review for: "${firstText.title}"`,
         });
-        return;
-      }
-
-      const firstText = textsForReview[0];
-      toast.success("Starting Review", {
-        description: `Starting review for: "${firstText.title}"`,
-      });
-
-      navigate(`/review/${firstText.id}`);
-    } catch (error) {
-      toast.error("Failed to start review", {
-        description:
-          error instanceof Error ? error.message : "Please try again",
-      });
-    }
+        navigate(`/review/${firstText.id}`);
+      },
+      onError: (error) => {
+        const errorMessage = error instanceof Error ? error.message : "Please try again";
+        
+        if (errorMessage.includes("No texts available")) {
+          toast.info("📝 No Reviews Available", {
+            description: "No texts are ready for review at this time.",
+          });
+        } else {
+          toast.error("Failed to start review", {
+            description: errorMessage,
+          });
+        }
+      },
+    });
   };
 
   const handleBulkUpload = () => {
@@ -271,7 +274,7 @@ export const RegularUserDashboard: React.FC = () => {
           {/* Start Work Card - Hide from reviewers */}
           {currentUser?.role !== "reviewer" && (
             <Card className="hover:shadow-lg  transition-all duration-300 cursor-pointer border-2 hover:border-blue-200">
-              <CardHeader className="text-center pb-4">
+              <CardHeader className="text                                                 5          -center pb-4">
                 <div className="flex justify-center mb-4">
                   <StartWorkIcon />
                 </div>
