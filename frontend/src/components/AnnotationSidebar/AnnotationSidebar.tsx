@@ -77,7 +77,7 @@ export const AnnotationSidebar = ({
         isOpen ? "h-[75vh]" : "h-auto"
       } w-full`}
     >
-      <Card
+      {annotations.length > 0 && <Card
         className={`flex flex-col transition-all duration-300 ${
           isOpen ? "h-full" : "h-auto"
         }`}
@@ -261,7 +261,7 @@ export const AnnotationSidebar = ({
             </button>
           </div>
         )}
-      </Card>
+      </Card>}
     </div>
   );
 };
