@@ -126,13 +126,6 @@ export const NavigationModeSelector = ({
                   currentMode === "error-list" ? "bg-orange-400" : "bg-gray-300"
                 }`}
               />
-              <div
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                  currentMode === "table-of-contents"
-                    ? "bg-blue-400"
-                    : "bg-gray-300"
-                }`}
-              />
             </div>
           </div>
         )}

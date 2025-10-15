@@ -26,6 +26,26 @@ class AnnotationListResponse(AnnotationListBase):
     created_by: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    
+    @classmethod
+    def model_validate(cls, obj, **kwargs):
+        """Custom validation to populate type from annotation_type relationship."""
+        if hasattr(obj, 'annotation_type') and obj.annotation_type:
+            # Create a dict with all attributes plus the type from relationship
+            data = {
+                'id': obj.id,
+                'title': obj.title,
+                'type': obj.annotation_type.name,
+                'level': obj.level,
+                'description': obj.description,
+                'meta': obj.meta,
+                'parent_id': obj.parent_id,
+                'created_by': obj.created_by,
+                'created_at': obj.created_at,
+                'updated_at': obj.updated_at
+            }
+            return super().model_validate(data, **kwargs)
+        return super().model_validate(obj, **kwargs)
 
 
 class CategoryInput(BaseModel):

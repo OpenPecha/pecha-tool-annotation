@@ -3,6 +3,7 @@ from .text import Text
 from .annotation import Annotation
 from .user_rejected_text import UserRejectedText
 from .annotation_review import AnnotationReview
-from .annotationlist import AnnotationList
+from .annotation_type import AnnotationType
+from .annotation_list import AnnotationList
 
-__all__ = ["User", "Text", "Annotation", "UserRejectedText", "AnnotationReview", "AnnotationList"] 
+__all__ = ["User", "Text", "Annotation", "UserRejectedText", "AnnotationReview", "AnnotationType", "AnnotationList"] 

@@ -55,7 +55,7 @@ export const AnnotationTypesFilter = ({
         className="w-full px-3 py-2 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors rounded"
       >
         <span className="text-xs font-medium text-gray-700">
-          Filter by Annotation Types
+          Filter by Annotations
         </span>
         {isOpen ? (
           <IoChevronDown className="w-4 h-4 text-gray-500" />

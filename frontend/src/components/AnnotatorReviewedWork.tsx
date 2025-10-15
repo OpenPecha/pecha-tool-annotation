@@ -1,15 +1,17 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import {
-  reviewApi,
-  type AnnotatorReviewedWork as AnnotatorReviewedWorkType,
-  type TextNeedingRevision,
+import type {
+  AnnotatorReviewedWork as AnnotatorReviewedWorkType,
+  TextNeedingRevision,
 } from "@/api/reviews";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import {
+  useAnnotatorReviewedWork,
+  useTextsNeedingRevision,
+} from "@/hooks";
 import {
   IoCheckmarkCircle as CheckCircle,
   IoCloseCircle as XCircle,
@@ -32,22 +34,12 @@ export const AnnotatorReviewedWork: React.FC<AnnotatorReviewedWorkProps> = ({
   );
 
   // Fetch reviewed work
-  const { data: reviewedWork, isLoading: isLoadingReviewed } = useQuery<
-    AnnotatorReviewedWorkType[]
-  >({
-    queryKey: ["annotator-reviewed-work"],
-    queryFn: () => reviewApi.getAnnotatorReviewedWork(),
-    refetchOnWindowFocus: false,
-  });
+  const { data: reviewedWork, isLoading: isLoadingReviewed } =
+    useAnnotatorReviewedWork();
 
   // Fetch texts needing revision
-  const { data: needsRevision, isLoading: isLoadingRevision } = useQuery<
-    TextNeedingRevision[]
-  >({
-    queryKey: ["texts-needing-revision"],
-    queryFn: () => reviewApi.getTextsNeedingRevision(),
-    refetchOnWindowFocus: false,
-  });
+  const { data: needsRevision, isLoading: isLoadingRevision } =
+    useTextsNeedingRevision();
 
   const handleViewText = (textId: number) => {
     navigate(`/task/${textId}`);

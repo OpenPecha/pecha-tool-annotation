@@ -1,5 +1,4 @@
 import React, { useState, useRef, useCallback } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -25,8 +24,17 @@ import type {
   AnnotationListUploadResponse,
   CategoryOutput,
 } from "@/api/annotation_list";
+import { useAnnotationTypes } from "@/hooks";
+import {
+  useAnnotationListHierarchical,
+  useUploadAnnotationList,
+  useDeleteAnnotationListByType,
+} from "@/hooks";
+import { queryKeys } from "@/constants/queryKeys";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const AdminAnnotationListSection: React.FC = () => {
+  const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploadResult, setUploadResult] =
@@ -37,62 +45,35 @@ export const AdminAnnotationListSection: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch all annotation list types
-  const { data: allLists, refetch: refetchLists } = useQuery({
-    queryKey: ["annotation-lists"],
-    queryFn: () => annotationListApi.getAll(),
-  });
+  // Fetch all annotation lists using custom hook
+  const { data: allAnnotationTypes } = useAnnotationTypes();
 
-  // Fetch hierarchical data for selected type
-  const { data: hierarchicalData } = useQuery({
-    queryKey: ["annotation-list-hierarchy", selectedType],
-    queryFn: () =>
-      selectedType
-        ? annotationListApi.getByTypeHierarchical(selectedType)
-        : Promise.resolve(null),
+  // Fetch hierarchical data for selected type using custom hook
+  const { data: hierarchicalData } = useAnnotationListHierarchical({
+    type_id: selectedType || "",
     enabled: !!selectedType,
   });
 
-  // Upload mutation
-  const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      return annotationListApi.uploadFile(file);
-    },
+  // Upload mutation using custom hook
+  const uploadMutation = useUploadAnnotationList({
     onSuccess: (data) => {
       setUploadResult(data);
       setCurrentStep("success");
-      refetchLists();
-
-      toast.success("Upload successful!", {
-        description: `Created ${data.total_records_created} records for "${data.root_type}"`,
-      });
     },
-    onError: (error: any) => {
-      toast.error("Upload failed", {
-        description: error.message || "Failed to upload annotation list",
-      });
+    onError: () => {
       setCurrentStep("select");
     },
   });
 
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (type: string) => {
-      return annotationListApi.deleteByType(type);
-    },
-    onSuccess: (data) => {
-      toast.success("Deleted successfully!", {
-        description: `Removed ${data.deleted_count} records`,
-      });
-      refetchLists();
-      if (selectedType === data.message) {
+  // Delete mutation using custom hook
+  const deleteMutation = useDeleteAnnotationListByType({
+    onSuccess: () => {
+      if (selectedType) {
         setSelectedType(null);
       }
-    },
-    onError: (error: any) => {
-      toast.error("Delete failed", {
-        description: error.message || "Failed to delete annotation list",
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.annotationTypes.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.annotationLists.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.annotationLists.types });
     },
   });
 
@@ -174,11 +155,6 @@ export const AdminAnnotationListSection: React.FC = () => {
       deleteMutation.mutate(type);
     }
   };
-
-  // Get unique types from all lists
-  const uniqueTypes = allLists
-    ? Array.from(new Set(allLists.map((item) => item.type))).filter(Boolean)
-    : [];
 
   // Render category tree
   const renderCategory = (category: CategoryOutput, depth: number = 0) => {
@@ -362,42 +338,37 @@ export const AdminAnnotationListSection: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {uniqueTypes.length === 0 ? (
+          {allAnnotationTypes?.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <IoList className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No annotation lists uploaded yet</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {uniqueTypes.map((type) => {
-                const itemsCount =
-                  allLists?.filter((item) => item.type === type).length || 0;
+              {allAnnotationTypes?.map((type) => {
                 return (
-                  <Card key={type} className="hover:shadow-md transition-shadow">
+                  <Card key={type.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-gray-900 truncate">
-                            {type}
+                            {type.name}
                           </h4>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {itemsCount} record(s)
-                          </p>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() =>
-                              setSelectedType(selectedType === type ? null : type)
+                              setSelectedType(selectedType === type.id ? null : type.id)
                             }
                           >
-                            <IoEye className={`w-4 h-4 ${selectedType === type ? "text-blue-600" : "text-gray-600"}`} />
+                            <IoEye className={`w-4 h-4 ${selectedType === type.id ? "text-blue-600" : "text-gray-600"}`} />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(type)}
+                            onClick={() => handleDelete(type.id)}
                             disabled={deleteMutation.isPending}
                           >
                             <IoTrash className="w-4 h-4 text-red-600" />

@@ -1,16 +1,14 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAnnotationStore } from "@/store/annotation";
 import { TextAnnotator } from "@/components/TextAnnotator";
 import type { TextAnnotatorRef } from "@/components/TextAnnotator";
+import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 import { AnnotationSidebar } from "@/components/AnnotationSidebar/AnnotationSidebar";
 import { NavigationModeSelector } from "@/components/NavigationModeSelector";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import ActionButtons from "@/components/ActionButtons";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { textApi } from "@/api/text";
-import { annotationsApi } from "@/api/annotations";
 import { reviewApi } from "@/api/reviews";
 import type {
   AnnotationResponse,
@@ -20,12 +18,24 @@ import type {
 } from "@/api/types";
 import type { AnnotationReviewResponse } from "@/api/reviews";
 import {
-  loadAnnotationConfig,
+  extractLeafNodes,
   isValidAnnotationType,
 } from "@/config/annotation-options";
+import { useAnnotationListHierarchical } from "@/hooks/";
 import { SkipConfirmationDialog } from "@/components/SkipConfirmationDialog";
 import { AnnotationColorSettings } from "@/components/AnnotationColorSettings";
 import { useAuth } from "@/auth/use-auth-hook";
+import {
+  useTextWithAnnotations,
+  useRecentActivity,
+  useCreateAnnotation,
+  useUpdateAnnotation,
+  useDeleteAnnotation,
+  useSubmitTask,
+  useSkipText,
+  useRevertWork,
+  useUpdateTask,
+} from "@/hooks";
 
 export type Annotation = {
   id: string;
@@ -51,32 +61,20 @@ const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { currentUser } = useAuth();
 
-  const { selectedAnnotationListType, selectedAnnotationTypes, setSelectedAnnotationTypes } = useAnnotationStore();
+  const { selectedAnnotationListType, selectedAnnotationTypes, setSelectedAnnotationTypes } = useAnnotationFiltersStore();
 
-  // React Query to fetch text data
+  // Parse textId
+  const parsedTextId = textId ? parseInt(textId, 10) : undefined;
+
+  // Fetch text data with annotations
   const {
     data: textData,
     isLoading,
     isError,
     error,
-  } = useQuery({
-    queryKey: ["text", textId],
-    queryFn: () => {
-      if (!textId) {
-        throw new Error("Text ID is required");
-      }
-      const id = parseInt(textId, 10);
-      if (isNaN(id)) {
-        throw new Error("Invalid text ID");
-      }
-      return textApi.getTextWithAnnotations(id);
-    },
-    refetchOnWindowFocus: false,
-    enabled: !!textId, // Only run query if textId exists
-  });
+  } = useTextWithAnnotations(parsedTextId || 0, !!parsedTextId && !isNaN(parsedTextId));
 
   // Convert API annotations to component format
   const convertApiAnnotations = async (
@@ -157,6 +155,12 @@ const Index = () => {
   const translation = textData?.translation || "";
   const hasTranslation = Boolean(translation && translation.trim().length > 0);
 
+  const {
+    data: annotationList,
+  } = useAnnotationListHierarchical({
+    type_id: selectedAnnotationListType,
+    enabled: !!selectedAnnotationListType,
+  });
   // Update local state when textData is loaded
   useEffect(() => {
     if (textData) {
@@ -168,26 +172,23 @@ const Index = () => {
     }
   }, [textData]);
 
+  // Fetch recent activity to check annotation acceptance status
+  const { data: recentActivityData } = useRecentActivity(10);
+  
   // Check if all annotations are accepted when textData is loaded
   useEffect(() => {
-    if (textData && textId) {
-      // Fetch the activity status to check if all annotations are accepted
-      textApi
-        .getRecentActivity(10)
-        .then((activities) => {
-          const currentTextActivity = activities.find(
-            (activity) => activity.text.id === parseInt(textId, 10)
-          );
-          if (currentTextActivity) {
-            setAllAnnotationsAccepted(currentTextActivity.all_accepted);
-          }
-        })
-        .catch(() => {
-          // If we can't fetch activity, assume editing is allowed
-          setAllAnnotationsAccepted(false);
-        });
+    if (recentActivityData && textId) {
+      const currentTextActivity = recentActivityData.find(
+        (activity) => activity.text.id === parseInt(textId, 10)
+      );
+      if (currentTextActivity) {
+        setAllAnnotationsAccepted(currentTextActivity.all_accepted);
+      } else {
+        // If activity not found, assume editing is allowed
+        setAllAnnotationsAccepted(false);
+      }
     }
-  }, [textData, textId]);
+  }, [recentActivityData, textId]);
 
   // Parse URL parameters to get target annotation ID
   useEffect(() => {
@@ -249,230 +250,27 @@ const Index = () => {
       }
     }
   }, [targetAnnotationId, annotations, hasScrolledToTarget, toast]);
+  
   // Mutation for creating annotations
-  const createAnnotationMutation = useMutation({
-    mutationFn: async (annotationData: AnnotationCreate) => {
-      return annotationsApi.createAnnotation(annotationData);
-    },
-    onSuccess: (data) => {
-      // Only refresh user stats (affects total annotations count)
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
-
-      toast({
-        title: "✅ Annotation Created",
-        description: `${data.annotation_type} annotation saved to database`,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "❌ Failed to Create Annotation",
-        description:
-          error instanceof Error ? error.message : "Failed to save annotation",
-      });
-    },
-  });
+  const createAnnotationMutation = useCreateAnnotation();
 
   // Mutation for updating annotations
-  const updateAnnotationMutation = useMutation({
-    mutationFn: async (data: {
-      id: number;
-      type: string;
-      name?: string;
-      level?: string;
-    }) => {
-      return annotationsApi.updateAnnotation(data.id, {
-        annotation_type: data.type,
-        name: data.name,
-        level: data.level as "minor" | "major" | "critical" | undefined,
-      });
-    },
-    onSuccess: (data) => {
-      // Only refresh user stats (affects total annotations count)
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
-
-      toast({
-        title: "✅ Annotation Updated",
-        description: `${data.annotation_type} annotation updated successfully`,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "❌ Failed to Update Annotation",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to update annotation",
-      });
-    },
-  });
+  const updateAnnotationMutation = useUpdateAnnotation();
 
   // Mutation for deleting annotations
-  const deleteAnnotationMutation = useMutation({
-    mutationFn: async (annotationId: number) => {
-      return annotationsApi.deleteAnnotation(annotationId);
-    },
-    onSuccess: () => {
-      // Only refresh user stats (affects total annotations count)
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
-
-      toast({
-        title: "✅ Annotation Deleted",
-        description: "Annotation removed from database",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "❌ Failed to Delete Annotation",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to delete annotation",
-      });
-    },
-  });
+  const deleteAnnotationMutation = useDeleteAnnotation();
 
   // Mutation for submitting task
-  const submitTaskMutation = useMutation({
-    mutationFn: async () => {
-      if (!textId) throw new Error("Text ID is required");
-      const id = parseInt(textId, 10);
-      if (isNaN(id)) throw new Error("Invalid text ID");
-      return textApi.submitTask(id);
-    },
-    onSuccess: (response: TaskSubmissionResponse) => {
-      toast({
-        title: "✅ Task Completed",
-        description: response.message,
-      });
-
-      // Refresh user stats and recent activity
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
-
-      // If there's a next task, navigate to it immediately
-      if (response.next_task) {
-        setTimeout(() => navigate(`/task/${response.next_task!.id}`), 1500);
-      } else {
-        // No more tasks, navigate back to dashboard
-        setTimeout(() => navigate("/"), 2000);
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: "❌ Failed to Submit Task",
-        description:
-          error instanceof Error ? error.message : "Failed to submit task",
-      });
-    },
-  });
+  const submitTaskMutation = useSubmitTask();
 
   // Mutation for skipping text
-  const skipTextMutation = useMutation({
-    mutationFn: async () => {
-      return textApi.skipText();
-    },
-    onSuccess: (nextText: TextResponse) => {
-      toast({
-        title: "⏭️ Text Skipped & Rejected",
-        description: `This text won't be shown to you again. Moving to: "${nextText.title}"`,
-      });
-
-      // Refresh user stats and recent activity
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
-
-      // Navigate to the next text
-      navigate(`/task/${nextText.id}`);
-    },
-    onError: (error) => {
-      // Extract error message from different error types
-      let errorMessage = "Failed to skip text";
-      let errorTitle = "❌ Error";
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (error && typeof error === "object" && "detail" in error) {
-        const apiError = error as { detail: string; status_code?: number };
-        errorMessage = apiError.detail || "Failed to skip text";
-
-        if (apiError.status_code === 404) {
-          errorTitle = "📝 No More Tasks";
-          errorMessage = "No more texts available for annotation at this time.";
-        }
-      }
-
-      if (errorTitle.includes("No More Tasks")) {
-        toast({
-          title: errorTitle,
-          description: errorMessage,
-        });
-        // Navigate to dashboard if no more tasks
-        setTimeout(() => navigate("/"), 2000);
-      } else {
-        toast({
-          title: errorTitle,
-          description: errorMessage,
-        });
-      }
-    },
-  });
+  const skipTextMutation = useSkipText();
 
   // Mutation for reverting work (edit mode skip)
-  const revertWorkMutation = useMutation({
-    mutationFn: async () => {
-      if (!textId) throw new Error("Text ID is required");
-      const id = parseInt(textId, 10);
-      if (isNaN(id)) throw new Error("Invalid text ID");
-      return textApi.revertWork(id);
-    },
-    onSuccess: (response) => {
-      toast({
-        title: "✅ Work Reverted",
-        description: response.message + " Text is now available for others.",
-      });
-
-      // Refresh user stats and recent activity
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-text-statistics"] });
-
-      // Navigate back to dashboard
-      setTimeout(() => navigate("/"), 1500);
-    },
-    onError: (error) => {
-      toast({
-        title: "❌ Failed to Revert Work",
-        description:
-          error instanceof Error ? error.message : "Failed to revert work",
-      });
-    },
-  });
+  const revertWorkMutation = useRevertWork();
 
   // Mutation for updating completed task
-  const updateTaskMutation = useMutation({
-    mutationFn: async () => {
-      if (!textId) throw new Error("Text ID is required");
-      const id = parseInt(textId, 10);
-      if (isNaN(id)) throw new Error("Invalid text ID");
-      return textApi.updateTask(id);
-    },
-    onSuccess: () => {
-      toast({
-        title: "✅ Task Updated",
-        description: "Your changes have been saved successfully!",
-      });
-      // Refresh user stats and recent activity (no need to refresh text data)
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
-    },
-    onError: (error) => {
-      toast({
-        title: "❌ Failed to Update Task",
-        description:
-          error instanceof Error ? error.message : "Failed to update task",
-      });
-    },
-  });
+  const updateTaskMutation = useUpdateTask();
 
   const addAnnotation = async (type: string, name?: string, level?: string) => {
     if (!selectedText || !textId) return;
@@ -492,8 +290,10 @@ const Index = () => {
         ) || type === "header";
     } else {
       // For error-list mode, check against error list configuration
-      const config = await loadAnnotationConfig(selectedAnnotationListType);
-      isValidType = isValidAnnotationType(config, type) || type === "header";
+      // const config = await loadAnnotationConfig("44347a16-696e-444c-a1bf-1754556217f0");
+      
+      const config = extractLeafNodes(annotationList?.categories || [], 0);
+      isValidType = isValidAnnotationType({options: config}, type) || type === "header";
     }
 
     if (!isValidType) {
@@ -578,19 +378,26 @@ const Index = () => {
           )
         );
 
-        // Invalidate annotations query to update the filter
-        queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
-
         // Automatically check the annotation type in the filter
         if (data.annotation_type && !selectedAnnotationTypes.has(data.annotation_type)) {
           const newSelectedTypes = new Set(selectedAnnotationTypes);
           newSelectedTypes.add(data.annotation_type);
           setSelectedAnnotationTypes(newSelectedTypes);
         }
+
+        toast({
+          title: "✅ Annotation Created",
+          description: `${data.annotation_type} annotation saved to database`,
+        });
       },
-      onError: () => {
+      onError: (error) => {
         // Remove the optimistic annotation on error
         setAnnotations((prev) => prev.filter((ann) => ann.id !== tempId));
+        toast({
+          title: "❌ Failed to Create Annotation",
+          description:
+            error instanceof Error ? error.message : "Failed to save annotation",
+        });
       },
     });
     setSelectedText(null);
@@ -680,19 +487,26 @@ const Index = () => {
           )
         );
 
-        // Invalidate annotations query to update the filter
-        queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
-
         // Automatically check the annotation type in the filter
         if (data.annotation_type && !selectedAnnotationTypes.has(data.annotation_type)) {
           const newSelectedTypes = new Set(selectedAnnotationTypes);
           newSelectedTypes.add(data.annotation_type);
           setSelectedAnnotationTypes(newSelectedTypes);
         }
+
+        toast({
+          title: "✅ Annotation Created",
+          description: `${data.annotation_type} annotation saved to database`,
+        });
       },
-      onError: () => {
+      onError: (error) => {
         // Remove the optimistic annotation on error
         setAnnotations((prev) => prev.filter((ann) => ann.id !== tempId));
+        toast({
+          title: "❌ Failed to Create Annotation",
+          description:
+            error instanceof Error ? error.message : "Failed to save annotation",
+        });
       },
     });
     setPendingHeader(null);
@@ -801,9 +615,11 @@ const Index = () => {
     updateAnnotationMutation.mutate(
       {
         id: annotationIdNumber,
-        type: newType,
-        name: newText,
-        level: newLevel,
+        data: {
+          annotation_type: newType,
+          name: newText,
+          level: newLevel as "minor" | "major" | "critical" | undefined,
+        },
       },
       {
         onSuccess: (data) => {
@@ -825,23 +641,32 @@ const Index = () => {
             )
           );
 
-          // Invalidate annotations query to update the filter
-          queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
-
           // Automatically check the annotation type in the filter
           if (data.annotation_type && !selectedAnnotationTypes.has(data.annotation_type)) {
             const newSelectedTypes = new Set(selectedAnnotationTypes);
             newSelectedTypes.add(data.annotation_type);
             setSelectedAnnotationTypes(newSelectedTypes);
           }
+
+          toast({
+            title: "✅ Annotation Updated",
+            description: `${data.annotation_type} annotation updated successfully`,
+          });
         },
-        onError: () => {
+        onError: (error) => {
           // Restore the original annotation on error
           setAnnotations((prev) =>
             prev.map((ann) =>
               ann.id === annotationId ? originalAnnotation : ann
             )
           );
+          toast({
+            title: "❌ Failed to Update Annotation",
+            description:
+              error instanceof Error
+                ? error.message
+                : "Failed to update annotation",
+          });
         },
       }
     );
@@ -877,9 +702,10 @@ const Index = () => {
     // Delete from database
     deleteAnnotationMutation.mutate(annotationIdNumber, {
       onSuccess: () => {
-        // Invalidate annotations query to update the filter
-        queryClient.invalidateQueries({ queryKey: ["annotationsByText", textId] });
-
+        toast({
+          title: "✅ Annotation Deleted",
+          description: "Annotation removed from database",
+        });
       },
       onError: (error) => {
         // Restore the annotation on error
@@ -893,6 +719,14 @@ const Index = () => {
             title: "🔒 Cannot Delete Annotation",
             description:
               "This annotation has been agreed upon by a reviewer and cannot be deleted.",
+          });
+        } else {
+          toast({
+            title: "❌ Failed to Delete Annotation",
+            description:
+              error instanceof Error
+                ? error.message
+                : "Failed to delete annotation",
           });
         }
       },
@@ -914,11 +748,49 @@ const Index = () => {
       return;
     }
 
+    if (!parsedTextId) return;
+
     // Use appropriate mutation based on task status
     if (isCompletedTask) {
-      updateTaskMutation.mutate();
+      updateTaskMutation.mutate(parsedTextId, {
+        onSuccess: () => {
+          toast({
+            title: "✅ Task Updated",
+            description: "Your changes have been saved successfully!",
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "❌ Failed to Update Task",
+            description:
+              error instanceof Error ? error.message : "Failed to update task",
+          });
+        },
+      });
     } else {
-      submitTaskMutation.mutate();
+      submitTaskMutation.mutate(parsedTextId, {
+        onSuccess: (response: TaskSubmissionResponse) => {
+          toast({
+            title: "✅ Task Completed",
+            description: response.message,
+          });
+
+          // If there's a next task, navigate to it immediately
+          if (response.next_task) {
+            setTimeout(() => navigate(`/task/${response.next_task!.id}`), 1500);
+          } else {
+            // No more tasks, navigate back to dashboard
+            setTimeout(() => navigate("/"), 2000);
+          }
+        },
+        onError: (error) => {
+          toast({
+            title: "❌ Failed to Submit Task",
+            description:
+              error instanceof Error ? error.message : "Failed to submit task",
+          });
+        },
+      });
     }
   };
 
@@ -928,7 +800,48 @@ const Index = () => {
 
   const handleConfirmSkip = () => {
     setShowSkipConfirmation(false);
-    skipTextMutation.mutate();
+    skipTextMutation.mutate(undefined, {
+      onSuccess: (nextText: TextResponse) => {
+        toast({
+          title: "⏭️ Text Skipped & Rejected",
+          description: `This text won't be shown to you again. Moving to: "${nextText.title}"`,
+        });
+
+        // Navigate to the next text
+        navigate(`/task/${nextText.id}`);
+      },
+      onError: (error) => {
+        // Extract error message from different error types
+        let errorMessage = "Failed to skip text";
+        let errorTitle = "❌ Error";
+
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (error && typeof error === "object" && "detail" in error) {
+          const apiError = error as { detail: string; status_code?: number };
+          errorMessage = apiError.detail || "Failed to skip text";
+
+          if (apiError.status_code === 404) {
+            errorTitle = "📝 No More Tasks";
+            errorMessage = "No more texts available for annotation at this time.";
+          }
+        }
+
+        if (errorTitle.includes("No More Tasks")) {
+          toast({
+            title: errorTitle,
+            description: errorMessage,
+          });
+          // Navigate to dashboard if no more tasks
+          setTimeout(() => navigate("/"), 2000);
+        } else {
+          toast({
+            title: errorTitle,
+            description: errorMessage,
+          });
+        }
+      },
+    });
   };
 
   const handleCancelSkip = () => {
@@ -941,7 +854,26 @@ const Index = () => {
         "Are you sure you want to revert your work? This will remove all your annotations and make the text available for others to work on."
       )
     ) {
-      revertWorkMutation.mutate();
+      if (!parsedTextId) return;
+      
+      revertWorkMutation.mutate(parsedTextId, {
+        onSuccess: (response) => {
+          toast({
+            title: "✅ Work Reverted",
+            description: response.message + " Text is now available for others.",
+          });
+
+          // Navigate back to dashboard
+          setTimeout(() => navigate("/"), 1500);
+        },
+        onError: (error) => {
+          toast({
+            title: "❌ Failed to Revert Work",
+            description:
+              error instanceof Error ? error.message : "Failed to revert work",
+          });
+        },
+      });
     }
   };
 

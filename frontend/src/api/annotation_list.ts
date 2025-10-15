@@ -59,9 +59,9 @@ export const annotationListApi = {
   /**
    * Get annotation lists by type in hierarchical format
    */
-  getByTypeHierarchical: async (type: string): Promise<HierarchicalJSONOutput> => {
+  getByTypeHierarchical: async (type_id: string): Promise<HierarchicalJSONOutput> => {
     return await apiClient.get<HierarchicalJSONOutput>(
-      `/annotation-lists/type/${encodeURIComponent(type)}`
+      `/annotation-lists/type/${encodeURIComponent(type_id)}`
     );
   },
 
@@ -72,20 +72,11 @@ export const annotationListApi = {
   },
 
   /**
-   * Get all unique annotation list types
-   */
-  getTypes: async (): Promise<string[]> => {
-    return await apiClient.get<string[]>(
-      `/annotation-lists/types`
-    );
-  },
-
-  /**
    * Delete all annotation lists by type
    */
-  deleteByType: async (type: string): Promise<{ success: boolean; message: string; deleted_count: number }> => {
+  deleteByType: async (type_id: string): Promise<{ success: boolean; message: string; deleted_count: number }> => {
     return await apiClient.delete(
-      `/annotation-lists/type/${encodeURIComponent(type)}`
+      `/annotation-lists/type/${encodeURIComponent(type_id)}`
     );
   },
 

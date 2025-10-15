@@ -11,13 +11,15 @@ import {
   IoWarning,
 } from "react-icons/io5";
 import { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { annotationListApi, type CategoryOutput } from "@/api/annotation_list";
-import { useAnnotationStore } from "@/store/annotation";
-import { annotationsApi } from "@/api/annotations";
-import type { AnnotationResponse } from "@/api/types";
+import type { CategoryOutput } from "@/api/annotation_list";
 import { AnnotationTypesFilter } from "./AnnotationTypesFilter";
 import { useParams } from "react-router-dom";
+import {
+  useAnnotationTypes,
+  useAnnotationListHierarchical,
+  useAnnotationsByText,
+} from "@/hooks";
+import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 
 // Type definitions for error typology (using API types)
 interface ErrorCategory extends CategoryOutput {
@@ -52,46 +54,34 @@ export const AnnotationList = ({
     setSelectedAnnotationListType,
     selectedAnnotationTypes,
     setSelectedAnnotationTypes,
-  } = useAnnotationStore();
-  // Fetch all available annotation list types from the backend
+  } = useAnnotationFiltersStore();
+  // Fetch all available annotation list types using custom hook
   const {
     data: availableTypes = [],
     isLoading: loadingTypes,
-  } = useQuery({
-    queryKey: ["annotationListTypes", selectedAnnotationTypes],
-    queryFn: () => annotationListApi.getTypes(),
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
-  });
-  const ListType =selectedAnnotationListType.length > 0 ? selectedAnnotationListType : availableTypes[0];
+  } = useAnnotationTypes();
+
+  // Fetch hierarchical data using custom hook
   const {
     data: errorData,
     isLoading: loading,
     error,
-  } = useQuery({
-    queryKey: ["annotationList", ListType],
-    queryFn: () => annotationListApi.getByTypeHierarchical(ListType),
-    staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
-    retry: 2, // Retry failed requests twice
-    enabled: !!ListType, // Only fetch if type is selected
+  } = useAnnotationListHierarchical({
+    type_id: selectedAnnotationListType,
+    enabled: !!selectedAnnotationListType,
   });
 
+  // Parse textId
+  const parsedTextId = textId ? parseInt(textId, 10) : undefined;
+  
   // Fetch Annotations by text
   const {
     data: annotationsByText = [],
     isLoading: loadingLeaves,
-  } = useQuery<AnnotationResponse[]>({
-    queryKey: ["annotationsByText", textId],
-    queryFn: () => {
-      if (!textId) return Promise.resolve([]);
-      const textIdNumber = parseInt(textId, 10);
-      if (isNaN(textIdNumber)) return Promise.resolve([]);
-      return annotationsApi.getAnnotationsByText(textIdNumber);
-    },
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
-    enabled: !!textId,
-  });
+  } = useAnnotationsByText(
+    parsedTextId || 0,
+    !!parsedTextId && !isNaN(parsedTextId)
+  );
 
   // Flatten the hierarchical structure for easier searching
   const flattenCategories = (categories: ErrorCategory[]): ErrorCategory[] => {
@@ -477,8 +467,8 @@ export const AnnotationList = ({
             <option>No types available</option>
           ) : (
             availableTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
+              <option key={type.id} value={type.id}>
+                {type.name}
               </option>
             ))
           )}

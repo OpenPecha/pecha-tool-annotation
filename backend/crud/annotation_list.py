@@ -1,8 +1,10 @@
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 import uuid
-from models.annotationlist import AnnotationList
-from schemas.annotationlist import AnnotationListCreate, CategoryInput, CategoryOutput, HierarchicalJSONOutput
+from models.annotation_list import AnnotationList
+from models.annotation_type import AnnotationType
+from schemas.annotation_list import AnnotationListCreate, CategoryInput, CategoryOutput, HierarchicalJSONOutput
+from crud.annotation_type import annotation_type_crud
 
 
 class AnnotationListCRUD:
@@ -10,9 +12,15 @@ class AnnotationListCRUD:
     
     def create(self, db: Session, obj_in: AnnotationListCreate, created_by: str) -> AnnotationList:
         """Create a new annotation list item."""
+        # Get or create annotation type if provided
+        type_id = None
+        if obj_in.type:
+            annotation_type = annotation_type_crud.get_or_create(db=db, name=obj_in.type)
+            type_id = annotation_type.id
+        
         db_obj = AnnotationList(
             id=str(uuid.uuid4()),
-            type=obj_in.type,
+            type_id=type_id,
             title=obj_in.title,
             level=obj_in.level,
             parent_id=obj_in.parent_id,
@@ -24,10 +32,6 @@ class AnnotationListCRUD:
         db.commit()
         db.refresh(db_obj)
         return db_obj
-    
-    def get_all(self, db: Session) -> List[AnnotationList]:
-        """Get all annotation lists."""
-        return db.query(AnnotationList).all()
     
     def get(self, db: Session, list_id: str) -> Optional[AnnotationList]:
         """Get annotation list by ID."""
@@ -45,21 +49,22 @@ class AnnotationListCRUD:
         query = db.query(AnnotationList)
         
         if type_filter:
-            query = query.filter(AnnotationList.type == type_filter)
+            # Support filtering by type name (convert to type_id)
+            annotation_type = annotation_type_crud.get_by_name(db=db, name=type_filter)
+            if annotation_type:
+                query = query.filter(AnnotationList.type_id == annotation_type.id)
+            else:
+                # If type doesn't exist, return empty list
+                return []
         
         if created_by:
             query = query.filter(AnnotationList.created_by == created_by)
         
         return query.offset(skip).limit(limit).all()
     
-    def get_by_type(self, db: Session, type_value: str) -> List[AnnotationList]:
-        """Get all annotation lists by type."""
-        return db.query(AnnotationList).filter(AnnotationList.type == type_value).all()
-    
-    def get_unique_types(self, db: Session) -> List[str]:
-        """Get all unique annotation list types."""
-        types = db.query(AnnotationList.type).distinct().all()
-        return sorted([type_tuple[0] for type_tuple in types if type_tuple[0]])
+    def get_by_type_id(self, db: Session, type_id: str) -> List[AnnotationList]:
+        """Get all annotation lists by type ID."""
+        return db.query(AnnotationList).filter(AnnotationList.type_id == type_id).all()
     
     def get_children(self, db: Session, parent_id: str) -> List[AnnotationList]:
         """Get all children of a parent annotation list."""
@@ -74,12 +79,16 @@ class AnnotationListCRUD:
             return True
         return False
     
-    def delete_by_type(self, db: Session, type_value: str) -> int:
-        """Delete all annotation lists by type."""
-        items = db.query(AnnotationList).filter(AnnotationList.type == type_value).all()
+    def delete_by_type(self, db: Session, type_id: str) -> int:
+        """Delete all annotation lists by type and the type itself."""
+        items = db.query(AnnotationList).filter(AnnotationList.type_id == type_id).all()
         count = len(items)
         for item in items:
             db.delete(item)
+        
+        # Also delete the annotation type
+        annotation_type_crud.delete(db=db, type_id=type_id)
+        
         db.commit()
         return count
     
@@ -98,7 +107,7 @@ class AnnotationListCRUD:
         Args:
             db: Database session
             categories: List of category items (could be nested)
-            root_type: The type value (from root title) to apply to all records
+            root_type: The type name (from root title) to apply to all records
             created_by: User ID of the creator
             parent_id: Parent record ID (None for root level)
             root_metadata: Metadata from root (version, copyright, etc.) for first item
@@ -107,7 +116,10 @@ class AnnotationListCRUD:
             List of created record IDs
         """
         created_ids = []
-        is_first_root = parent_id is None and len(created_ids) == 0
+        
+        # Get or create the annotation type
+        annotation_type = annotation_type_crud.get_or_create(db=db, name=root_type)
+        type_id = annotation_type.id
         
         for idx, category in enumerate(categories):
             # Extract fields for meta
@@ -149,7 +161,7 @@ class AnnotationListCRUD:
             record_id = category.id or str(uuid.uuid4())
             db_obj = AnnotationList(
                 id=record_id,
-                type=root_type,
+                type_id=type_id,
                 title=category.name,
                 level=str(category.level) if category.level is not None else None,
                 parent_id=parent_id,
@@ -188,7 +200,8 @@ class AnnotationListCRUD:
             raise ValueError("Cannot reconstruct hierarchy from empty list")
         
         # Extract root-level metadata from first item or items' meta
-        root_type = items[0].type
+        # Get the type name from the annotation_type relationship
+        root_type = items[0].annotation_type.name if items[0].annotation_type else "Unknown"
         
         # Build a lookup dictionary for quick parent-child relationships
         items_by_id = {item.id: item for item in items}

@@ -9,14 +9,14 @@ import {
 } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import {
-  loadAnnotationConfig,
+  extractLeafNodes,
   type AnnotationConfig,
   type AnnotationOption,
 } from "@/config/annotation-options";
 import type { Annotation } from "@/pages/Task";
-import { useAuth } from "@/auth/use-auth-hook";
 import { truncateText } from "@/lib/utils";
-import { useAnnotationStore } from "@/store/annotation";
+import { useAnnotationFiltersStore } from "@/store/annotationFilters";
+import { useAnnotationListHierarchical } from "@/hooks/";
 
 interface EditPopupProps {
   visible: boolean;
@@ -47,20 +47,27 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   const [selectedType, setSelectedType] = useState<string>("");
   const [annotationText, setAnnotationText] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
-  const { selectedAnnotationListType } = useAnnotationStore();
+  const { selectedAnnotationListType } = useAnnotationFiltersStore();
 
+  const {
+    data: annotationList,
+  } = useAnnotationListHierarchical({
+    type_id: selectedAnnotationListType,
+    enabled: !!selectedAnnotationListType,
+  });
   // Load annotation configuration based on selected type
   useEffect(() => {
+    if (!annotationList?.categories) return;
     const loadConfig = async () => {
       try {
-        const config = await loadAnnotationConfig(selectedAnnotationListType);
-        setAnnotationConfig(config);
+        const config = extractLeafNodes(annotationList?.categories || [], 0);
+        setAnnotationConfig({options: config});
       } catch (error) {
         console.error("Failed to load annotation configuration:", error);
       }
     };
     loadConfig();
-  }, [selectedAnnotationListType]); // Reload when type changes
+  }, [selectedAnnotationListType, annotationList, ]); // Reload when type changes
 
   // Initialize form values when annotation changes
   useEffect(() => {
