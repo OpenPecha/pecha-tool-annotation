@@ -389,7 +389,7 @@ const Review = () => {
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
-      <Navbar />
+      <Navbar textTitle={reviewSession.title} />
 
       <div className="flex-1 overflow-hidden px-6">
         {/* Header */}
