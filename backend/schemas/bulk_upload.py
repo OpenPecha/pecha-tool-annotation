@@ -37,6 +37,7 @@ class BulkTextData(BaseModel):
     translation: Optional[str] = Field(None, description="Optional translation of the content")
     source: Optional[str] = Field(None, description="Source/origin of the text")
     language: Optional[str] = Field("en", description="Language code")
+    annotation_type_id: Optional[str] = Field(None, description="Optional annotation type ID")
     # Note: status is not included in upload data - always set to "initialized"
     
     @validator('title')

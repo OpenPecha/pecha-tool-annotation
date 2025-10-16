@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from deps import get_db
 from auth import get_current_active_user, require_admin, require_reviewer
@@ -90,6 +90,8 @@ def create_text(
 
 @router.post("/upload-file", response_model=TextResponse, status_code=status.HTTP_201_CREATED)
 def upload_text_file(
+    annotation_type_id: str = Form(...),
+    language: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
@@ -121,7 +123,8 @@ def upload_text_file(
             title=title,
             content=content,
             source=file.filename,
-            language="en",  # Default to English, could be made configurable
+            language=language, 
+            annotation_type_id=annotation_type_id,
             uploaded_by=current_user.id
         )
         

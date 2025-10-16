@@ -15,7 +15,7 @@ class AnnotationListCRUD:
         # Get or create annotation type if provided
         type_id = None
         if obj_in.type:
-            annotation_type = annotation_type_crud.get_or_create(db=db, name=obj_in.type)
+            annotation_type = annotation_type_crud.get_or_create(db=db, name=obj_in.type, uploader_id=created_by)
             type_id = annotation_type.id
         
         db_obj = AnnotationList(
@@ -118,7 +118,7 @@ class AnnotationListCRUD:
         created_ids = []
         
         # Get or create the annotation type
-        annotation_type = annotation_type_crud.get_or_create(db=db, name=root_type)
+        annotation_type = annotation_type_crud.get_or_create(db=db, name=root_type, uploader_id=created_by)
         type_id = annotation_type.id
         
         for idx, category in enumerate(categories):

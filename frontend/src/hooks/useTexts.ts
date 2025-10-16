@@ -238,7 +238,7 @@ export const useUploadTextFile = (options?: UseUploadTextFileOptions) => {
   const { showToast = true } = options || {};
 
   return useMutation({
-    mutationFn: (file: File) => textApi.uploadTextFile(file),
+    mutationFn: ({file, annotation_type_id, language}: {file: File, annotation_type_id: string, language: string}) => textApi.uploadTextFile(file, annotation_type_id, language),
     onSuccess: (data: TextResponse) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: queryKeys.texts.all });

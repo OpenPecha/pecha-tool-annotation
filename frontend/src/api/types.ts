@@ -33,7 +33,9 @@ export interface TextBase {
   language: string;
 }
 
-export type TextCreate = TextBase;
+export interface TextCreate extends TextBase {
+  annotation_type_id?: string;
+}
 
 export interface TextUpdate {
   title?: string;

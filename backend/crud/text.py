@@ -17,6 +17,7 @@ class TextCRUD:
             source=obj_in.source,
             language=obj_in.language,
             uploaded_by=obj_in.uploaded_by,
+            annotation_type_id=obj_in.annotation_type_id,
         )
         db.add(db_obj)
         db.commit()

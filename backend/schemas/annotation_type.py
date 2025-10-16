@@ -1,25 +1,21 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional, Dict, Any
+from typing import Optional
 from datetime import datetime
 
 
 class AnnotationTypeBase(BaseModel):
     """Base schema for annotation type."""
     name: str
-    description: Optional[str] = None
-    meta: Optional[Dict[str, Any]] = None
 
 
 class AnnotationTypeCreate(AnnotationTypeBase):
     """Schema for creating an annotation type."""
-    pass
+    uploader_id: Optional[str] = None  # Auth0 user ID of the uploader
 
 
 class AnnotationTypeUpdate(BaseModel):
     """Schema for updating an annotation type."""
     name: Optional[str] = None
-    description: Optional[str] = None
-    meta: Optional[Dict[str, Any]] = None
 
 
 class AnnotationTypeResponse(AnnotationTypeBase):
@@ -27,6 +23,7 @@ class AnnotationTypeResponse(AnnotationTypeBase):
     model_config = ConfigDict(from_attributes=True)
     
     id: str
+    uploader_id: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

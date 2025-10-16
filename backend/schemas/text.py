@@ -43,6 +43,7 @@ class TextBase(BaseModel):
 
 class TextCreate(TextBase):
     uploaded_by: Optional[int] = None
+    annotation_type_id: Optional[str] = None
 
 
 class TextUpdate(BaseModel):
@@ -68,6 +69,7 @@ class TextResponse(TextBase):
     id: int
     status: str
     annotator_id: Optional[int] = None
+    annotation_type_id: Optional[str] = None
     reviewer_id: Optional[int] = None
     uploaded_by: Optional[int] = None
     created_at: datetime

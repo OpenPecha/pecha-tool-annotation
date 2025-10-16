@@ -38,10 +38,11 @@ export const textApi = {
   },
 
   // Upload text file
-  uploadTextFile: async (file: File): Promise<TextResponse> => {
+  uploadTextFile: async (file: File, annotation_type_id: string, language: string): Promise<TextResponse> => {
     const formData = new FormData();
     formData.append("file", file);
-
+    formData.append("annotation_type_id", annotation_type_id);
+    formData.append("language", language);
     return apiClient.post<TextResponse>("/texts/upload-file", formData);
   },
 

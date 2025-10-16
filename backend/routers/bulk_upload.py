@@ -50,7 +50,7 @@ def validate_json_file(file_content: str, filename: str) -> tuple[bool, BulkUplo
             return False, None, [f"Validation error: {str(e)}"]
 
 
-def create_text_from_data(db: Session, text_data: BulkTextData, uploaded_by: Optional[int] = None) -> Text:
+def create_text_from_data(db: Session, text_data: BulkTextData, uploaded_by: Optional[int] = None, annotation_type_id: Optional[str] = None) -> Text:
     """Create a text record from BulkTextData"""
     # Always set status to "initialized" for uploaded texts
     text_create = TextCreate(
@@ -59,7 +59,8 @@ def create_text_from_data(db: Session, text_data: BulkTextData, uploaded_by: Opt
         translation=text_data.translation,
         source=text_data.source,
         language=text_data.language,
-        uploaded_by=uploaded_by  # None for admin bulk uploads (system texts)
+        uploaded_by=uploaded_by,  # None for admin bulk uploads (system texts)
+        annotation_type_id=annotation_type_id  # Optional annotation type
         # status will default to "initialized" in the schema
     )
     
@@ -136,7 +137,12 @@ def process_single_file(
     """Process a single validated file and create database records (text status remains 'initialized')"""
     try:
         # Create text record with uploaded_by=None for admin bulk uploads (system texts)
-        text = create_text_from_data(db, file_data.text, uploaded_by=None)
+        text = create_text_from_data(
+            db, 
+            file_data.text, 
+            uploaded_by=None, 
+            annotation_type_id=file_data.text.annotation_type_id
+        )
         
         # Create annotation records with None as annotator_id (system annotations)
         annotations = create_annotations_from_data(
