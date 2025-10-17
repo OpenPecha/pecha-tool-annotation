@@ -56,14 +56,14 @@ class AnnotationTypeCRUD:
         db.commit()
         return True
     
-    def get_or_create(self, db: Session, name: str, description: Optional[str] = None, uploader_id: Optional[str] = None) -> AnnotationType:
+    def get_or_create(self, db: Session, name: str, uploader_id: Optional[str] = None) -> AnnotationType:
         """Get an annotation type by name or create it if it doesn't exist."""
         db_obj = self.get_by_name(db=db, name=name)
         if db_obj:
             return db_obj
         
         # Create new annotation type
-        create_schema = AnnotationTypeCreate(name=name, description=description, uploader_id=uploader_id)
+        create_schema = AnnotationTypeCreate(name=name, uploader_id=uploader_id)
         return self.create(db=db, obj_in=create_schema)
 
 

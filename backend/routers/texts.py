@@ -197,7 +197,6 @@ def skip_text(
 ):
     """Skip current text by adding it to your rejected list and get next available text."""
     next_text = text_crud.skip_text(db=db, user_id=current_user.id, user_role=current_user.role.value)
-    print("next_text", next_text)
     if not next_text:
         if current_user.role.value == "user":
             detail = "No more texts available for annotation. Please upload more text files."
