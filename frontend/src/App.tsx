@@ -20,8 +20,6 @@ const Login = lazy(() => import("./pages/Login"));
 const Callback = lazy(() => import("./pages/Callback"));
 
 const queryClient = new QueryClient();
-import ReactGA from "react-ga4";
-ReactGA.initialize("G-JP63FKPR0T");
 
 
 function Layout({ children }: { children: React.ReactNode }) {
@@ -77,9 +75,7 @@ function AppContent() {
     return () => clearTimeout(timeoutId);
   }, [location.pathname]);
 
-  useEffect(() => {
-    ReactGA.send({ hitType: "pageview", page: location.pathname + location.search });
-  }, [location]);
+ 
   return (
     <Routes>
       <Route
