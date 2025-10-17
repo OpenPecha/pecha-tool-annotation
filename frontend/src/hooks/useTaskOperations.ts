@@ -5,13 +5,13 @@ import type { TextWithAnnotations } from "@/api/types";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import type { Annotation } from "@/utils/annotationConverter";
-import type { TextResponse, TaskSubmissionResponse } from "@/api/types";
+import type { TextResponse, TaskSubmissionResponse, DeleteMyAnnotationsResponse } from "@/api/types";
 import {
   useSubmitTask,
   useSkipText,
   useRevertWork,
   useUpdateTask,
-  useDeleteAnnotation,
+  useDeleteMyAnnotationsForText,
 } from "@/hooks";
 import { TOAST_MESSAGES, NAVIGATION_DELAYS, CONFIRMATION_MESSAGES } from "@/constants/taskConstants";
 
@@ -41,7 +41,7 @@ export const useTaskOperations = (
   const updateTaskMutation = useUpdateTask();
   const skipTextMutation = useSkipText();
   const revertWorkMutation = useRevertWork();
-  const deleteAnnotationMutation = useDeleteAnnotation();
+  const deleteMyAnnotationsMutation = useDeleteMyAnnotationsForText();
 
   /**
    * Submits or updates the task based on its current status
@@ -110,6 +110,7 @@ export const useTaskOperations = (
    * Confirms and executes text skip
    */
   const handleConfirmSkip = useCallback(() => {
+    console.log("handleConfirmSkip");
     setShowSkipConfirmation(false);
     skipTextMutation.mutate(undefined, {
       onSuccess: (nextText: TextResponse) => {
@@ -121,6 +122,7 @@ export const useTaskOperations = (
         navigate(`/task/${nextText.id}`);
       },
       onError: (error) => {
+        console.log("error", error);
         let errorMessage = "Failed to skip text";
         let errorTitle: string = TOAST_MESSAGES.INVALID_TYPE;
 
@@ -193,6 +195,14 @@ export const useTaskOperations = (
       return;
     }
 
+    if (!textId) {
+      toast({
+        title: TOAST_MESSAGES.INVALID_TYPE,
+        description: "Unable to identify current text.",
+      });
+      return;
+    }
+
     // Filter annotations made by current user
     const userAnnotations = annotations.filter(
       (annotation) =>
@@ -210,47 +220,46 @@ export const useTaskOperations = (
 
     if (window.confirm(CONFIRMATION_MESSAGES.UNDO_ANNOTATIONS(userAnnotations.length))) {
       // Optimistically update cache for text-with-annotations
-      if (textId) {
-        const cacheKey = queryKeys.texts.withAnnotations(textId);
-        const previous = queryClient.getQueryData<TextWithAnnotations>(cacheKey);
+      const cacheKey = queryKeys.texts.withAnnotations(textId);
+      const previous = queryClient.getQueryData<TextWithAnnotations>(cacheKey);
 
-        if (previous) {
-          const filtered = {
-            ...previous,
-            annotations: previous.annotations.filter(
-              (ann) => !(ann.annotator_id !== undefined && ann.annotator_id === currentUserId)
-            ),
-          } as TextWithAnnotations;
-          queryClient.setQueryData<TextWithAnnotations>(cacheKey, filtered);
-        }
-
-        let rolledBack = false;
-        // Delete all user annotations
-        userAnnotations.forEach((annotation) => {
-          const annotationIdNumber = parseInt(annotation.id, 10);
-          if (!isNaN(annotationIdNumber)) {
-            deleteAnnotationMutation.mutate(annotationIdNumber, {
-              onError: () => {
-                if (!rolledBack && previous) {
-                  rolledBack = true;
-                  queryClient.setQueryData<TextWithAnnotations>(cacheKey, previous);
-                }
-              },
-              onSettled: () => {
-                queryClient.invalidateQueries({ queryKey: cacheKey });
-                queryClient.invalidateQueries({ queryKey: queryKeys.annotations.byText(textId) });
-              },
-            });
-          }
-        });
+      if (previous) {
+        const filtered = {
+          ...previous,
+          annotations: previous.annotations.filter(
+            (ann) => !(ann.annotator_id !== undefined && ann.annotator_id === currentUserId)
+          ),
+        } as TextWithAnnotations;
+        queryClient.setQueryData<TextWithAnnotations>(cacheKey, filtered);
       }
 
-      toast({
-        title: TOAST_MESSAGES.ANNOTATIONS_REMOVED,
-        description: `All ${userAnnotations.length} of your annotations have been removed.`,
+      // Delete all user annotations in bulk
+      deleteMyAnnotationsMutation.mutate(textId, {
+        onSuccess: (response: DeleteMyAnnotationsResponse) => {
+          toast({
+            title: TOAST_MESSAGES.ANNOTATIONS_REMOVED,
+            description: response.message || `All ${userAnnotations.length} of your annotations have been removed.`,
+          });
+        },
+        onError: (error: Error) => {
+          // Rollback optimistic update
+          if (previous) {
+            queryClient.setQueryData<TextWithAnnotations>(cacheKey, previous);
+          }
+          
+          toast({
+            title: "Failed to Delete Annotations",
+            description: error.message || "Failed to delete your annotations",
+          });
+        },
+        onSettled: () => {
+          // Invalidate queries to ensure UI is in sync
+          queryClient.invalidateQueries({ queryKey: cacheKey });
+          queryClient.invalidateQueries({ queryKey: queryKeys.annotations.byText(textId) });
+        },
       });
     }
-  }, [currentUserId, annotations, deleteAnnotationMutation, toast]);
+  }, [currentUserId, textId, annotations, deleteMyAnnotationsMutation, queryClient, toast]);
 
   /**
    * Gets count of annotations created by current user
@@ -282,6 +291,7 @@ export const useTaskOperations = (
     isSubmitting: submitTaskMutation.isPending || updateTaskMutation.isPending,
     isSkipping: skipTextMutation.isPending,
     isReverting: revertWorkMutation.isPending,
+    isUndoing: deleteMyAnnotationsMutation.isPending,
   };
 };
 

@@ -5,6 +5,8 @@ import {
 
 import { useAnnotationStore } from "@/store/annotation";
 import { AnnotationList } from "./AnnotationList";
+import { useAnnotationTypes } from "@/hooks";
+import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 
 interface NavigationModeSelectorProps {
   // Common props
@@ -15,9 +17,6 @@ interface NavigationModeSelectorProps {
   onErrorSelect?: (error: unknown) => void;
   searchable?: boolean;
 
-
-
-  // Mode selector props (removed - using Zustand now)
 }
 
 export const NavigationModeSelector = ({
@@ -31,10 +30,12 @@ export const NavigationModeSelector = ({
   const { currentNavigationMode: currentMode } =
     useAnnotationStore();
 
- 
-
+  const { selectedAnnotationListType } = useAnnotationFiltersStore();
+  // fetch annotation types
+  const { data: annotationTypes = [] } = useAnnotationTypes();
+  const annotationType = annotationTypes.find((type) => type.id === selectedAnnotationListType);
   const modeConfig = {
-      title: "Annotations",
+      title: annotationType?.name || "Annotations",
       icon: IoWarning,
       iconColor: "text-orange-600",
       bgColor: "hover:bg-orange-50",

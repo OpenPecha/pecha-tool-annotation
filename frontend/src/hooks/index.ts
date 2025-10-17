@@ -38,6 +38,7 @@ export {
   useCreateAnnotation,
   useUpdateAnnotation,
   useDeleteAnnotation,
+  useDeleteMyAnnotationsForText,
   useValidatePositions,
 } from "./useAnnotations";
 

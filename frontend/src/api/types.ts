@@ -66,6 +66,7 @@ export interface TextResponse extends TextBase {
   annotator?: UserInfo;
   reviewer?: UserInfo;
   uploader?: UserInfo;
+  annotation_type_id?: string;
 }
 
 export interface TextFilters extends PaginationParams {
@@ -139,6 +140,11 @@ export interface ValidatePositionsResponse {
   valid: boolean;
   error?: string;
   selected_text?: string;
+}
+
+export interface DeleteMyAnnotationsResponse {
+  message: string;
+  deleted_count: number;
 }
 
 // User-related types

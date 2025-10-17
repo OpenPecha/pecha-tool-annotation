@@ -1,5 +1,5 @@
 import { Button } from "./ui/button";
-import type { Annotation } from "@/pages/Task";
+import type { Annotation } from "@/utils/annotationConverter";
 import {
   IoSend,
   IoPlaySkipForward,
@@ -7,7 +7,6 @@ import {
   IoRefresh,
 } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/auth/use-auth-hook";
 
 function ActionButtons({
   annotations,
@@ -18,6 +17,7 @@ function ActionButtons({
   userAnnotationsCount = 0,
   isSubmitting = false,
   isSkipping = false,
+  isUndoing = false,
   isCompletedTask = false,
 }: {
   readonly annotations: Annotation[];
@@ -28,10 +28,10 @@ function ActionButtons({
   readonly userAnnotationsCount?: number;
   readonly isSubmitting?: boolean;
   readonly isSkipping?: boolean;
+  readonly isUndoing?: boolean;
   readonly isCompletedTask?: boolean;
 }) {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
 
   const handleSkip = () => {
     if (onSkipText) {
@@ -62,7 +62,7 @@ function ActionButtons({
       <Button
         onClick={handleSubmit}
         className="bg-green-600 h-20 hover:bg-green-700 text-white cursor-pointer"
-        disabled={annotations.length === 0 || isSubmitting || isSkipping}
+        disabled={annotations.length === 0 || isSubmitting || isSkipping || isUndoing}
         size={"lg"}
         data-wireboard-event="click"
         data-wireboard-event-publisher="c62fdf36-9c41-4a5a-8464-d051cad20f5f"
@@ -84,7 +84,7 @@ function ActionButtons({
         <Button
           onClick={handleSkip}
           className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
-          disabled={isSubmitting || isSkipping}
+          disabled={isSubmitting || isSkipping || isUndoing}
           size={"lg"}
           title="Skip this text - it won't be shown to you again"
         >
@@ -98,7 +98,7 @@ function ActionButtons({
         <Button
           onClick={handleRevert}
           className="bg-yellow-600 hover:bg-yellow-700 text-white cursor-pointer"
-          disabled={isSubmitting || isSkipping}
+          disabled={isSubmitting || isSkipping || isUndoing}
           size={"lg"}
           title="Revert your work and make text available for others"
         >
@@ -112,12 +112,12 @@ function ActionButtons({
         <Button
           onClick={handleUndo}
           className="bg-gray-600 hover:bg-gray-700 text-white cursor-pointer"
-          disabled={isSubmitting || isSkipping}
+          disabled={isSubmitting || isSkipping || isUndoing}
           size={"lg"}
           title={`Remove all ${userAnnotationsCount} annotations you've added`}
         >
           <IoArrowUndo className="w-4 h-4 mr-2" />
-          Reset ({userAnnotationsCount})
+          {isUndoing ? "Resetting..." : `Reset (${userAnnotationsCount})`}
         </Button>
       )}
     </div>

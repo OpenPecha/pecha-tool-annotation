@@ -51,15 +51,12 @@ export const AnnotationList = ({
   // Get state from store
   const { 
     selectedAnnotationListType, 
-    setSelectedAnnotationListType,
     selectedAnnotationTypes,
     setSelectedAnnotationTypes,
   } = useAnnotationFiltersStore();
-  // Fetch all available annotation list types using custom hook
-  const {
-    data: availableTypes = [],
-    isLoading: loadingTypes,
-  } = useAnnotationTypes();
+
+  // fetch annotation types
+  const { data: annotationTypes = [] } = useAnnotationTypes();
 
   // Fetch hierarchical data using custom hook
   const {
@@ -450,30 +447,6 @@ export const AnnotationList = ({
 
   return (
     <div className="h-full flex flex-col overflow-visible pt-6">
-      {/* Annotation List Type Dropdown */}
-      <div className="mb-3 flex-shrink-0">
-        <label className="block text-xs font-medium text-gray-700 mb-1">
-          Annotation List Type
-        </label>
-        <select
-          value={selectedAnnotationListType}
-          onChange={(e) => setSelectedAnnotationListType(e.target.value)}
-          disabled={loadingTypes}
-          className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent bg-white"
-        >
-          {loadingTypes ? (
-            <option>Loading types...</option>
-          ) : availableTypes.length === 0 ? (
-            <option>No types available</option>
-          ) : (
-            availableTypes.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.name}
-              </option>
-            ))
-          )}
-        </select>
-      </div>
 
       {/* Collapsible Annotation Types Filter */}
       <AnnotationTypesFilter

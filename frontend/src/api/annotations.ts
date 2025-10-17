@@ -7,6 +7,7 @@ import type {
   AnnotationStats,
   ValidatePositionsRequest,
   ValidatePositionsResponse,
+  DeleteMyAnnotationsResponse,
 } from "./types";
 
 // Annotations API client
@@ -43,6 +44,10 @@ export const annotationsApi = {
     return apiClient.delete<void>(`/annotations/${id}`);
   },
 
+  // Delete my annotations for a text
+  deleteMyAnnotationsForText: async (textId: number): Promise<DeleteMyAnnotationsResponse> => {
+    return apiClient.delete<DeleteMyAnnotationsResponse>(`/annotations/text/${textId}/my-annotations`);
+  },
   // Get current user's annotations
   getMyAnnotations: async (
     filters: { skip?: number; limit?: number } = {}

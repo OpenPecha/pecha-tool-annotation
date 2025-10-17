@@ -104,6 +104,7 @@ const Index = () => {
     showSkipConfirmation,
     isSubmitting,
     isSkipping,
+    isUndoing,
   } = useTaskOperations(parsedTextId, annotationsForUI, currentUserId, isCompletedTask || false);
 
   /**
@@ -229,6 +230,7 @@ const Index = () => {
             isCompletedTask={isCompletedTask}
             onSkipText={handleSkipText}
             isSkipping={isSkipping}
+            isUndoing={isUndoing}
             onUndoAnnotations={handleUndoAnnotations}
             onRevertWork={handleRevertWork}
             userAnnotationsCount={getUserAnnotationsCount()}
