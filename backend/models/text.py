@@ -27,6 +27,7 @@ class Text(Base):
     language = Column(String, default="en")
     status = Column(String, default=INITIALIZED, nullable=False)
     annotator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    annotation_type_id = Column(String, ForeignKey("annotation_type.id"), nullable=True)
     reviewer_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

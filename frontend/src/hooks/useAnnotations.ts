@@ -9,6 +9,7 @@ import type {
   AnnotationStats,
   ValidatePositionsRequest,
   ValidatePositionsResponse,
+  DeleteMyAnnotationsResponse,
 } from "@/api/types";
 
 // ============================================================================
@@ -152,6 +153,22 @@ export const useDeleteAnnotation = () => {
 
   return useMutation({
     mutationFn: (id: number) => annotationsApi.deleteAnnotation(id),
+    onSuccess: () => {
+      // Invalidate all annotation-related queries since we don't have text_id after deletion
+      queryClient.invalidateQueries({ queryKey: queryKeys.annotations.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.texts.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.annotations.stats() });
+    },
+  });
+};
+
+/**
+ * Delete my annotations for a text
+ */
+export const useDeleteMyAnnotationsForText = () => {
+  const queryClient = useQueryClient();
+  return useMutation<DeleteMyAnnotationsResponse, Error, number>({
+    mutationFn: (textId: number) => annotationsApi.deleteMyAnnotationsForText(textId),
     onSuccess: () => {
       // Invalidate all annotation-related queries since we don't have text_id after deletion
       queryClient.invalidateQueries({ queryKey: queryKeys.annotations.all });

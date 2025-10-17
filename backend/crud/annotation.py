@@ -173,25 +173,25 @@ class AnnotationCRUD:
     def delete_user_annotations(self, db: Session, text_id: int, annotator_id: int) -> int:
         """Delete all annotations by a specific user for a specific text."""
         from models.text import Text, INITIALIZED
-        
         # Get all user annotations for this text
         user_annotations = db.query(Annotation).filter(
             Annotation.text_id == text_id,
             Annotation.annotator_id == annotator_id
         ).all()
         
-        # Count how many will be deleted
-        deleted_count = len(user_annotations)
-        
-        # Delete all user annotations
+        # Delete all user annotations (except agreed ones)
+        deleted_count = 0
         for annotation in user_annotations:
+            # Check if annotation has been agreed upon by any reviewer
+            if self.is_annotation_agreed(db=db, annotation_id=annotation.id):
+                continue  # Skip deletion of agreed annotations
             db.delete(annotation)
+            deleted_count += 1
         
         # Check if we should revert text status
         remaining_annotations = db.query(Annotation).filter(
             Annotation.text_id == text_id
         ).count() - deleted_count
-        
         if remaining_annotations == 0:
             text = db.query(Text).filter(Text.id == text_id).first()
             if text:

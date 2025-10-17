@@ -38,7 +38,6 @@ export const AnnotationTypesFilter = ({
       .map(([type, count]) => ({ type, count }))
       .sort((a, b) => a.type.localeCompare(b.type));
   }, [annotationsByText]);
-
   // Handle toggle all
   const handleToggleAll = () => {
     if (selectedAnnotationTypes.size === annotationTypesWithCounts.length) {

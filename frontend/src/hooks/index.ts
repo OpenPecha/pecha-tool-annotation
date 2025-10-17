@@ -38,6 +38,7 @@ export {
   useCreateAnnotation,
   useUpdateAnnotation,
   useDeleteAnnotation,
+  useDeleteMyAnnotationsForText,
   useValidatePositions,
 } from "./useAnnotations";
 
@@ -112,4 +113,12 @@ export { useAnnotationColors } from "./use-annotation-colors";
 export { useLocalStorage } from "./use-local-storage";
 export { useToast } from "./use-toast";
 export { useIsMobile } from "./use-mobile";
+
+// ============================================================================
+// Composite Hooks (Business Logic)
+// ============================================================================
+
+export { useAnnotationOperations } from "./useAnnotationOperations";
+export { useTaskOperations } from "./useTaskOperations";
+export { useAnnotationNavigation } from "./useAnnotationNavigation";
 

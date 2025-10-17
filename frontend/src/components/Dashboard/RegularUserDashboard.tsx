@@ -15,14 +15,13 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import BulkUploadModal from "../BulkUploadModal";
 import type { BulkUploadResponse } from "@/api/bulk-upload";
 import { AnnotatorReviewedWork } from "../AnnotatorReviewedWork";
-import { OpenPechaLoaderModal } from "../OpenPechaLoaderModal";
+import { LoadTextModal } from "./LoadTextModal";
 import {
   useStartWork,
   useMyWorkInProgress,
   useRecentActivity,
   useMyReviewProgress,
   useCancelWorkWithRevertAndSkip,
-  useUploadTextFile,
   useStartReviewing,
 } from "@/hooks";
 
@@ -99,47 +98,18 @@ const BulkUploadIcon = () => (
   </svg>
 );
 
-const UploadIcon = () => (
-  <svg
-    className="w-12 h-12 text-orange-500"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-    />
-  </svg>
-);
-
 export const RegularUserDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
-  const [showOpenPechaModal, setShowOpenPechaModal] = useState(false);
+  const [showLoadTextModal, setShowLoadTextModal] = useState(false);
   const [isLoadingText, setIsLoadingText] = useState(false);
-  const [isUploadingFile, setIsUploadingFile] = useState(false);
 
   // Mutation to start work - find work in progress or assign new text
   const startWorkMutation = useStartWork();
 
   // Mutation to start reviewing
   const startReviewingMutation = useStartReviewing();
-
-  // Mutation to upload text file
-  const uploadTextFileMutation = useUploadTextFile({
-    onSuccess: (uploadedText) => {
-      // Automatically start working on the uploaded text
-      navigate(`/task/${uploadedText.id}`);
-      setIsUploadingFile(false);
-    },
-    onError: () => {
-      setIsUploadingFile(false);
-    },
-  });
 
   // Fetch user's work in progress
   const { data: workInProgress = [] } = useMyWorkInProgress();
@@ -224,28 +194,6 @@ export const RegularUserDashboard: React.FC = () => {
       });
     }
     setShowBulkUploadModal(false);
-  };
-
-  // File upload handler for regular users
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Check if file is a text file
-    if (!file.type.startsWith("text/")) {
-      toast.error("Invalid file type", {
-        description: "Please select a text file (.txt, .md, etc.)",
-      });
-      return;
-    }
-
-    setIsUploadingFile(true);
-    uploadTextFileMutation.mutate(file, {
-      onSettled: () => {
-        // Reset file input
-        event.target.value = "";
-      },
-    });
   };
 
   // Helper function to determine activity type
@@ -406,58 +354,13 @@ export const RegularUserDashboard: React.FC = () => {
             </Card>
           )}
 
-          {/* File Upload Card - Show for regular users only */}
-          {currentUser?.role === "user" && (
-            <Card className="hover:shadow-lg transition-all duration-300 border-2 hover:border-orange-200">
-              <CardHeader className="text-center pb-4">
-                <div className="flex justify-center mb-4">
-                  <UploadIcon />
-                </div>
-                <CardTitle className="text-2xl">Upload Text</CardTitle>
-                <CardDescription className="text-base">
-                  Upload your own text file to start annotating
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept=".txt,.md,.text"
-                    onChange={handleFileUpload}
-                    disabled={isUploadingFile}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                    id="file-upload"
-                  />
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full border-orange-200 hover:bg-orange-50"
-                    disabled={isUploadingFile}
-                  >
-                    {isUploadingFile ? (
-                      <>
-                        <AiOutlineLoading3Quarters className="w-4 h-4 mr-2 animate-spin" />
-                        Uploading...
-                      </>
-                    ) : (
-                      "Choose Text File"
-                    )}
-                  </Button>
-                </div>
-                <p className="text-sm text-gray-500 mt-3">
-                  Upload .txt or .md files to create your own annotation tasks
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* OpenPecha Loader Card - Show for all users except reviewers */}
+          {/* Load Text Card - Show for all users except reviewers */}
           {currentUser?.role !== "reviewer" && (
-            <Card className="hover:shadow-lg transition-all duration-300 border-2 hover:border-indigo-200">
+            <Card className="hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200">
               <CardHeader className="text-center pb-4">
                 <div className="flex justify-center mb-4">
                   <svg
-                    className="w-12 h-12 text-indigo-500"
+                    className="w-12 h-12 text-blue-500"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -466,26 +369,26 @@ export const RegularUserDashboard: React.FC = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                     />
                   </svg>
                 </div>
-                <CardTitle className="text-2xl">Load from OpenPecha</CardTitle>
+                <CardTitle className="text-2xl">Load Text</CardTitle>
                 <CardDescription className="text-base">
-                  Import texts directly from the OpenPecha library
+                  Upload a file or import from OpenPecha
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-center">
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full border-indigo-200 hover:bg-indigo-50"
-                  onClick={() => setShowOpenPechaModal(true)}
+                  className="w-full border-blue-200 hover:bg-blue-50"
+                  onClick={() => setShowLoadTextModal(true)}
                 >
-                  Browse OpenPecha
+                  Load Text
                 </Button>
                 <p className="text-sm text-gray-500 mt-3">
-                  Access texts with segmentation and annotations
+                  Upload your own text file or browse OpenPecha library
                 </p>
               </CardContent>
             </Card>
@@ -561,10 +464,10 @@ export const RegularUserDashboard: React.FC = () => {
         onUploadComplete={handleBulkUploadComplete}
       />
 
-      {/* OpenPecha Loader Modal */}
-      <OpenPechaLoaderModal
-        isOpen={showOpenPechaModal}
-        onClose={() => setShowOpenPechaModal(false)}
+      {/* Load Text Modal */}
+      <LoadTextModal
+        isOpen={showLoadTextModal}
+        onClose={() => setShowLoadTextModal(false)}
       />
     </div>
   );
@@ -608,6 +511,7 @@ function RecentActivityItem({
       },
     });
   };
+
   return (
     <div
       key={activity.text.id}

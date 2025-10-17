@@ -1,7 +1,7 @@
 from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, and_, exists
+from sqlalchemy import func, and_, exists, select
 from models.text import Text, INITIALIZED, ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION, SKIPPED, PROGRESS, VALID_STATUSES
 from models.annotation import Annotation
 from schemas.text import TextCreate, TextUpdate
@@ -17,6 +17,7 @@ class TextCRUD:
             source=obj_in.source,
             language=obj_in.language,
             uploaded_by=obj_in.uploaded_by,
+            annotation_type_id=obj_in.annotation_type_id,
         )
         db.add(db_obj)
         db.commit()
@@ -228,9 +229,7 @@ class TextCRUD:
         from models.user_rejected_text import UserRejectedText
         
         # Get text IDs that user has rejected
-        rejected_text_ids = db.query(UserRejectedText.text_id).filter(
-            UserRejectedText.user_id == user_id
-        ).subquery()
+        rejected_text_ids = (select(UserRejectedText.text_id).where(UserRejectedText.user_id == user_id))
         
         # Base query for available texts
         query = db.query(Text).filter(

@@ -39,6 +39,8 @@ def create_annotation_type(
             detail=f"Annotation type with name '{annotation_type_in.name}' already exists"
         )
     
+    # Set the uploader_id to the current user's auth0_user_id
+    annotation_type_in.uploader_id = current_user.auth0_user_id
     return annotation_type_crud.create(db=db, obj_in=annotation_type_in)
 
 

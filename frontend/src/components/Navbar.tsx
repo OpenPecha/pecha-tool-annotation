@@ -3,7 +3,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/auth/use-auth-hook";
 import ProfileArea from "./ProfileArea";
 
-const Navbar = () => {
+interface NavbarProps {
+  textTitle?: string;
+}
+
+const Navbar = ({ textTitle }: NavbarProps) => {
   const { login, isAuthenticated } = useAuth();
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-6 py-2 flex justify-between items-center">
@@ -18,7 +22,14 @@ const Navbar = () => {
             width={40}
             className=" object-contain"
           />
-          <span className="text-2xl font-bold">Text Annotator</span>
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold">Text Annotator</span>
+            {textTitle && (
+              <span className="text-sm font-normal text-gray-600 truncate max-w-md">
+                {textTitle}
+              </span>
+            )}
+          </div>
         </Link>
       </div>
       <div className="flex items-center gap-4">

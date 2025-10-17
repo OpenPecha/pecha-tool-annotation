@@ -17,7 +17,7 @@ import type {
   RecentActivityWithReviewCounts,
   TextStatus,
 } from "@/api/types";
-
+import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 // ============================================================================
 // Query Hooks
 // ============================================================================
@@ -49,9 +49,14 @@ export const useText = (id: number, enabled = true) => {
  * Get text with annotations
  */
 export const useTextWithAnnotations = (id: number, enabled = true) => {
+  const { setSelectedAnnotationListType } = useAnnotationFiltersStore();
   return useQuery<TextWithAnnotations>({
     queryKey: queryKeys.texts.withAnnotations(id),
-    queryFn: () => textApi.getTextWithAnnotations(id),
+    queryFn: async () => {
+      const data = await textApi.getTextWithAnnotations(id);
+      setSelectedAnnotationListType(data?.annotation_type_id || "");
+      return data;
+    },
     enabled,
     staleTime: 1000 * 30, // 30 seconds - more frequent updates for active editing
     refetchOnWindowFocus: true,
@@ -238,7 +243,7 @@ export const useUploadTextFile = (options?: UseUploadTextFileOptions) => {
   const { showToast = true } = options || {};
 
   return useMutation({
-    mutationFn: (file: File) => textApi.uploadTextFile(file),
+    mutationFn: ({file, annotation_type_id, language}: {file: File, annotation_type_id: string, language: string}) => textApi.uploadTextFile(file, annotation_type_id, language),
     onSuccess: (data: TextResponse) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: queryKeys.texts.all });

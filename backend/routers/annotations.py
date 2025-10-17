@@ -244,6 +244,34 @@ def delete_annotation(
     annotation_crud.delete(db=db, annotation_id=annotation_id)
 
 
+@router.delete("/text/{text_id}/my-annotations", status_code=status.HTTP_200_OK)
+def delete_my_annotations_for_text(
+    text_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Delete all of the current user's annotations for a specific text."""
+    # Check if text exists
+    text = text_crud.get(db=db, text_id=text_id)
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Text not found"
+        )
+    
+    # Delete all user's annotations for this text
+    deleted_count = annotation_crud.delete_user_annotations(
+        db=db,
+        text_id=text_id,
+        annotator_id=current_user.id
+    )
+    
+    return {
+        "message": f"Successfully deleted {deleted_count} annotation(s)",
+        "deleted_count": deleted_count
+    }
+
+
 @router.post("/validate-positions")
 def validate_annotation_positions(
     text_id: int,
