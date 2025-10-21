@@ -13,7 +13,7 @@ import {
 } from "./utils/appPreloader";
 import { UserbackProvider } from "./providers/UserbackProvider";
 import { useTokenExpiration } from "./hooks/useTokenExpiration";
-import { WelcomeLanding } from "./components/WelcomeLanding";
+import { Welcome } from "./components/Welcome";
 // Lazy load page components
 const Task = lazy(() => import("./pages/Task"));
 const Review = lazy(() => import("./pages/Review"));
@@ -51,7 +51,7 @@ function Layout({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated]);
   
   if (!isAuthenticated) {
-    return <WelcomeLanding />;
+    return <Welcome />;
   }
 
   // Show loading if colors are not loaded yet to prevent flash of unstyled annotations

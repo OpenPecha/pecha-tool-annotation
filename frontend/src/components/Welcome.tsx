@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { BookOpen, Users, Zap, CheckCircle, FileText, Eye } from "lucide-react";
 
-export const WelcomeLanding = () => {
+export const Welcome = () => {
   const features = [
     {
       icon: <BookOpen className="w-6 h-6" />,
@@ -23,12 +23,6 @@ export const WelcomeLanding = () => {
       title: "Review System",
       description: "Quality control through structured review process",
     },
-  ];
-
-  const stats = [
-    { label: "Annotations", value: "10K+" },
-    { label: "Active Users", value: "50+" },
-    { label: "Texts Processed", value: "500+" },
   ];
 
   return (
@@ -106,24 +100,10 @@ export const WelcomeLanding = () => {
             ))}
           </div>
 
-          {/* Stats Section */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 rounded-3xl p-8 md:p-12 shadow-2xl">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center text-white">
-              {stats.map((stat, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="text-4xl md:text-5xl font-bold">
-                    {stat.value}
-                  </div>
-                  <div className="text-lg opacity-90">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Additional Info */}
           <div className="mt-16 text-center space-y-6">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Why Choose Pecha Tool?
+              Why Choose Text Annotation Tool?
             </h2>
             <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
               {[
