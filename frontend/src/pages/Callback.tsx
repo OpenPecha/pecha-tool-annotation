@@ -15,7 +15,7 @@ const Callback: React.FC = () => {
     const queryParams = new URLSearchParams(location.search);
     const errormessage = queryParams.get("error");
     if (errormessage?.includes("login_required")) {
-      const logoutURL = import.meta.env.VITE_WORKSPACE_URL + "/logout";
+      const logoutURL = import.meta.env.VITE_WORKSPACE_URL;
       window.location.href = logoutURL;
     }
   }, [isAuthenticated]);
