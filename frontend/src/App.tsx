@@ -1,5 +1,5 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route, useLocation, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./auth/AuthProvider";
 import { Suspense, useEffect, lazy } from "react";
@@ -13,6 +13,7 @@ import {
 } from "./utils/appPreloader";
 import { UserbackProvider } from "./providers/UserbackProvider";
 import { useTokenExpiration } from "./hooks/useTokenExpiration";
+import { WelcomeLanding } from "./components/WelcomeLanding";
 // Lazy load page components
 const Task = lazy(() => import("./pages/Task"));
 const Review = lazy(() => import("./pages/Review"));
@@ -48,27 +49,10 @@ function Layout({ children }: { children: React.ReactNode }) {
     }, 100);
     return () => clearTimeout(timeoutId);
   }, [isAuthenticated]);
-  if (!isAuthenticated)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="text-center space-y-8 px-4">
-          <div className="space-y-4">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white">
-              Welcome Back
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-md mx-auto">
-              Sign in to continue to your workspace
-            </p>
-          </div>
-          <Link
-            to="/login"
-            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Sign In
-          </Link>
-        </div>
-      </div>
-    );
+  
+  if (!isAuthenticated) {
+    return <WelcomeLanding />;
+  }
 
   // Show loading if colors are not loaded yet to prevent flash of unstyled annotations
   if (!colorsLoaded) {
