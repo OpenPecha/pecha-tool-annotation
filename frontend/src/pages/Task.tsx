@@ -174,7 +174,7 @@ const Index = () => {
     <div className="h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
       <Navbar textTitle={textData?.title} />
 
-      <div className="flex w-full gap-6 flex-1 px-6 pt-16 mx-auto overflow-hidden">
+      <div className="flex w-full gap-6 flex-1 px-6 mx-auto overflow-hidden">
         {/* Left Sidebar: Navigation (Error List + Table of Contents) */}
         <NavigationModeSelector
           isOpen={navigationOpen}

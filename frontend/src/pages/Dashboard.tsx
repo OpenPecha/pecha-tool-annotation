@@ -27,7 +27,7 @@ const Dashboard = () => {
   }, [currentUser?.role]);
 
   return (
-    <div>
+    <div className="flex flex-col h-screen">
       <Navbar />
       <Suspense fallback={<FullScreenLoading />}>
         {currentUser?.role === "admin" ? (

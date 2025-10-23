@@ -24,6 +24,7 @@ import {
   useCancelWorkWithRevertAndSkip,
   useStartReviewing,
 } from "@/hooks";
+import { CalendarIcon } from "lucide-react";
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("en-US", {
@@ -36,7 +37,7 @@ const formatDate = (dateString: string) => {
 // Icon components
 const StartWorkIcon = () => (
   <svg
-    className="w-12 h-12 text-blue-500"
+    className="w-5 h-5"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -52,7 +53,7 @@ const StartWorkIcon = () => (
 
 const ReviewWorkIcon = () => (
   <svg
-    className="w-12 h-12 text-green-500"
+    className="w-5 h-5"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -68,7 +69,7 @@ const ReviewWorkIcon = () => (
 
 const RecentActivityIcon = () => (
   <svg
-    className="w-6 h-6 text-gray-500"
+    className="w-5 h-5 text-gray-500"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -84,7 +85,7 @@ const RecentActivityIcon = () => (
 
 const BulkUploadIcon = () => (
   <svg
-    className="w-12 h-12 text-purple-500"
+    className="w-5 h-5"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -104,6 +105,7 @@ export const RegularUserDashboard: React.FC = () => {
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [showLoadTextModal, setShowLoadTextModal] = useState(false);
   const [isLoadingText, setIsLoadingText] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Mutation to start work - find work in progress or assign new text
   const startWorkMutation = useStartWork();
@@ -205,217 +207,176 @@ export const RegularUserDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-8 pt-24">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Welcome, {currentUser?.name}!
+    <div className="flex-1 bg-gray-50 flex">
+      {/* Mobile Menu Button */}
+      <button
+        className="md:hidden fixed top-16 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle sidebar menu"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <button
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40 w-full h-full"
+          onClick={() => setSidebarOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setSidebarOpen(false);
+            }
+          }}
+          aria-label="Close sidebar"
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`w-80 bg-white border-r border-gray-200 flex flex-col fixed md:relative h-full z-50 transform transition-transform duration-300 ease-in-out ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      }`}>
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200">
+          <h1 className="text-xl font-semibold text-gray-900">
+            Welcome, {currentUser?.name}
           </h1>
-          <p className="text-gray-600">
-            Create annotations, review work, and contribute to the knowledge
-            base
+          <p className="text-sm text-gray-600 mt-1">
+            Annotation Dashboard
           </p>
         </div>
 
-        {/* Main Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Start Work Card - Hide from reviewers */}
+        {/* Action Buttons */}
+        <div className="flex-1 p-6 space-y-4">
+          {/* Start Work Button - Hide from reviewers */}
           {currentUser?.role !== "reviewer" && (
-            <Card className="hover:shadow-lg  transition-all duration-300 cursor-pointer border-2 hover:border-blue-200">
-              <CardHeader className="text                                                 5          -center pb-4">
-                <div className="flex justify-center mb-4">
-                  <StartWorkIcon />
-                </div>
-                <CardTitle className="text-2xl">Start Work</CardTitle>
-                <CardDescription className="text-base">
-                  Begin annotating texts and creating structured content
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                {workInProgress.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h3 className="font-semibold mb-2">Work in Progress</h3>
-                      {workInProgress.map((text) => (
-                        <div
-                          key={text.id}
-                          className="bg-white p-3 rounded border"
-                        >
-                          <div className="text-left">
-                            <p className="font-medium text-gray-900">
-                              {text.title}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Status: {text.status} • Started:{" "}
-                              {formatDate(text.updated_at || text.created_at)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-2 justify-center">
+            <div className="space-y-3">
+              <Button
+                size="lg"
+                className="w-full h-12 text-base font-medium"
+                onClick={handleStartWork}
+                disabled={isLoadingText}
+              >
+                {isLoadingText ? (
+                  <>
+                    <AiOutlineLoading3Quarters className="w-4 h-4 mr-2 animate-spin" />
+                    Finding Text...
+                  </>
+                ) : (
+                  <>
+                    <StartWorkIcon />
+                    <span className="ml-2">Start Work</span>
+                  </>
+                )}
+              </Button>
+              
+              {/* Work in Progress */}
+              {workInProgress.length > 0 && (
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-sm text-gray-900 mb-2">Work in Progress</h3>
+                  {workInProgress.map((text) => (
+                    <div
+                      key={text.id}
+                      className="bg-white p-3 rounded border mb-2 last:mb-0"
+                    >
+                      <p className="font-medium text-sm text-gray-900">
+                        {text.title}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Status: {text.status} • Started:{" "}
+                        {formatDate(text.updated_at || text.created_at)}
+                      </p>
                       <Button
-                        size="lg"
-                        className="flex-1 cursor-pointer"
-                        onClick={() =>
-                          navigate(`/task/${workInProgress[0].id}`)
-                        }
+                        size="sm"
+                        className="w-full mt-2"
+                        onClick={() => navigate(`/task/${text.id}`)}
                       >
                         Continue
                       </Button>
                     </div>
-                  </div>
-                ) : (
-                  <>
-                    <Button
-                      size="lg"
-                      className="w-full"
-                      onClick={handleStartWork}
-                      disabled={isLoadingText}
-                    >
-                      {isLoadingText ? (
-                        <>
-                          <AiOutlineLoading3Quarters className="w-4 h-4 mr-2 animate-spin" />
-                          Finding Text...
-                        </>
-                      ) : (
-                        "Start Annotating"
-                      )}
-                    </Button>
-                    <p className="text-sm text-gray-500 mt-3">
-                      {isLoadingText
-                        ? "Looking for available texts to annotate..."
-                        : "Create new annotations, mark headers, identify persons and objects"}
-                    </p>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
-          {/* Review Work Card - Show for reviewers or admins */}
-          {(currentUser?.role === "reviewer" ||
-            currentUser?.role === "admin") && (
-            <Card
-              className="hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-green-200"
+          {/* Review Work Button - Show for reviewers or admins */}
+          {(currentUser?.role === "reviewer" || currentUser?.role === "admin") && (
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full h-12 text-base font-medium"
               onClick={handleReviewWork}
             >
-              <CardHeader className="text-center pb-4">
-                <div className="flex justify-center mb-4">
-                  <ReviewWorkIcon />
-                </div>
-                <CardTitle className="text-2xl">Review Work</CardTitle>
-                <CardDescription className="text-base">
-                  Review and validate existing annotations from yourself or
-                  other contributors
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {}}
-                >
-                  Start Reviewing
-                </Button>
-                <p className="text-sm text-gray-500 mt-3">
-                  Quality check annotations, approve or suggest improvements
-                </p>
-              </CardContent>
-            </Card>
+              <ReviewWorkIcon />
+              <span className="ml-2">Review Work</span>
+            </Button>
           )}
 
-          {/* Bulk Upload Card - Show for admins only */}
-          {currentUser?.role === "admin" && (
-            <Card className="hover:shadow-lg transition-all duration-300 border-2 hover:border-purple-200">
-              <CardHeader className="text-center pb-4">
-                <div className="flex justify-center mb-4">
-                  <BulkUploadIcon />
-                </div>
-                <CardTitle className="text-2xl">Bulk Upload</CardTitle>
-                <CardDescription className="text-base">
-                  Upload multiple JSON files containing texts and annotations
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full border-purple-200 hover:bg-purple-50"
-                  onClick={handleBulkUpload}
-                >
-                  Upload Files
-                </Button>
-                <p className="text-sm text-gray-500 mt-3">
-                  Batch import texts and annotations from JSON files
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Load Text Card - Show for all users except reviewers */}
+          {/* Load Text Button - Show for all users except reviewers */}
           {currentUser?.role !== "reviewer" && (
-            <Card className="hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200">
-              <CardHeader className="text-center pb-4">
-                <div className="flex justify-center mb-4">
-                  <svg
-                    className="w-12 h-12 text-blue-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                    />
-                  </svg>
-                </div>
-                <CardTitle className="text-2xl">Load Text</CardTitle>
-                <CardDescription className="text-base">
-                  Upload a file or import from OpenPecha
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full border-blue-200 hover:bg-blue-50"
-                  onClick={() => setShowLoadTextModal(true)}
-                >
-                  Load Text
-                </Button>
-                <p className="text-sm text-gray-500 mt-3">
-                  Upload your own text file or browse OpenPecha library
-                </p>
-              </CardContent>
-            </Card>
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full h-12 text-base font-medium"
+              onClick={() => setShowLoadTextModal(true)}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              <span className="ml-2">Load Text</span>
+            </Button>
+          )}
+
+          {/* Bulk Upload Button - Show for admins only */}
+          {currentUser?.role === "admin" && (
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full h-12 text-base font-medium"
+              onClick={handleBulkUpload}
+            >
+              <BulkUploadIcon />
+              <span className="ml-2">Bulk Upload</span>
+            </Button>
           )}
         </div>
+      </div>
 
-        {/* Review Progress Section - Show for reviewers and admins */}
-        {(currentUser?.role === "reviewer" ||
-          currentUser?.role === "admin") && (
-          <div className="mb-8">
-            <ReviewProgressSection />
-          </div>
-        )}
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-auto md:ml-0 ml-0">
+        <div className="p-4 md:p-8 pt-20 md:pt-8">
+          {/* Review Progress Section - Show for reviewers and admins */}
+          {(currentUser?.role === "reviewer" || currentUser?.role === "admin") && (
+            <div className="mb-8">
+              <ReviewProgressSection />
+            </div>
+          )}
 
-        {/* Recent Activity Section - Hide from reviewers */}
-        {currentUser?.role !== "reviewer" && (
-          <Card className="w-full mx-auto">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <RecentActivityIcon />
-                <CardTitle>Recent Activity</CardTitle>
+          {/* Recent Activity Section - Hide from reviewers */}
+          {currentUser?.role !== "reviewer" && (
+            <div className="mb-8">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <RecentActivityIcon />
+                  <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Your recent work and contributions
+                </p>
               </div>
-              <CardDescription>
-                Your recent work and contributions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+              
               {isLoadingActivity && (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
@@ -443,18 +404,18 @@ export const RegularUserDashboard: React.FC = () => {
                   </p>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        )}
-        {/* Reviewed Work Section - Show only for annotators, reviewers, and admins */}
+            </div>
+          )}
 
-        {(currentUser?.role === "annotator" ||
-          currentUser?.role === "reviewer" ||
-          currentUser?.role === "admin") && (
-          <div className="mb-8 mt-8">
-            <AnnotatorReviewedWork />
-          </div>
-        )}
+          {/* Reviewed Work Section - Show only for annotators, reviewers, and admins */}
+          {(currentUser?.role === "annotator" ||
+            currentUser?.role === "reviewer" ||
+            currentUser?.role === "admin") && (
+            <div className="mb-8">
+              <AnnotatorReviewedWork />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Bulk Upload Modal */}
@@ -484,12 +445,7 @@ function RecentActivityItem({
 
   // Handle clicking on recent activity item
   const handleActivityClick = (textId: number) => {
-    // Only allow editing if not all annotations are accepted
-    if (activity.all_accepted) {
-      navigate(`/task/${textId}`); // View only
-    } else {
-      navigate(`/task/${textId}`); // Edit allowed
-    }
+    navigate(`/task/${textId}`);
   };
 
   // Mutation to cancel work (delete user annotations and skip text)
@@ -512,23 +468,31 @@ function RecentActivityItem({
     });
   };
 
+  // Determine button text based on activity type and status
+  const getButtonText = () => {
+    if (activity.all_accepted && activityType === "annotation") {
+      return "View";
+    }
+    if (activityType === "annotation") {
+      return "Edit";
+    }
+    return "Review";
+  };
+  const buttonText:string = activity.all_accepted && activityType === "annotation" ? "View" : getButtonText();
   return (
-    <div
+    <button
       key={activity.text.id}
-      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+      title={buttonText} 
+      className="flex w-full px-2 py-1 items-center justify-between border-b border-gray-100 hover:bg-neutral-200 hover:border-blue-200 hover:shadow-sm transition-all duration-200 cursor-pointer rounded-lg mx-1"
+      onClick={() => handleActivityClick(activity.text.id)}
     >
       <div className="flex items-center gap-3">
-        <div
-          className={`w-3 h-3 rounded-full ${
-            activityType === "annotation" ? "bg-blue-500" : "bg-green-500"
-          }`}
-        ></div>
+      
         <div className="flex-1">
-          <p className="font-medium text-gray-900">{activity.text.title}</p>
-          <p className="text-sm text-gray-500">
-            {formatDate(activity.text.updated_at || activity.text.created_at)} •{" "}
-            {activity.text.status}
+          <p className="font-medium capitalize text-left text-gray-900  transition-colors">
+            {activity.text.title}
           </p>
+         
           {activity.total_annotations > 0 && (
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
@@ -544,47 +508,24 @@ function RecentActivityItem({
           )}
         </div>
       </div>
-      <div className="flex gap-2">
-        <Button
-          variant="ghost"
-          className="cursor-pointer"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleActivityClick(activity.text.id);
-          }}
-          disabled={activity.all_accepted && activityType === "annotation"}
-        >
-          {activity.all_accepted && activityType === "annotation"
-            ? "View"
-            : activityType === "annotation"
-            ? "Edit"
-            : "Review"}
-        </Button>
-        {activity.text.status === "progress" && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCancelWork();
-            }}
-            disabled={cancelWorkMutation.isPending}
-            title="Delete your annotations and skip this text permanently"
-          >
-            {cancelWorkMutation.isPending ? "Cancelling..." : "Cancel & Skip"}
-          </Button>
-        )}
+      <div className="flex items-center">
+        <span className="text-sm text-gray-500 hover:text-blue-600 transition-colors">
+          <span className="flex items-center gap-1">
+            <CalendarIcon className="w-4 h-4" />
+                      {formatDate(activity.text.updated_at || activity.text.created_at)} •{" "}
+            </span>
+          <p className="text-sm text-gray-500 text-left">
+            {activity.text.status}
+          </p>
+        </span>
       </div>
-    </div>
+    </button>
   );
 }
 
 // Review Progress Section Component
 function ReviewProgressSection() {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
 
   // Fetch reviewer's work in progress
   const { data: reviewProgress = [], isLoading: isLoadingProgress } = useMyReviewProgress();
