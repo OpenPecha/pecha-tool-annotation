@@ -104,13 +104,6 @@ def upload_text_file(
             detail="Only text files are allowed"
         )
     
-    # Check for duplicate filename
-    existing_text = text_crud.get_by_title(db=db, title=file.filename.rsplit('.', 1)[0])
-    if existing_text:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"A text with the filename '{file.filename}' has already been uploaded"
-        )
     try:
         # Read the file content
         content = file.file.read().decode('utf-8')
