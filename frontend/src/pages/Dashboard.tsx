@@ -1,8 +1,8 @@
 import React, { Suspense, useEffect } from "react";
-import { useAuth } from "@/auth/use-auth-hook";
 import Navbar from "@/components/Navbar";
 import { FullScreenLoading } from "@/components/ui/loading";
 import { preloadByUserRole } from "@/utils/componentPreloader";
+import { useCurrentUser } from "@/hooks";
 
 // Lazy load dashboard components
 const AdminDashboard = React.lazy(() =>
@@ -17,7 +17,7 @@ const RegularUserDashboard = React.lazy(() =>
 );
 
 const Dashboard = () => {
-  const { currentUser } = useAuth();
+  const { data: currentUser } = useCurrentUser();
 
   // Preload components based on user role for better performance
   useEffect(() => {
