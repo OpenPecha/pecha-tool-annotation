@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { IoChevronDown, IoChevronForward } from "react-icons/io5";
 import type { AnnotationResponse } from "@/api/types";
 
@@ -38,6 +38,14 @@ export const AnnotationTypesFilter = ({
       .map(([type, count]) => ({ type, count }))
       .sort((a, b) => a.type.localeCompare(b.type));
   }, [annotationsByText]);
+
+  // Auto-select all annotation types by default when they first load
+  useEffect(() => {
+    if (annotationTypesWithCounts.length > 0 && selectedAnnotationTypes.size === 0) {
+      onSelectAllAnnotationTypes(annotationTypesWithCounts.map(item => item.type));
+    }
+  }, [annotationTypesWithCounts, selectedAnnotationTypes.size, onSelectAllAnnotationTypes]);
+
   // Handle toggle all
   const handleToggleAll = () => {
     if (selectedAnnotationTypes.size === annotationTypesWithCounts.length) {
