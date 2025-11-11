@@ -116,7 +116,10 @@ def upload_text_file(
         content = file.file.read().decode('utf-8')
         
         # Get filename without extension for title
-        title = file.filename.rsplit('.', 1)[0] if file.filename else "Uploaded Text"
+        from datetime import datetime
+        base_title = file.filename.rsplit('.', 1)[0] if file.filename else "Uploaded Text"
+        current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+        title = f"{base_title}_{current_time}"
         
         # Create TextCreate object
         text_create = TextCreate(
