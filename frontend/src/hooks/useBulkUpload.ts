@@ -25,9 +25,9 @@ export const useValidateBulkUpload = () => {
 export const useUploadBulk = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<BulkUploadResponse, Error, File[]>({
-    mutationFn: async (files: File[]) => {
-      const formData = bulkUploadApi.createFormData(files);
+  return useMutation<BulkUploadResponse, Error, { files: File[]; annotationTypeId?: string }>({
+    mutationFn: async ({ files, annotationTypeId }) => {
+      const formData = bulkUploadApi.createFormData(files, annotationTypeId);
       return bulkUploadApi.uploadFiles(formData);
     },
     onSuccess: () => {

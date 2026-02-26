@@ -68,11 +68,14 @@ export const bulkUploadApi = {
   /**
    * Helper function to create FormData from File array
    */
-  createFormData: (files: File[]): FormData => {
+  createFormData: (files: File[], annotationTypeId?: string): FormData => {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append("files", file);
     });
+    if (annotationTypeId) {
+      formData.append("annotation_type_id", annotationTypeId);
+    }
     return formData;
   },
 

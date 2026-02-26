@@ -259,19 +259,10 @@ export function UserManagement({ className }: UserManagementProps) {
                       <div className="font-medium text-gray-900">
                         {user.full_name || user.username}
                       </div>
-                      <div className="text-sm text-gray-500">
-                        {user.email} • ID: {user.id}
-                      </div>
+                    
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge className={getRoleColor(user.role)}>
-                      {user.role}
-                    </Badge>
-                    <Badge variant={user.is_active ? "default" : "secondary"}>
-                      {user.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
+                
                 </div>
                 <div className="flex items-center space-x-2">
                   <select
@@ -299,14 +290,7 @@ export function UserManagement({ className }: UserManagementProps) {
                   >
                     {user.is_active ? "Deactivate" : "Activate"}
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDeleteUser(user.id)}
-                    disabled={deleteUserMutation.isPending}
-                  >
-                    <IoTrash className="w-4 h-4" />
-                  </Button>
+                 
                 </div>
               </div>
             ))}

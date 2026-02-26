@@ -7,6 +7,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import {
   IoCloudUpload,
@@ -19,7 +26,7 @@ import {
 } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import type { BulkUploadResponse } from "@/api/bulk-upload";
-import { useValidateBulkUpload, useUploadBulk } from "@/hooks";
+import { useValidateBulkUpload, useUploadBulk, useAnnotationTypes } from "@/hooks";
 
 interface FileValidationResult {
   filename: string;
@@ -42,15 +49,19 @@ export const AdminBulkUploadSection: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [validationResults, setValidationResults] = useState<
-    FileValidationResult[] | null
+  FileValidationResult[] | null
   >(null);
   const [uploadResults, setUploadResults] = useState<BulkUploadResponse | null>(
     null
   );
   const [currentStep, setCurrentStep] = useState<
-    "select" | "validate" | "upload" | "results"
+  "select" | "validate" | "upload" | "results"
   >("select");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Fetch annotation types
+  const { data: annotationTypes = [], isLoading: isLoadingAnnotationTypes } = useAnnotationTypes();
+  const [selectedAnnotationTypeId, setSelectedAnnotationTypeId] = useState<string>(annotationTypes.length > 0 ? annotationTypes[0].id : "none");
 
   // Bulk upload mutations
   const validateMutation = useValidateBulkUpload();
@@ -126,7 +137,12 @@ export const AdminBulkUploadSection: React.FC = () => {
   const handleUploadFiles = () => {
     if (selectedFiles.length === 0) return;
     setCurrentStep("upload");
-    uploadMutation.mutate(selectedFiles, {
+    uploadMutation.mutate(
+      { 
+        files: selectedFiles, 
+        annotationTypeId: selectedAnnotationTypeId && selectedAnnotationTypeId !== "none" ? selectedAnnotationTypeId : undefined 
+      },
+      {
       onSuccess: (data) => {
         setUploadResults(data);
         setCurrentStep("results");
@@ -152,6 +168,7 @@ export const AdminBulkUploadSection: React.FC = () => {
 
   const handleReset = () => {
     setSelectedFiles([]);
+    setSelectedAnnotationTypeId("none");
     setValidationResults(null);
     setUploadResults(null);
     setCurrentStep("select");
@@ -214,20 +231,16 @@ export const AdminBulkUploadSection: React.FC = () => {
                 <div className="flex items-start gap-2">
                   <IoInformationCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-blue-900">
-                    <p className="font-medium mb-1">File Format Required</p>
                     <p className="text-blue-700">
-                      Each JSON file must contain a text object and annotations array.{" "}
                         <a
                           href="../../docs/BULK_UPLOAD_FORMAT.md"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="underline font-medium hover:text-blue-900"
                         >
-                          View detailed format documentation →
+                          Documentation
                         </a>
-                        <span className="text-blue-600 text-xs block mt-1">
-                          (Available in docs/BULK_UPLOAD_FORMAT.md)
-                        </span>
+                      
                     </p>
                   </div>
                 </div>
@@ -246,6 +259,53 @@ export const AdminBulkUploadSection: React.FC = () => {
                 onChange={handleFileSelect}
                 className="hidden"
               />
+            </div>
+
+            {/* Annotation Type Selection */}
+            <div className="space-y-2">
+              <label htmlFor="annotation-type-select" className="text-sm font-semibold text-gray-700">
+                Annotation Type (Optional)
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Select an annotation type to apply to all texts in this bulk upload. 
+                If not selected, texts will use the annotation type from their JSON files (if provided).
+              </p>
+              <Select
+                value={selectedAnnotationTypeId}
+                onValueChange={setSelectedAnnotationTypeId}
+                disabled={isLoadingAnnotationTypes}
+              >
+                <SelectTrigger id="annotation-type-select" className="focus:ring-0 ring-0 focus:outline-none focus:ring-offset-0">
+                  <SelectValue
+                    placeholder={
+                      isLoadingAnnotationTypes
+                        ? "Loading annotation types..."
+                        : "Select annotation type (optional)..."
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {isLoadingAnnotationTypes ? (
+                    <div className="p-4 text-center">
+                      <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin mx-auto mb-2 text-indigo-500" />
+                      <p className="text-sm text-gray-500">Loading types...</p>
+                    </div>
+                  ) : annotationTypes.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-gray-500">
+                      No annotation types available
+                    </div>
+                  ) : (
+                    <>
+                      <SelectItem value="none">None (use file default)</SelectItem>
+                      {annotationTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Selected Files */}

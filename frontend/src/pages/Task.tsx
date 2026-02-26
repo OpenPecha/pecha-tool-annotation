@@ -15,20 +15,24 @@ import {
   useTextWithAnnotations,
   useRecentActivity,
   useAnnotationListHierarchical,
+  useCurrentUser,
 } from "@/hooks";
 import { convertApiAnnotationsSync } from "@/utils/annotationConverter";
 import type { Annotation } from "@/utils/annotationConverter";
 import { useAnnotationOperations } from "@/hooks/useAnnotationOperations";
 import { useTaskOperations } from "@/hooks/useTaskOperations";
 import { useAnnotationNavigation } from "@/hooks/useAnnotationNavigation";
+import { exportAsJsonFile } from "@/utils/exportAnnotation";
 
 const Index = () => {
   const { textId } = useParams<{ textId: string }>();
   const { currentUser } = useAuth();
+  const { data: currentUserData } = useCurrentUser();
 
   // Parse textId early for all hooks
   const parsedTextId = textId ? parseInt(textId, 10) : undefined;
   const currentUserId = currentUser?.id ? parseInt(currentUser.id, 10) : null;
+  const userRole = currentUserData?.role;
 
   // Global state from Zustand stores
   const { navigationOpen, sidebarOpen, toggleNavigation, toggleSidebar } = useAnnotationStore();
@@ -155,6 +159,15 @@ const Index = () => {
     return filteredAnnotations.filter((ann) => ann.type !== "header");
   }, [filteredAnnotations]);
 
+  /**
+   * Handle export for regular users
+   */
+  const handleExport = () => {
+    if (textData) {
+      exportAsJsonFile(textData);
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return <TaskLoadingState />;
@@ -234,6 +247,9 @@ const Index = () => {
             isUndoing={isUndoing}
             onUndoAnnotations={handleUndoAnnotations}
             onRevertWork={handleRevertWork}
+            onExport={handleExport}
+            textData={textData}
+            userRole={userRole}
             userAnnotationsCount={getUserAnnotationsCount()}
           />
           <AnnotationSidebar

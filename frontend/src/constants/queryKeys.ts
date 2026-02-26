@@ -46,7 +46,6 @@ export const queryKeys = {
     myReviews: ["my-reviews"] as const,
     annotationReviews: (annotationId: number) => ["annotation-reviews", annotationId] as const,
     stats: ["reviewer-stats"] as const,
-    annotatorReviewedWork: ["annotator-reviewed-work"] as const,
     textsNeedingRevision: ["texts-needing-revision"] as const,
   },
 

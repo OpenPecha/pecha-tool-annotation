@@ -207,9 +207,6 @@ export const AdminAnnotationListSection: React.FC = () => {
                   <div className="flex items-start gap-2">
                     <IoInformationCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-blue-900">
-                      <p className="font-medium mb-1">File Format Required</p>
-                      <p className="text-blue-700">
-                        JSON file must contain a hierarchical structure with categories and subcategories.{" "}
                         <a
                           href="../../docs/ANNOTATION_LIST_UPLOAD_FORMAT.md"
                           target="_blank"
@@ -218,10 +215,7 @@ export const AdminAnnotationListSection: React.FC = () => {
                         >
                           View detailed format documentation →
                         </a>
-                        <span className="text-blue-600 text-xs block mt-1">
-                          (Available in docs/ANNOTATION_LIST_UPLOAD_FORMAT.md)
-                        </span>
-                      </p>
+                       
                     </div>
                   </div>
                 </div>

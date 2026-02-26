@@ -1,10 +1,10 @@
 from typing import List, Optional
 from datetime import datetime
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, defer
 from sqlalchemy import func, and_, exists, select
 from models.text import Text, INITIALIZED, ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION, SKIPPED, PROGRESS, VALID_STATUSES
 from models.annotation import Annotation
-from schemas.text import TextCreate, TextUpdate
+from schemas.text import TextCreate, TextListResponse, TextUpdate
 
 
 class TextCRUD:
@@ -53,12 +53,15 @@ class TextCRUD:
         language: Optional[str] = None,
         reviewer_id: Optional[int] = None,
         uploaded_by: Optional[str] = None
-    ) -> List[Text]:
-        """Get multiple texts with optional filtering and user relationships."""
+    ) -> List[TextListResponse]:
+        """Get multiple texts with optional filtering and user relationships.
+        Excludes content and translation fields for better performance."""
         query = db.query(Text).options(
             joinedload(Text.annotator),
             joinedload(Text.reviewer),
-            joinedload(Text.uploader)
+            joinedload(Text.uploader),
+            defer(Text.content),
+            defer(Text.translation)
         )
         
         if status:
@@ -210,12 +213,23 @@ class TextCRUD:
             "progress": progress
         }
 
-    def get_work_in_progress(self, db: Session, user_id: int) -> Optional[Text]:
+    def get_work_in_progress(self, db: Session, user_id: int, user_role: str = None) -> Optional[Text]:
         """Get text that user is currently working on (progress status)."""
-        return db.query(Text).filter(
-            Text.annotator_id == user_id,
-            Text.status == PROGRESS
-        ).first()
+        if user_role == "annotator":
+            # For users, return text where source is not 'Bulk Upload'
+            return db.query(Text).filter(
+                Text.annotator_id == user_id,
+                Text.status == PROGRESS,
+                Text.source == 'Bulk Upload'
+            ).first()
+        elif user_role == "user":
+            return db.query(Text).filter(
+                Text.annotator_id == user_id,
+                Text.status == PROGRESS,
+                Text.source != 'Bulk Upload'
+            ).first()
+        else:
+            return None
 
     def get_unassigned_text(self, db: Session) -> Optional[Text]:
         """Get an unassigned text with initialized status."""
@@ -263,9 +277,13 @@ class TextCRUD:
     def start_work(self, db: Session, user_id: int, user_role: str = None) -> Optional[Text]:
         """Start work for a user - find work in progress or assign new text."""
         # First, check if user has work in progress
-        work_in_progress = self.get_work_in_progress(db, user_id)
+        work_in_progress = self.get_work_in_progress(db, user_id, user_role)
+        
         if work_in_progress:
             return work_in_progress
+        
+        if user_role == "user":
+            return None
         
         # If no work in progress, find an unassigned text (excluding rejected ones)
         unassigned_text = self.get_unassigned_text_for_user(db, user_id, user_role)
@@ -275,26 +293,34 @@ class TextCRUD:
         # No texts available
         return None
 
-    def get_recent_activity(self, db: Session, user_id: int, limit: int = 10) -> List[Text]:
+    def get_recent_activity(self, db: Session, user_id: int, limit: int = 10, user_role: str = None) -> List[Text]:
         """Get recent texts annotated or reviewed by the user."""
         # Get texts where user was annotator or reviewer, ordered by updated_at desc
-        recent_texts = db.query(Text).filter(
+        query = db.query(Text).filter(
             (Text.annotator_id == user_id) | (Text.reviewer_id == user_id)
         ).filter(
             Text.status.in_([ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION])  # Only completed work
-        ).order_by(
+        )
+        
+        # Role-based filtering by source
+        if user_role == "user":
+            # For all other roles (admin, annotator, reviewer), filter only texts where source is "bulk"
+            query = query.filter(Text.source != "Bulk Upload")
+        # USER role: no source filtering (show all texts)
+        
+        recent_texts = query.order_by(
             Text.updated_at.desc()
         ).limit(limit).all()
         
         return recent_texts
 
-    def get_recent_activity_with_review_counts(self, db: Session, user_id: int, limit: int = 10) -> List[dict]:
+    def get_recent_activity_with_review_counts(self, db: Session, user_id: int, limit: int = 10, user_role: str = None) -> List[dict]:
         """Get recent texts annotated or reviewed by the user with annotation review counts."""
         from models.annotation import Annotation
         from models.annotation_review import AnnotationReview
         
         # Get recent texts
-        recent_texts = self.get_recent_activity(db, user_id, limit)
+        recent_texts = self.get_recent_activity(db, user_id, limit, user_role)
         
         result = []
         for text in recent_texts:
@@ -489,7 +515,8 @@ class TextCRUD:
         base_query = db.query(Text).filter(
             and_(
                 Text.created_at >= start_date_inclusive,
-                Text.created_at <= end_date_inclusive
+                Text.created_at <= end_date_inclusive,
+                
             )
         )
         

@@ -10,7 +10,6 @@ import type {
   TextForReview,
   ReviewProgressItem,
   ReviewerStats,
-  AnnotatorReviewedWork,
   TextNeedingRevision,
 } from "@/api/reviews";
 
@@ -100,16 +99,7 @@ export const useReviewerStats = () => {
   });
 };
 
-/**
- * Get annotator's reviewed work
- */
-export const useAnnotatorReviewedWork = (skip = 0, limit = 100) => {
-  return useQuery<AnnotatorReviewedWork[]>({
-    queryKey: [...queryKeys.reviews.annotatorReviewedWork, skip, limit],
-    queryFn: () => reviewApi.getAnnotatorReviewedWork(skip, limit),
-    staleTime: 1000 * 60, // 1 minute
-  });
-};
+
 
 /**
  * Get texts that need revision (for annotators)

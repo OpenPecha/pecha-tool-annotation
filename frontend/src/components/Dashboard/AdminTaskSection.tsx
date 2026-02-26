@@ -102,21 +102,12 @@ const formatDate = (dateString: string) => {
   });
 };
 
-// Helper function to truncate text
-const truncateText = (text: string, maxLength: number = 100) => {
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + "...";
-};
+
 
 const ITEMS_PER_PAGE = 10;
 
 export const AdminTaskSection: React.FC = () => {
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<TextStatus | "all">("all");
-  const [languageFilter, setLanguageFilter] = useState<string>("all");
-  const [uploadedByFilter, setUploadedByFilter] = useState<
-    "all" | "system" | "user"
-  >("all");
   const [currentPage, setCurrentPage] = useState(1);
 
   // Calculate skip for pagination
@@ -127,112 +118,28 @@ export const AdminTaskSection: React.FC = () => {
     skip,
     limit: ITEMS_PER_PAGE,
   };
-  if (statusFilter !== "all") paginatedFilters.status = statusFilter;
-  if (languageFilter !== "all") paginatedFilters.language = languageFilter;
-  if (uploadedByFilter !== "all") paginatedFilters.uploaded_by = uploadedByFilter;
-
-  const countFilters: TextFilters = {};
-  if (statusFilter !== "all") countFilters.status = statusFilter;
-  if (languageFilter !== "all") countFilters.language = languageFilter;
-  if (uploadedByFilter !== "all") countFilters.uploaded_by = uploadedByFilter;
 
   // Fetch paginated texts with backend filtering
   const {
-    data: textsData,
+    data: texts = [],
     isLoading,
     error,
   } = useTexts(paginatedFilters);
 
-  const texts = textsData || [];
 
-  // Fetch total count for pagination (separate query without pagination)
-  const { data: allTextsForCountData } = useTexts(countFilters);
 
-  const allTextsForCount = allTextsForCountData || [];
 
-  // Fetch all texts for filter options (we need to get unique languages and status counts)
-  const { data: allTextsData } = useTexts({});
 
-  const allTexts = allTextsData || [];
 
   // Calculate pagination info
-  const totalItems = allTextsForCount.length;
+  const totalItems = texts?.length || 0;
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
   const hasNextPage = currentPage < totalPages;
   const hasPreviousPage = currentPage > 1;
 
-  // Get unique languages for filter
-  const uniqueLanguages = Array.from(
-    new Set(allTexts.map((text) => text.language))
-  ).sort();
+  
 
-  // Status filter options with counts
-  const statusOptions = [
-    { value: "all", label: "All Status", count: allTextsForCount.length },
-    {
-      value: TextStatus.INITIALIZED,
-      label: "Ready for Annotation",
-      count: allTexts.filter((t) => t.status === TextStatus.INITIALIZED).length,
-    },
-    {
-      value: TextStatus.ANNOTATION_IN_PROGRESS,
-      label: "In Progress",
-      count: allTexts.filter(
-        (t) => t.status === TextStatus.ANNOTATION_IN_PROGRESS
-      ).length,
-    },
-    {
-      value: TextStatus.ANNOTATED,
-      label: "Annotated",
-      count: allTexts.filter((t) => t.status === TextStatus.ANNOTATED).length,
-    },
-    {
-      value: TextStatus.REVIEWED,
-      label: "Reviewed",
-      count: allTexts.filter((t) => t.status === TextStatus.REVIEWED).length,
-    },
-    {
-      value: TextStatus.PUBLISHED,
-      label: "Published",
-      count: allTexts.filter((t) => t.status === TextStatus.PUBLISHED).length,
-    },
-  ];
 
-  // Uploaded by filter options with counts
-  const uploadedByOptions = [
-    { value: "all", label: "All Sources", count: allTextsForCount.length },
-    {
-      value: "system" as const,
-      label: "System Texts",
-      count: allTexts.filter(
-        (t) => t.uploaded_by === null || t.uploaded_by === undefined
-      ).length,
-    },
-    {
-      value: "user" as const,
-      label: "User Uploads",
-      count: allTexts.filter(
-        (t) => t.uploaded_by !== null && t.uploaded_by !== undefined
-      ).length,
-    },
-  ];
-
-  // Calculate task progress statistics from all texts
-  const taskStats = {
-    total: allTexts.length,
-    ready: allTexts.filter((t) => t.status === TextStatus.INITIALIZED).length,
-    inProgress: allTexts.filter(
-      (t) => t.status === TextStatus.ANNOTATION_IN_PROGRESS
-    ).length,
-    completed: allTexts.filter((t) => {
-      const completedStatuses: TextStatus[] = [
-        TextStatus.ANNOTATED,
-        TextStatus.REVIEWED,
-        TextStatus.PUBLISHED,
-      ];
-      return completedStatuses.includes(t.status);
-    }).length,
-  };
 
   const handleViewTask = (textId: number) => {
     navigate(`/task/${textId}`);
@@ -257,16 +164,6 @@ export const AdminTaskSection: React.FC = () => {
     });
   };
 
-  const handleFilterChange = (
-    newStatusFilter: TextStatus | "all",
-    newLanguageFilter: string,
-    newUploadedByFilter: "all" | "system" | "user"
-  ) => {
-    setStatusFilter(newStatusFilter);
-    setLanguageFilter(newLanguageFilter);
-    setUploadedByFilter(newUploadedByFilter);
-    setCurrentPage(1); // Reset to first page when filters change
-  };
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -291,139 +188,6 @@ export const AdminTaskSection: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header with Statistics */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <IoDocumentText className="w-5 h-5" />
-            Task Management
-          </CardTitle>
-          <CardDescription>
-            View and manage all annotation tasks in the system
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
-              <div className="flex items-center gap-2">
-                <IoStarOutline className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-medium text-blue-700">
-                  Total Tasks
-                </span>
-              </div>
-              <p className="text-2xl font-bold text-blue-800">
-                {taskStats.total}
-              </p>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
-              <div className="flex items-center gap-2">
-                <IoCheckmarkCircle className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium text-green-700">
-                  Ready
-                </span>
-              </div>
-              <p className="text-2xl font-bold text-green-800">
-                {taskStats.ready}
-              </p>
-            </div>
-            <div className="bg-orange-50 p-4 rounded-lg border-2 border-orange-200">
-              <div className="flex items-center gap-2">
-                <IoTimeOutline className="w-5 h-5 text-orange-600" />
-                <span className="text-sm font-medium text-orange-700">
-                  In Progress
-                </span>
-              </div>
-              <p className="text-2xl font-bold text-orange-800">
-                {taskStats.inProgress}
-              </p>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
-              <div className="flex items-center gap-2">
-                <IoCheckmarkCircle className="w-5 h-5 text-purple-600" />
-                <span className="text-sm font-medium text-purple-700">
-                  Completed
-                </span>
-              </div>
-              <p className="text-2xl font-bold text-purple-800">
-                {taskStats.completed}
-              </p>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 mb-6">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                Status Filter
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) =>
-                  handleFilterChange(
-                    e.target.value as TextStatus | "all",
-                    languageFilter,
-                    uploadedByFilter
-                  )
-                }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label} ({option.count})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                Language Filter
-              </label>
-              <select
-                value={languageFilter}
-                onChange={(e) =>
-                  handleFilterChange(
-                    statusFilter,
-                    e.target.value,
-                    uploadedByFilter
-                  )
-                }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All Languages ({allTexts.length})</option>
-                {uniqueLanguages.map((lang) => (
-                  <option key={lang} value={lang}>
-                    {lang.charAt(0).toUpperCase() + lang.slice(1)} (
-                    {allTexts.filter((t) => t.language === lang).length})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                Uploaded By Filter
-              </label>
-              <select
-                value={uploadedByFilter}
-                onChange={(e) =>
-                  handleFilterChange(
-                    statusFilter,
-                    languageFilter,
-                    e.target.value as "all" | "system" | "user"
-                  )
-                }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {uploadedByOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label} ({option.count})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Tasks List */}
       <Card>
         <CardHeader>
@@ -500,17 +264,9 @@ export const AdminTaskSection: React.FC = () => {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 mb-3">
-                            {truncateText(text.content)}
-                          </p>
+                          
                           <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <span>ID: {text.id}</span>
-                            <span>Created: {formatDate(text.created_at)}</span>
-                            {text.updated_at && (
-                              <span>
-                                Updated: {formatDate(text.updated_at)}
-                              </span>
-                            )}
+                         
                             <span>Uploaded by: {uploaderName}</span>
                             {annotatorName && (
                               <span>Annotator: {annotatorName}</span>

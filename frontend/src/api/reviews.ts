@@ -104,30 +104,6 @@ export interface ReviewerStats {
   agreement_rate: number;
 }
 
-// Types for annotator reviewed work
-export interface AnnotatorReviewedWork {
-  id: number;
-  title: string;
-  status: string;
-  reviewer_id: number;
-  total_annotations: number;
-  agree_count: number;
-  disagree_count: number;
-  annotations: Array<{
-    id: number;
-    annotation_type: string;
-    selected_text: string;
-    name?: string;
-    reviews: Array<{
-      id: number;
-      decision: "agree" | "disagree";
-      comment?: string;
-      reviewer_id: number;
-      created_at: string;
-    }>;
-  }>;
-  reviewed_at: string;
-}
 
 export interface TextNeedingRevision {
   id: number;
@@ -226,15 +202,7 @@ export const reviewApi = {
     return apiClient.delete<{ message: string }>(`/reviews/${reviewId}`);
   },
 
-  // New methods for annotator reviewed work
-  async getAnnotatorReviewedWork(
-    skip: number = 0,
-    limit: number = 100
-  ): Promise<AnnotatorReviewedWork[]> {
-    return await apiClient.get<AnnotatorReviewedWork[]>(
-      `/reviews/annotator/reviewed-work?skip=${skip}&limit=${limit}`
-    );
-  },
+
 
   async getTextsNeedingRevision(
     skip: number = 0,

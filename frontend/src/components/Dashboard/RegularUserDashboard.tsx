@@ -1,27 +1,17 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/auth/use-auth-hook";
 import { toast } from "sonner";
 import type { RecentActivityWithReviewCounts } from "@/api/types";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import BulkUploadModal from "../BulkUploadModal";
 import type { BulkUploadResponse } from "@/api/bulk-upload";
-import { AnnotatorReviewedWork } from "../AnnotatorReviewedWork";
 import { LoadTextModal } from "./LoadTextModal";
 import {
   useStartWork,
   useMyWorkInProgress,
   useRecentActivity,
-  useMyReviewProgress,
-  useCancelWorkWithRevertAndSkip,
   useStartReviewing,
   useCurrentUser,
 } from "@/hooks";
@@ -84,21 +74,6 @@ const RecentActivityIcon = () => (
   </svg>
 );
 
-const BulkUploadIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-    />
-  </svg>
-);
 
 export const RegularUserDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -186,9 +161,7 @@ export const RegularUserDashboard: React.FC = () => {
     });
   };
 
-  const handleBulkUpload = () => {
-    setShowBulkUploadModal(true);
-  };
+
 
   const handleBulkUploadComplete = (result: BulkUploadResponse) => {
     if (result.success) {
@@ -251,7 +224,7 @@ export const RegularUserDashboard: React.FC = () => {
         {/* Action Buttons */}
         <div className="flex-1 p-6 space-y-4">
           {/* Start Work Button - Hide from reviewers */}
-          {currentUser?.role !== "reviewer" && (
+          {(currentUser?.role == "annotator" || currentUser?.role == "user") && (
             <div className="space-y-3">
               <Button
                 size="lg"
@@ -315,8 +288,8 @@ export const RegularUserDashboard: React.FC = () => {
             </Button>
           )}
 
-          {/* Load Text Button - Show for all users except reviewers */}
-          {currentUser?.role !== "reviewer" && (
+          {/* Load Text Button - Show only for users and admins (not annotators or reviewers) */}
+          {currentUser?.role === "user" && (
             <Button
               size="lg"
               variant="outline"
@@ -340,17 +313,7 @@ export const RegularUserDashboard: React.FC = () => {
             </Button>
           )}
           {/* Bulk Upload Button - Show for admins only */}
-          {currentUser?.role === "admin" && (
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full h-12 text-base font-medium"
-              onClick={handleBulkUpload}
-            >
-              <BulkUploadIcon />
-              <span className="ml-2">Bulk Upload</span>
-            </Button>
-          )}
+        
           {currentUser?.role === "admin" && (
       <Link to="/admin" className=" transition-colors">Admin Dashboard</Link>
           )}
@@ -362,11 +325,7 @@ export const RegularUserDashboard: React.FC = () => {
       <div className="flex-1 overflow-auto md:ml-0 ml-0">
         <div className="p-4 md:p-8 pt-20 md:pt-8">
           {/* Review Progress Section - Show for reviewers and admins */}
-          {(currentUser?.role === "reviewer" || currentUser?.role === "admin") && (
-            <div className="mb-8">
-              <ReviewProgressSection />
-            </div>
-          )}
+        
 
           {/* Recent Activity Section - Hide from reviewers */}
           {currentUser?.role !== "reviewer" && (
@@ -411,14 +370,7 @@ export const RegularUserDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Reviewed Work Section - Show only for annotators, reviewers, and admins */}
-          {(currentUser?.role === "annotator" ||
-            currentUser?.role === "reviewer" ||
-            currentUser?.role === "admin") && (
-            <div className="mb-8">
-              <AnnotatorReviewedWork />
-            </div>
-          )}
+      
         </div>
       </div>
 
@@ -429,11 +381,7 @@ export const RegularUserDashboard: React.FC = () => {
         onUploadComplete={handleBulkUploadComplete}
       />
 
-      {/* Load Text Modal */}
-      <LoadTextModal
-        isOpen={showLoadTextModal}
-        onClose={() => setShowLoadTextModal(false)}
-      />
+    
     </div>
   );
 };
@@ -446,31 +394,17 @@ function RecentActivityItem({
   readonly activityType: string;
 }) {
   const navigate = useNavigate();
-
+  const { data: currentUser } = useCurrentUser();
   // Handle clicking on recent activity item
   const handleActivityClick = (textId: number) => {
+    if(activity.text.status === "reviewed" && currentUser?.role !== "admin" && currentUser?.role !== "reviewer") {
+      alert("this is reviewed text.");
+      return;
+    }
     navigate(`/task/${textId}`);
   };
 
-  // Mutation to cancel work (delete user annotations and skip text)
-  const cancelWorkMutation = useCancelWorkWithRevertAndSkip();
 
-  const handleCancelWork = () => {
-    cancelWorkMutation.mutate(activity.text.id, {
-      onSuccess: () => {
-        toast.success("✅ Work Cancelled & Skipped", {
-          description:
-            "Your annotations were deleted and text was skipped. It won't be shown to you again.",
-        });
-      },
-      onError: (error) => {
-        toast.error("❌ Failed to Cancel Work", {
-          description:
-            error instanceof Error ? error.message : "Failed to cancel work",
-        });
-      },
-    });
-  };
 
   // Determine button text based on activity type and status
   const getButtonText = () => {
@@ -527,108 +461,3 @@ function RecentActivityItem({
   );
 }
 
-// Review Progress Section Component
-function ReviewProgressSection() {
-  const navigate = useNavigate();
-
-  // Fetch reviewer's work in progress
-  const { data: reviewProgress = [], isLoading: isLoadingProgress } = useMyReviewProgress();
-
-  if (isLoadingProgress) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>My Review Progress</CardTitle>
-          <CardDescription>
-            Texts currently assigned to you for review
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
-            <p className="text-gray-500">Loading review progress...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (reviewProgress.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>My Review Progress</CardTitle>
-          <CardDescription>
-            Texts currently assigned to you for review
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-gray-500">No texts assigned for review yet.</p>
-            <p className="text-sm text-gray-400 mt-1">
-              Start reviewing texts to see your progress here!
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>My Review Progress</CardTitle>
-        <CardDescription>
-          Texts currently assigned to you for review ({reviewProgress.length})
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {reviewProgress.map((text) => (
-            <div
-              key={text.id}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{text.title}</h4>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {text.reviewed_count} of {text.annotation_count}{" "}
-                      annotations reviewed
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${text.progress_percentage}%` }}
-                      />
-                    </div>
-                    <span className="text-sm text-gray-600 min-w-[3rem]">
-                      {text.progress_percentage}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 ml-4">
-                {text.is_complete && (
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                    Complete
-                  </span>
-                )}
-                <Button
-                  size="sm"
-                  variant={text.is_complete ? "outline" : "default"}
-                  onClick={() => navigate(`/review/${text.id}`)}
-                >
-                  {text.is_complete ? "View" : "Continue"}
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}

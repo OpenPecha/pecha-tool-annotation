@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 import json
@@ -24,7 +24,7 @@ from crud.annotation import annotation_crud
 router = APIRouter(prefix="/bulk-upload", tags=["Bulk Upload"])
 
 
-def validate_json_file(file_content: str, filename: str) -> tuple[bool, BulkUploadFileData, List[str]]:
+def validate_json_file(file_content: str) -> tuple[bool, BulkUploadFileData, List[str]]:
     """Validate a single JSON file and return parsed data or errors"""
     try:
         # Parse JSON
@@ -57,11 +57,10 @@ def create_text_from_data(db: Session, text_data: BulkTextData, uploaded_by: Opt
         title=text_data.title,
         content=text_data.content,
         translation=text_data.translation,
-        source=text_data.source,
+        source="Bulk Upload",
         language=text_data.language,
         uploaded_by=uploaded_by,  # None for admin bulk uploads (system texts)
         annotation_type_id=annotation_type_id  # Optional annotation type
-        # status will default to "initialized" in the schema
     )
     
     return text_crud.create(db=db, obj_in=text_create)
@@ -132,16 +131,20 @@ def process_single_file(
     db: Session, 
     file_data: BulkUploadFileData, 
     filename: str, 
-    annotator_id: int
+    annotator_id: int,
+    annotation_type_id: Optional[str] = None
 ) -> BulkUploadResult:
     """Process a single validated file and create database records (text status remains 'initialized')"""
     try:
+        # Use provided annotation_type_id if available, otherwise fall back to file data
+        final_annotation_type_id = annotation_type_id or file_data.text.annotation_type_id
+        
         # Create text record with uploaded_by=None for admin bulk uploads (system texts)
         text = create_text_from_data(
             db, 
             file_data.text, 
             uploaded_by=None, 
-            annotation_type_id=file_data.text.annotation_type_id
+            annotation_type_id=final_annotation_type_id
         )
         
         # Create annotation records with None as annotator_id (system annotations)
@@ -193,12 +196,17 @@ def process_single_file(
 @router.post("/upload-files", response_model=BulkUploadResponse)
 async def upload_multiple_files(
     files: List[UploadFile] = File(...),
+    annotation_type_id: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     """
     Upload multiple JSON files for bulk text and annotation creation.
     Admin only endpoint.
+    
+    Args:
+        files: List of JSON files to upload
+        annotation_type_id: Optional annotation type ID to apply to all texts in the bulk upload
     """
     if not files:
         raise HTTPException(
@@ -237,7 +245,7 @@ async def upload_multiple_files(
             file_content = content.decode('utf-8')
             
             # Validate JSON structure
-            is_valid, file_data, validation_errors = validate_json_file(file_content, filename)
+            is_valid, file_data, validation_errors = validate_json_file(file_content)
             
             if not is_valid:
                 results.append(BulkUploadResult(
@@ -267,7 +275,7 @@ async def upload_multiple_files(
             titles_in_batch.add(file_data.text.title)
             
             # Process the file (create text and annotations)
-            result = process_single_file(db, file_data, filename, current_user.id)
+            result = process_single_file(db, file_data, filename, current_user.id, annotation_type_id)
             results.append(result)
             
             if result.success:
@@ -354,7 +362,7 @@ async def validate_multiple_files(
             file_content = content.decode('utf-8')
             
             # Validate JSON structure
-            is_valid, file_data, validation_errors = validate_json_file(file_content, filename)
+            is_valid, file_data, validation_errors = validate_json_file(file_content)
             
             if is_valid:
                 # Additional validations for successful schema validation

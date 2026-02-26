@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from deps import get_db
 from auth import get_current_active_user, require_admin, require_reviewer
 from crud.text import text_crud
-from schemas.text import TextCreate, TextUpdate, TextResponse, TaskSubmissionResponse, RecentActivityWithReviewCounts
+from schemas.text import TextCreate, TextUpdate, TextResponse, TextListResponse, TaskSubmissionResponse, RecentActivityWithReviewCounts
 from schemas.combined import TextWithAnnotations
 from schemas.user_rejected_text import RejectedTextWithDetails
 from models.user import User
@@ -32,7 +32,7 @@ def get_status_options(
     }
 
 
-@router.get("/", response_model=List[TextResponse])
+@router.get("/", response_model=List[TextListResponse])
 def read_texts(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -43,7 +43,7 @@ def read_texts(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get texts list with optional filtering."""
+    """Get texts list with optional filtering. Content and translation fields are excluded for performance."""
     # Validate status if provided
     if status is not None and status not in VALID_STATUSES:
         raise HTTPException(
@@ -69,7 +69,14 @@ def create_text(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Create new text."""
+    """Create new text - Only users and admins can create texts."""
+    # Restrict text creation to users and admins only
+    if current_user.role.value not in ["user", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Role '{current_user.role.value}' is not allowed to create texts"
+        )
+    
     # Check for duplicate title
     existing_text = text_crud.get_by_title(db=db, title=text_in.title)
     if existing_text:
@@ -96,7 +103,14 @@ def upload_text_file(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Upload a text file and create a new text record."""
+    """Upload a text file and create a new text record - Only users and admins can upload files."""
+    # Restrict file upload to users and admins only
+    if current_user.role.value not in ["user", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Role '{current_user.role.value}' is not allowed to upload text files"
+        )
+    
     # Check if file is a text file
     if not file.content_type or not file.content_type.startswith('text/'):
         raise HTTPException(
@@ -461,7 +475,12 @@ def get_recent_activity(
     current_user: User = Depends(get_current_active_user)
 ):
     """Get recent texts annotated or reviewed by the current user with annotation review counts."""
-    return text_crud.get_recent_activity_with_review_counts(db=db, user_id=current_user.id, limit=limit)
+    return text_crud.get_recent_activity_with_review_counts(
+        db=db, 
+        user_id=current_user.id, 
+        limit=limit,
+        user_role=current_user.role.value
+    )
 
 
 @router.get("/user-stats")

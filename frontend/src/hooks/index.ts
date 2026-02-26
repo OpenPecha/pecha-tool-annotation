@@ -51,7 +51,6 @@ export {
   useMyReviews,
   useAnnotationReviews,
   useReviewerStats,
-  useAnnotatorReviewedWork,
   useTextsNeedingRevision,
   useSubmitReview,
   useReviewAnnotation,

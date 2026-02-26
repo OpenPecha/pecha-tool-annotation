@@ -68,6 +68,39 @@ class TextResponse(TextBase):
     
     id: int
     status: str
+    content: Optional[str] = ""  # Optional for list views
+    translation: Optional[str] = None
+    annotator_id: Optional[int] = None
+    annotation_type_id: Optional[str] = None
+    reviewer_id: Optional[int] = None
+    uploaded_by: Optional[int] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    # Optional: Include annotations count
+    annotations_count: Optional[int] = None
+    
+    # Nested user information
+    annotator: Optional[UserBasic] = None
+    reviewer: Optional[UserBasic] = None
+    uploader: Optional[UserBasic] = None
+    
+    @validator('status')
+    def validate_status(cls, v):
+        if v not in VALID_STATUSES:
+            raise ValueError(f'Status must be one of: {", ".join(VALID_STATUSES)}')
+        return v
+
+
+class TextListResponse(BaseModel):
+    """Response schema for text lists - excludes content and translation for performance."""
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    title: str
+    source: Optional[str] = None
+    language: str = "en"
+    status: str
     annotator_id: Optional[int] = None
     annotation_type_id: Optional[str] = None
     reviewer_id: Optional[int] = None
