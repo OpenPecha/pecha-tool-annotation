@@ -17,6 +17,7 @@ import {
   IoTrash,
   IoEye,
   IoFolder,
+  IoInformationCircle,
 } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { annotationListApi } from "@/api/annotation_list";
@@ -24,17 +25,20 @@ import type {
   AnnotationListUploadResponse,
   CategoryOutput,
 } from "@/api/annotation_list";
-import { useAnnotationTypes } from "@/hooks";
 import {
+  useAnnotationTypes,
   useAnnotationListHierarchical,
   useUploadAnnotationList,
   useDeleteAnnotationListByType,
+  useCurrentUser,
 } from "@/hooks";
 import { queryKeys } from "@/constants/queryKeys";
 import { useQueryClient } from "@tanstack/react-query";
+import { EditableAnnotationList } from "./EditableAnnotationList";
 
 export const AdminAnnotationListSection: React.FC = () => {
   const queryClient = useQueryClient();
+  const { data: currentUser } = useCurrentUser();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploadResult, setUploadResult] =
@@ -44,6 +48,7 @@ export const AdminAnnotationListSection: React.FC = () => {
   >("select");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isAdmin = currentUser?.role === "admin";
 
   // Fetch all annotation lists using custom hook
   const { data: allAnnotationTypes } = useAnnotationTypes();
@@ -148,7 +153,7 @@ export const AdminAnnotationListSection: React.FC = () => {
 
   const handleDelete = (type: string) => {
     if (
-      window.confirm(
+      globalThis.confirm(
         `Are you sure you want to delete all records for "${type}"? This action cannot be undone.`
       )
     ) {
@@ -156,48 +161,10 @@ export const AdminAnnotationListSection: React.FC = () => {
     }
   };
 
-  // Render category tree
-  const renderCategory = (category: CategoryOutput, depth: number = 0) => {
-    const indent = depth * 20;
-    return (
-      <div key={category.id || category.name} className="space-y-1">
-        <div
-          className="flex items-start gap-2 p-2 rounded hover:bg-gray-50"
-          style={{ marginLeft: `${indent}px` }}
-        >
-          <IoFolder className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-sm">{category.name}</span>
-              {category.level !== undefined && (
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                  Level {category.level}
-                </span>
-              )}
-              {category.mnemonic && (
-                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                  {category.mnemonic}
-                </span>
-              )}
-            </div>
-            {category.description && (
-              <p className="text-xs text-gray-600 mt-1">
-                {category.description}
-              </p>
-            )}
-            {category.examples && category.examples.length > 0 && (
-              <p className="text-xs text-gray-500 mt-1">
-                {category.examples.length} example(s)
-              </p>
-            )}
-          </div>
-        </div>
-        {category.subcategories &&
-          category.subcategories.map((subcat) =>
-            renderCategory(subcat, depth + 1)
-          )}
-      </div>
-    );
+  const handleRefresh = () => {
+    if (selectedType) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.annotationLists.byType(selectedType) });
+    }
   };
 
   return (
@@ -236,6 +203,28 @@ export const AdminAnnotationListSection: React.FC = () => {
                 <p className="text-gray-500 text-sm mb-4">
                   Hierarchical annotation list in JSON format
                 </p>
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-left">
+                  <div className="flex items-start gap-2">
+                    <IoInformationCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-900">
+                      <p className="font-medium mb-1">File Format Required</p>
+                      <p className="text-blue-700">
+                        JSON file must contain a hierarchical structure with categories and subcategories.{" "}
+                        <a
+                          href="../../docs/ANNOTATION_LIST_UPLOAD_FORMAT.md"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline font-medium hover:text-blue-900"
+                        >
+                          View detailed format documentation →
+                        </a>
+                        <span className="text-blue-600 text-xs block mt-1">
+                          (Available in docs/ANNOTATION_LIST_UPLOAD_FORMAT.md)
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <Button
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
@@ -401,11 +390,62 @@ export const AdminAnnotationListSection: React.FC = () => {
                 )}
               </CardHeader>
               <CardContent>
-                <div className="space-y-1 max-h-96 overflow-y-auto">
-                  {hierarchicalData.categories.map((category) =>
-                    renderCategory(category)
-                  )}
-                </div>
+                {isAdmin ? (
+                  <div className="max-h-[600px] overflow-y-auto">
+                    <EditableAnnotationList
+                      categories={hierarchicalData.categories}
+                      typeId={selectedType}
+                      onRefresh={handleRefresh}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-1 max-h-96 overflow-y-auto">
+                    {hierarchicalData.categories.map((category) => {
+                      const renderCategory = (cat: CategoryOutput, depth: number = 0) => {
+                        const indent = depth * 20;
+                        return (
+                          <div key={cat.id || cat.name} className="space-y-1">
+                            <div
+                              className="flex items-start gap-2 p-2 rounded hover:bg-gray-50"
+                              style={{ marginLeft: `${indent}px` }}
+                            >
+                              <IoFolder className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-sm">{cat.name}</span>
+                                  {cat.level !== undefined && (
+                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                                      Level {cat.level}
+                                    </span>
+                                  )}
+                                  {cat.mnemonic && (
+                                    <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                      {cat.mnemonic}
+                                    </span>
+                                  )}
+                                </div>
+                                {cat.description && (
+                                  <p className="text-xs text-gray-600 mt-1">
+                                    {cat.description}
+                                  </p>
+                                )}
+                                {cat.examples && cat.examples.length > 0 && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {cat.examples.length} example(s)
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {cat.subcategories?.map((subcat) =>
+                              renderCategory(subcat, depth + 1)
+                            )}
+                          </div>
+                        );
+                      };
+                      return renderCategory(category);
+                    })}
+                  </div>
+                )}
                 {hierarchicalData.copyright && (
                   <p className="text-xs text-gray-400 mt-4 border-t pt-4">
                     {hierarchicalData.copyright}

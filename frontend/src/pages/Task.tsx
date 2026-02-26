@@ -217,6 +217,7 @@ const Index = () => {
               isCreatingAnnotation={isCreatingAnnotation}
               isDeletingAnnotation={isDeletingAnnotation}
               highlightedAnnotationId={highlightedAnnotationId}
+              textId={parsedTextId}
             />
           </div>
         </div>

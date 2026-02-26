@@ -25,17 +25,19 @@ app = FastAPI(
 
 # CORS configuration
 allowed_origins = os.getenv(
-    "ALLOWED_ORIGINS", 
-    "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"
+    "ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"
 )
-origins = [origin.strip() for origin in allowed_origins.split(",")]
+
+origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
+print(f"CORS allowed origins: {origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Create database tables

@@ -12,12 +12,8 @@ import {
 } from "react-icons/io5";
 import { useState, useEffect, useMemo } from "react";
 import type { CategoryOutput } from "@/api/annotation_list";
-import { AnnotationTypesFilter } from "./AnnotationTypesFilter";
-import { useParams } from "react-router-dom";
 import {
-  useAnnotationTypes,
   useAnnotationListHierarchical,
-  useAnnotationsByText,
 } from "@/hooks";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 
@@ -43,20 +39,13 @@ export const AnnotationList = ({
   onErrorSelect,
   searchable = true,
 }: AnnotationListProps) => {
-  const { textId } = useParams<{ textId: string }>();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLeafFilterOpen, setIsLeafFilterOpen] = useState(false);
   
   // Get state from store
   const { 
     selectedAnnotationListType, 
-    selectedAnnotationTypes,
-    setSelectedAnnotationTypes,
   } = useAnnotationFiltersStore();
-
-  // fetch annotation types
-  const { data: annotationTypes = [] } = useAnnotationTypes();
 
   // Fetch hierarchical data using custom hook
   const {
@@ -67,18 +56,6 @@ export const AnnotationList = ({
     type_id: selectedAnnotationListType,
     enabled: !!selectedAnnotationListType,
   });
-
-  // Parse textId
-  const parsedTextId = textId ? parseInt(textId, 10) : undefined;
-  
-  // Fetch Annotations by text
-  const {
-    data: annotationsByText = [],
-    isLoading: loadingLeaves,
-  } = useAnnotationsByText(
-    parsedTextId || 0,
-    !!parsedTextId && !isNaN(parsedTextId)
-  );
 
   // Flatten the hierarchical structure for easier searching
   const flattenCategories = (categories: ErrorCategory[]): ErrorCategory[] => {
@@ -434,31 +411,8 @@ export const AnnotationList = ({
     );
   }
 
-  // Toggle annotation type selection
-  const toggleAnnotationTypeSelection = (annotationType: string) => {
-    const newSet = new Set(selectedAnnotationTypes);
-    if (newSet.has(annotationType)) {
-      newSet.delete(annotationType);
-    } else {
-      newSet.add(annotationType);
-    }
-    setSelectedAnnotationTypes(newSet);
-  };
-
   return (
     <div className="h-full flex flex-col overflow-visible pt-6">
-
-      {/* Collapsible Annotation Types Filter */}
-      <AnnotationTypesFilter
-        isOpen={isLeafFilterOpen}
-        onToggle={() => setIsLeafFilterOpen(!isLeafFilterOpen)}
-        annotationsByText={annotationsByText}
-        loadingLeaves={loadingLeaves}
-        selectedAnnotationTypes={selectedAnnotationTypes}
-        onToggleAnnotationType={toggleAnnotationTypeSelection}
-        onSelectAllAnnotationTypes={(types) => setSelectedAnnotationTypes(new Set(types))}
-        onDeselectAllAnnotationTypes={() => setSelectedAnnotationTypes(new Set<string>())}
-      />
 
       {/* Search box */}
       {searchable && (

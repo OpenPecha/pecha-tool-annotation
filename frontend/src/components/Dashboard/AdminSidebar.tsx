@@ -37,7 +37,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     <div
       className={`${
         sidebarOpen ? "w-64" : "w-16"
-      } transition-all duration-300 bg-white shadow-lg border-r border-gray-200 h-[calc(100vh-64px)] fixed left-0 top-16 z-10`}
+      } transition-all duration-300 bg-white shadow-lg border-r border-gray-200 h-[calc(100vh-64px)] absolute left-0  z-10`}
     >
       <div className="p-4 h-full flex flex-col">
         <div className="flex items-center justify-between mb-8">

@@ -9,7 +9,9 @@ from schemas.annotation_list import (
     AnnotationListResponse,
     AnnotationListBulkCreateRequest,
     AnnotationListBulkCreateResponse,
-    HierarchicalJSONOutput
+    HierarchicalJSONOutput,
+    AnnotationListCreate,
+    AnnotationListUpdate
 )
 from models.user import User
 
@@ -148,4 +150,135 @@ def delete_annotation_lists_by_type(
         "message": f"Deleted {deleted_count} annotation list records",
         "deleted_count": deleted_count
     }
+
+
+@router.post("/", response_model=AnnotationListResponse, status_code=status.HTTP_201_CREATED)
+def create_annotation_list_item(
+    item_in: AnnotationListCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Create a new annotation list item."""
+    if current_user.role.value != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can create annotation list items"
+        )
+    
+    # If type_id is provided, use it; otherwise use type name to get/create type
+    if item_in.type_id:
+        # Verify type exists
+        from crud.annotation_type import annotation_type_crud
+        annotation_type = annotation_type_crud.get(db=db, type_id=item_in.type_id)
+        if not annotation_type:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Annotation type with id '{item_in.type_id}' not found"
+            )
+    elif item_in.type:
+        # Get or create annotation type by name
+        from crud.annotation_type import annotation_type_crud
+        annotation_type = annotation_type_crud.get_or_create(
+            db=db, 
+            name=item_in.type, 
+            uploader_id=current_user.auth0_user_id
+        )
+        item_in.type_id = annotation_type.id
+    
+    # Create the item
+    created_item = annotation_list_crud.create(
+        db=db,
+        obj_in=item_in,
+        created_by=current_user.auth0_user_id
+    )
+    
+    return created_item
+
+
+@router.put("/{item_id}", response_model=AnnotationListResponse)
+def update_annotation_list_item(
+    item_id: str,
+    item_in: AnnotationListUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Update an annotation list item."""
+    if current_user.role.value != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can update annotation list items"
+        )
+    
+    item = annotation_list_crud.get(db=db, list_id=item_id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Annotation list item with id '{item_id}' not found"
+        )
+    
+    try:
+        updated_item = annotation_list_crud.update(db=db, db_obj=item, obj_in=item_in)
+        return updated_item
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.delete("/{item_id}", status_code=status.HTTP_200_OK)
+def delete_annotation_list_item(
+    item_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Delete an annotation list item."""
+    if current_user.role.value != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can delete annotation list items"
+        )
+    
+    item = annotation_list_crud.get(db=db, list_id=item_id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Annotation list item with id '{item_id}' not found"
+        )
+    
+    # Check if item has children
+    children = annotation_list_crud.get_children(db=db, parent_id=item_id)
+    if children:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete item with {len(children)} child item(s). Delete children first."
+        )
+    
+    success = annotation_list_crud.delete(db=db, list_id=item_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete annotation list item"
+        )
+    
+    return {
+        "success": True,
+        "message": f"Deleted annotation list item '{item_id}'"
+    }
+
+
+@router.get("/{item_id}", response_model=AnnotationListResponse)
+def get_annotation_list_item(
+    item_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get an annotation list item by ID."""
+    item = annotation_list_crud.get(db=db, list_id=item_id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Annotation list item with id '{item_id}' not found"
+        )
+    return item
 

@@ -13,8 +13,8 @@ class AnnotationListCRUD:
     def create(self, db: Session, obj_in: AnnotationListCreate, created_by: str) -> AnnotationList:
         """Create a new annotation list item."""
         # Get or create annotation type if provided
-        type_id = None
-        if obj_in.type:
+        type_id = obj_in.type_id
+        if not type_id and obj_in.type:
             annotation_type = annotation_type_crud.get_or_create(db=db, name=obj_in.type, uploader_id=created_by)
             type_id = annotation_type.id
         
@@ -36,6 +36,51 @@ class AnnotationListCRUD:
     def get(self, db: Session, list_id: str) -> Optional[AnnotationList]:
         """Get annotation list by ID."""
         return db.query(AnnotationList).filter(AnnotationList.id == list_id).first()
+    
+    def update(self, db: Session, db_obj: AnnotationList, obj_in) -> AnnotationList:
+        """Update annotation list item."""
+        from schemas.annotation_list import AnnotationListUpdate
+        update_data = obj_in.model_dump(exclude_unset=True)
+        
+        # Handle parent_id update - validate it's not creating a circular reference
+        if 'parent_id' in update_data and update_data['parent_id']:
+            # Prevent setting parent to itself
+            if update_data['parent_id'] == db_obj.id:
+                raise ValueError("Cannot set parent to itself")
+            # Prevent circular references by checking if parent is a descendant
+            if self._is_descendant(db, db_obj.id, update_data['parent_id']):
+                raise ValueError("Cannot create circular reference")
+        
+        # Handle meta updates - merge with existing meta
+        if 'meta' in update_data and update_data['meta']:
+            existing_meta = db_obj.meta or {}
+            existing_meta.update(update_data['meta'])
+            update_data['meta'] = existing_meta
+        
+        for field, value in update_data.items():
+            setattr(db_obj, field, value)
+        
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+    
+    def _is_descendant(self, db: Session, ancestor_id: str, potential_descendant_id: str) -> bool:
+        """Check if potential_descendant_id is a descendant of ancestor_id."""
+        current = db.query(AnnotationList).filter(AnnotationList.id == potential_descendant_id).first()
+        if not current:
+            return False
+        
+        visited = set()
+        while current and current.parent_id:
+            if current.parent_id == ancestor_id:
+                return True
+            if current.parent_id in visited:
+                break  # Prevent infinite loops
+            visited.add(current.parent_id)
+            current = db.query(AnnotationList).filter(AnnotationList.id == current.parent_id).first()
+        
+        return False
     
     def get_multi(
         self, 

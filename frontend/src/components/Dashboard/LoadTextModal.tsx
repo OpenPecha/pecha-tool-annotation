@@ -66,17 +66,17 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
   } = useAnnotationTypes();
 
   // OpenPecha queries
-  const {
-    data: texts = [],
-    isLoading: isLoadingTexts,
-    error: textsError,
-  } = useOpenPechaTexts();
+  // const {
+  //   data: texts = [],
+  //   isLoading: isLoadingTexts,
+  //   error: textsError,
+  // } = useOpenPechaTexts();
 
-  const {
-    data: instances = [],
-    isLoading: isLoadingInstances,
-    error: instancesError,
-  } = useOpenPechaInstances(selectedText?.id || "", !!selectedText?.id);
+  // const {
+  //   data: instances = [],
+  //   isLoading: isLoadingInstances,
+  //   error: instancesError,
+  // } = useOpenPechaInstances(selectedText?.id || "", !!selectedText?.id);
 
   const {
     data: textContent,
@@ -85,11 +85,11 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
   } = useOpenPechaContent(selectedInstanceId, !!selectedInstanceId);
 
   // Auto-select first instance when instances are loaded
-  React.useEffect(() => {
-    if (instances.length > 0 && !selectedInstanceId) {
-      setSelectedInstanceId(instances[0].id);
-    }
-  }, [instances, selectedInstanceId]);
+  // React.useEffect(() => {
+  //   if (instances.length > 0 && !selectedInstanceId) {
+  //     setSelectedInstanceId(instances[0].id);
+  //   }
+  // }, [instances, selectedInstanceId]);
 
   // OpenPecha load mutation
   const loadTextMutation = useCreateText();
@@ -231,27 +231,27 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
   };
 
   // Handle errors for OpenPecha
-  React.useEffect(() => {
-    if (textsError && isOpen) {
-      toast.error("Failed to load OpenPecha texts", {
-        description:
-          textsError instanceof Error
-            ? textsError.message
-            : "Please try again later",
-      });
-    }
-  }, [textsError, isOpen]);
+  // React.useEffect(() => {
+  //   if (textsError && isOpen) {
+  //     toast.error("Failed to load OpenPecha texts", {
+  //       description:
+  //         textsError instanceof Error
+  //           ? textsError.message
+  //           : "Please try again later",
+  //     });
+  //   }
+  // }, [textsError, isOpen]);
 
-  React.useEffect(() => {
-    if (instancesError && isOpen) {
-      toast.error("Failed to load text instances", {
-        description:
-          instancesError instanceof Error
-            ? instancesError.message
-            : "Please try again",
-      });
-    }
-  }, [instancesError, isOpen]);
+  // React.useEffect(() => {
+  //   if (instancesError && isOpen) {
+  //     toast.error("Failed to load text instances", {
+  //       description:
+  //         instancesError instanceof Error
+  //           ? instancesError.message
+  //           : "Please try again",
+  //     });
+  //   }
+  // }, [instancesError, isOpen]);
 
   React.useEffect(() => {
     if (contentError && isOpen) {
@@ -323,7 +323,7 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
           >
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="file">File Upload</TabsTrigger>
-              <TabsTrigger value="openpecha">OpenPecha</TabsTrigger>
+              <TabsTrigger value="openpecha" disabled>OpenPecha</TabsTrigger>
             </TabsList>
 
             {/* File Upload Tab */}
@@ -458,8 +458,9 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
 
             {/* OpenPecha Tab */}
             <TabsContent value="openpecha" className="space-y-6">
+              <></>
               {/* Text Selection Dropdown */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   Select Text
                 </label>
@@ -502,10 +503,10 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
                     )}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
 
               {/* Instance/Version Selection Dropdown */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   Select Version
                 </label>
@@ -556,10 +557,10 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
                     )}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
 
               {/* Annotation Type Selection */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   Select Annotation Type
                   <span className="text-red-500">*</span>
@@ -599,10 +600,10 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
                     )}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
 
               {/* Text Preview */}
-              {selectedText && selectedInstanceId && (
+              {/* {selectedText && selectedInstanceId && (
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-700">
                     Preview
@@ -621,7 +622,7 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
                     </pre>
                   </div>
                 </div>
-              )}
+              )} */}
             </TabsContent>
           </Tabs>
         </div>

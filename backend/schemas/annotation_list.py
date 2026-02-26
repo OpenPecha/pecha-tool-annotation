@@ -15,6 +15,16 @@ class AnnotationListBase(BaseModel):
 class AnnotationListCreate(AnnotationListBase):
     """Schema for creating an annotation list item."""
     parent_id: Optional[str] = None
+    type_id: Optional[str] = None
+
+
+class AnnotationListUpdate(BaseModel):
+    """Schema for updating an annotation list item."""
+    title: Optional[str] = None
+    level: Optional[str] = None
+    description: Optional[str] = None
+    parent_id: Optional[str] = None
+    meta: Optional[Dict[str, Any]] = None
 
 
 class AnnotationListResponse(AnnotationListBase):

@@ -8,6 +8,7 @@ import {
   IoCloseCircle,
   IoDocumentText,
   IoEye,
+  IoInformationCircle,
 } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { toast } from "sonner";
@@ -249,6 +250,28 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                 <p className="text-gray-500 text-sm mb-4">
                   Support for multiple .json files
                 </p>
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-left">
+                  <div className="flex items-start gap-2">
+                    <IoInformationCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-900">
+                      <p className="font-medium mb-1">File Format Required</p>
+                      <p className="text-blue-700">
+                        Each JSON file must contain a text object and annotations array.{" "}
+                        <a
+                          href="../../docs/BULK_UPLOAD_FORMAT.md"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline font-medium hover:text-blue-900"
+                        >
+                          View detailed format documentation →
+                        </a>
+                        <span className="text-blue-600 text-xs block mt-1">
+                          (Available in docs/BULK_UPLOAD_FORMAT.md)
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <Button
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}

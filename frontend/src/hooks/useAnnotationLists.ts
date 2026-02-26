@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { annotationListApi, type HierarchicalJSONOutput, type AnnotationListUploadResponse } from "@/api/annotation_list";
+import { annotationListApi, type HierarchicalJSONOutput, type AnnotationListUploadResponse, type AnnotationListCreate, type AnnotationListUpdate } from "@/api/annotation_list";
 import { queryKeys } from "@/constants/queryKeys";
 import { toast } from "sonner";
 
@@ -96,6 +96,112 @@ export const useDeleteAnnotationListByType = (options?: UseDeleteAnnotationListB
     onError: (error: Error) => {
       toast.error("Delete failed", {
         description: error.message || "Failed to delete annotation list",
+      });
+
+      options?.onError?.(error);
+    },
+  });
+};
+
+// ============================================================================
+// Individual Item CRUD Hooks
+// ============================================================================
+
+interface UseCreateAnnotationListItemOptions {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+  typeId?: string; // For invalidating the correct query
+}
+
+export const useCreateAnnotationListItem = (options?: UseCreateAnnotationListItemOptions) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (item: AnnotationListCreate) => {
+      return annotationListApi.createItem(item);
+    },
+    onSuccess: (data) => {
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: queryKeys.annotationLists.all });
+      if (options?.typeId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.annotationLists.byType(options.typeId) });
+      }
+
+      toast.success("Item created successfully!");
+
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to create item", {
+        description: error.message || "Failed to create annotation list item",
+      });
+
+      options?.onError?.(error);
+    },
+  });
+};
+
+interface UseUpdateAnnotationListItemOptions {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+  typeId?: string; // For invalidating the correct query
+}
+
+export const useUpdateAnnotationListItem = (options?: UseUpdateAnnotationListItemOptions) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ itemId, item }: { itemId: string; item: AnnotationListUpdate }) => {
+      return annotationListApi.updateItem(itemId, item);
+    },
+    onSuccess: (data) => {
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: queryKeys.annotationLists.all });
+      if (options?.typeId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.annotationLists.byType(options.typeId) });
+      }
+
+      toast.success("Item updated successfully!");
+
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to update item", {
+        description: error.message || "Failed to update annotation list item",
+      });
+
+      options?.onError?.(error);
+    },
+  });
+};
+
+interface UseDeleteAnnotationListItemOptions {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+  typeId?: string; // For invalidating the correct query
+}
+
+export const useDeleteAnnotationListItem = (options?: UseDeleteAnnotationListItemOptions) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (itemId: string) => {
+      return annotationListApi.deleteItem(itemId);
+    },
+    onSuccess: () => {
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: queryKeys.annotationLists.all });
+      if (options?.typeId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.annotationLists.byType(options.typeId) });
+      }
+
+      toast.success("Item deleted successfully!");
+
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to delete item", {
+        description: error.message || "Failed to delete annotation list item",
       });
 
       options?.onError?.(error);

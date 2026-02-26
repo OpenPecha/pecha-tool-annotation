@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { IoSearch, IoChevronUp, IoChevronDown } from "react-icons/io5";
-import { useAuth } from "@/auth/use-auth-hook";
+import { AnnotationTypesFilter } from "./AnnotationTypesFilter";
+import { useAnnotationsByText } from "@/hooks";
+import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 
 interface SearchResult {
   index: number;
@@ -16,6 +18,7 @@ interface SearchComponentProps {
   isVisible: boolean;
   onClose: () => void;
   onResultSelect: (start: number, end: number) => void;
+  textId?: number;
 }
 
 export const SearchComponent: React.FC<SearchComponentProps> = ({
@@ -23,14 +26,41 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
   isVisible,
   onClose,
   onResultSelect,
+  textId,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [wholeWord, setWholeWord] = useState(false);
+  const [isLeafFilterOpen, setIsLeafFilterOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const { currentUser } = useAuth();
+
+  // Get state from store
+  const { 
+    selectedAnnotationTypes,
+    setSelectedAnnotationTypes,
+  } = useAnnotationFiltersStore();
+
+  // Fetch Annotations by text if textId is provided
+  const {
+    data: annotationsByText = [],
+    isLoading: loadingLeaves,
+  } = useAnnotationsByText(
+    textId || 0,
+    !!textId && !Number.isNaN(textId)
+  );
+
+  // Toggle annotation type selection
+  const toggleAnnotationTypeSelection = (annotationType: string) => {
+    const newSet = new Set(selectedAnnotationTypes);
+    if (newSet.has(annotationType)) {
+      newSet.delete(annotationType);
+    } else {
+      newSet.add(annotationType);
+    }
+    setSelectedAnnotationTypes(newSet);
+  };
 
   // Focus search input when component becomes visible
   useEffect(() => {
@@ -153,6 +183,22 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
 
   return (
     <div className="w-full bg-white border-b border-gray-200 shadow-sm p-3 z-50">
+      {/* Annotation Types Filter */}
+      {textId && (
+        <div className="mb-2">
+          <AnnotationTypesFilter
+            isOpen={isLeafFilterOpen}
+            onToggle={() => setIsLeafFilterOpen(!isLeafFilterOpen)}
+            annotationsByText={annotationsByText}
+            loadingLeaves={loadingLeaves}
+            selectedAnnotationTypes={selectedAnnotationTypes}
+            onToggleAnnotationType={toggleAnnotationTypeSelection}
+            onSelectAllAnnotationTypes={(types) => setSelectedAnnotationTypes(new Set(types))}
+            onDeselectAllAnnotationTypes={() => setSelectedAnnotationTypes(new Set<string>())}
+          />
+        </div>
+      )}
+
       {/* Main Search Row */}
       <div className="flex items-center gap-3 mb-2">
         {/* Search Icon and Input */}

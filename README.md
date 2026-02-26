@@ -627,6 +627,10 @@ All API calls automatically include:
 - Type-based filtering
 - Bulk delete by type
 
+**Documentation**
+For detailed file format documentation, examples, and validation rules, see:
+- [Annotation List Upload Format Documentation](./docs/ANNOTATION_LIST_UPLOAD_FORMAT.md)
+
 #### 📦 Bulk Upload
 
 **Features**
@@ -637,6 +641,10 @@ All API calls automatically include:
 - Annotation bounds validation
 - Detailed success/failure reporting
 - Dry-run validation endpoint
+
+**Documentation**
+For detailed file format documentation, examples, and validation rules, see:
+- [Bulk Upload Format Documentation](./docs/BULK_UPLOAD_FORMAT.md)
 
 **JSON Format**
 ```json

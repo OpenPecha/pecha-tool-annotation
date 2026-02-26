@@ -14,6 +14,8 @@ import {
 import { UserbackProvider } from "./providers/UserbackProvider";
 import { useTokenExpiration } from "./hooks/useTokenExpiration";
 import { Welcome } from "./components/Welcome";
+import { AdminDashboard } from "./components/Dashboard";
+import Navbar from "./components/Navbar";
 // Lazy load page components
 const Task = lazy(() => import("./pages/Task"));
 const Review = lazy(() => import("./pages/Review"));
@@ -49,7 +51,7 @@ function Layout({ children }: { children: React.ReactNode }) {
     }, 100);
     return () => clearTimeout(timeoutId);
   }, [isAuthenticated]);
-  
+
   if (!isAuthenticated) {
     return <Welcome />;
   }
@@ -77,7 +79,7 @@ function AppContent() {
     return () => clearTimeout(timeoutId);
   }, [location.pathname]);
 
- 
+
   return (
     <Routes>
       <Route
@@ -88,7 +90,17 @@ function AppContent() {
           </Layout>
         }
       />
-
+      <Route
+        path="/admin"
+        element={
+          <Layout>
+            <Navbar />
+            <Suspense fallback={<FullScreenLoading />}>
+              <AdminDashboard />
+            </Suspense>
+          </Layout>
+        }
+      />
       <Route
         path="/login"
         element={
@@ -142,11 +154,11 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <UserbackProvider>
-        <BrowserRouter>
+          <BrowserRouter>
 
-          <AppContent />
-          <Toaster />
-        </BrowserRouter>
+            <AppContent />
+            <Toaster />
+          </BrowserRouter>
         </UserbackProvider>
       </QueryClientProvider>
     </AuthProvider>

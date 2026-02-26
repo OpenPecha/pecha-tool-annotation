@@ -4,12 +4,7 @@ import { FullScreenLoading } from "@/components/ui/loading";
 import { preloadByUserRole } from "@/utils/componentPreloader";
 import { useCurrentUser } from "@/hooks";
 
-// Lazy load dashboard components
-const AdminDashboard = React.lazy(() =>
-  import("@/components/Dashboard").then((module) => ({
-    default: module.AdminDashboard,
-  }))
-);
+
 const RegularUserDashboard = React.lazy(() =>
   import("@/components/Dashboard").then((module) => ({
     default: module.RegularUserDashboard,
@@ -30,11 +25,7 @@ const Dashboard = () => {
     <div className="flex flex-col h-screen">
       <Navbar />
       <Suspense fallback={<FullScreenLoading />}>
-        {currentUser?.role === "admin" ? (
-          <AdminDashboard />
-        ) : (
           <RegularUserDashboard />
-        )}
       </Suspense>
     </div>
   );

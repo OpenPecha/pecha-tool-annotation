@@ -42,6 +42,24 @@ export interface AnnotationListResponse {
   updated_at?: string;
 }
 
+export interface AnnotationListCreate {
+  title: string;
+  type?: string;
+  type_id?: string;
+  level?: string;
+  parent_id?: string;
+  description?: string;
+  meta?: Record<string, any>;
+}
+
+export interface AnnotationListUpdate {
+  title?: string;
+  level?: string;
+  parent_id?: string;
+  description?: string;
+  meta?: Record<string, any>;
+}
+
 export const annotationListApi = {
   /**
    * Upload a JSON file with hierarchical annotation list
@@ -147,6 +165,34 @@ export const annotationListApi = {
       }
     });
     return count;
+  },
+
+  /**
+   * Create a new annotation list item
+   */
+  createItem: async (item: AnnotationListCreate): Promise<AnnotationListResponse> => {
+    return await apiClient.post<AnnotationListResponse>("/annotation-lists/", item);
+  },
+
+  /**
+   * Update an annotation list item
+   */
+  updateItem: async (itemId: string, item: AnnotationListUpdate): Promise<AnnotationListResponse> => {
+    return await apiClient.put<AnnotationListResponse>(`/annotation-lists/${encodeURIComponent(itemId)}`, item);
+  },
+
+  /**
+   * Delete an annotation list item
+   */
+  deleteItem: async (itemId: string): Promise<{ success: boolean; message: string }> => {
+    return await apiClient.delete(`/annotation-lists/${encodeURIComponent(itemId)}`);
+  },
+
+  /**
+   * Get an annotation list item by ID
+   */
+  getItem: async (itemId: string): Promise<AnnotationListResponse> => {
+    return await apiClient.get<AnnotationListResponse>(`/annotation-lists/${encodeURIComponent(itemId)}`);
   },
 };
 

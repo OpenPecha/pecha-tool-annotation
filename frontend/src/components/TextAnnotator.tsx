@@ -39,6 +39,7 @@ interface TextAnnotatorProps {
   isDeletingAnnotation?: boolean;
   highlightedAnnotationId?: string | null;
   annotationMode?: NavigationMode;
+  textId?: number;
 }
 
 export type TextAnnotatorRef = {
@@ -64,6 +65,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
       isDeletingAnnotation = false,
       highlightedAnnotationId,
       annotationMode = "error-list",
+      textId,
     },
     ref
   ) => {
@@ -96,6 +98,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
               isVisible={true}
               onClose={() => {}} // No close functionality needed
               onResultSelect={handleSearchResultSelect}
+              textId={textId}
             />
           </div>
           {hasTranslation && translation && (

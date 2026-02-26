@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -23,6 +23,7 @@ import {
   useMyReviewProgress,
   useCancelWorkWithRevertAndSkip,
   useStartReviewing,
+  useCurrentUser,
 } from "@/hooks";
 import { CalendarIcon } from "lucide-react";
 
@@ -101,7 +102,7 @@ const BulkUploadIcon = () => (
 
 export const RegularUserDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { data: currentUser } = useCurrentUser();
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [showLoadTextModal, setShowLoadTextModal] = useState(false);
   const [isLoadingText, setIsLoadingText] = useState(false);
@@ -338,7 +339,6 @@ export const RegularUserDashboard: React.FC = () => {
               <span className="ml-2">Load Text</span>
             </Button>
           )}
-
           {/* Bulk Upload Button - Show for admins only */}
           {currentUser?.role === "admin" && (
             <Button
@@ -351,6 +351,10 @@ export const RegularUserDashboard: React.FC = () => {
               <span className="ml-2">Bulk Upload</span>
             </Button>
           )}
+          {currentUser?.role === "admin" && (
+      <Link to="/admin" className=" transition-colors">Admin Dashboard</Link>
+          )}
+
         </div>
       </div>
 

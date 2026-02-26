@@ -1,0 +1,744 @@
+{
+  "version": "1.0",
+  "title": "Tibetan Text Annotation Types",
+  "description": "Annotation typology for Tibetan texts including codicological/philological features, linguistic features, and content features",
+  "copyright": "© 2024 Buddhist AI Project",
+  "categories": [
+    {
+      "id": "codicological-philological",
+      "name": "Codicological/Philological Features",
+      "description": "Features related to manuscript characteristics and scribal practices. Important for reconstructing scribal practices. Less urgent than Linguistic and Content features.",
+      "level": 0,
+      "mnemonic": "COD",
+      "notes": "Desired annotation features for codicological analysis",
+      "subcategories": [
+        {
+          "id": "cod-script-size",
+          "name": "Script Size",
+          "description": "Size of the script in the manuscript",
+          "level": 1,
+          "mnemonic": "COD-SIZE",
+          "examples": [
+            "normal",
+            "small",
+            "big"
+          ],
+          "notes": "Fixed values: normal, small, big"
+        },
+        {
+          "id": "cod-script-direction",
+          "name": "Script Direction",
+          "description": "Direction of the script",
+          "level": 1,
+          "mnemonic": "COD-DIR",
+          "examples": [
+            "horizontal",
+            "vertical",
+            "circular"
+          ]
+        },
+        {
+          "id": "cod-script-style",
+          "name": "Script Style",
+          "description": "Style of Tibetan script",
+          "level": 1,
+          "mnemonic": "COD-STYLE",
+          "examples": [
+            "ume",
+            "uchen"
+          ]
+        },
+        {
+          "id": "cod-script-colour",
+          "name": "Script Colour",
+          "description": "Colour of the script",
+          "level": 1,
+          "mnemonic": "COD-COLOUR",
+          "examples": [
+            "black",
+            "red",
+            "gold"
+          ]
+        },
+        {
+          "id": "cod-illustration",
+          "name": "Illustration",
+          "description": "Presence of illustrations in the text",
+          "level": 1,
+          "mnemonic": "COD-ILL",
+          "examples": [
+            "Decorative illustrations",
+            "Figure drawings",
+            "Ornamental elements"
+          ]
+        },
+        {
+          "id": "cod-table",
+          "name": "Table",
+          "description": "Presence of tables in the text",
+          "level": 1,
+          "mnemonic": "COD-TAB",
+          "examples": [
+            "Data tables",
+            "Comparison tables",
+            "Structured information"
+          ]
+        },
+        {
+          "id": "cod-symbols",
+          "name": "Symbols",
+          "description": "Special symbols or marks in the text",
+          "level": 1,
+          "mnemonic": "COD-SYM",
+          "examples": [
+            "Ritual symbols",
+            "Mantric symbols",
+            "Decorative marks"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "linguistics",
+      "name": "Linguistics Features",
+      "description": "Linguistic annotations including segmentation, POS tags, semantic roles, and animacy. Some features (word segmentation and POS tags) are added prior to upload.",
+      "level": 0,
+      "mnemonic": "LING",
+      "notes": "Necessary features for linguistic analysis",
+      "subcategories": [
+        {
+          "id": "ling-segmentation",
+          "name": "Segmentation/Tokenisation",
+          "description": "Segmented or tokenised version of text",
+          "level": 1,
+          "mnemonic": "LING-SEG",
+          "examples": [
+            "དཔང་/n.count ལོ་ཙཱ་བ་/n.count",
+            "Word boundaries",
+            "Token boundaries"
+          ],
+          "notes": "Text is tokenised with each token followed by / + POS tag"
+        },
+        {
+          "id": "ling-pos",
+          "name": "Part-of-Speech Tags",
+          "description": "Morphosyntactic part-of-speech tags",
+          "level": 1,
+          "mnemonic": "LING-POS",
+          "examples": [
+            "n.count (noun count)",
+            "n.prop (proper noun)",
+            "case.gen (genitive case)",
+            "num.card (cardinal number)",
+            "punc (punctuation)"
+          ],
+          "notes": "POS tags are provided in format: token/POS_tag"
+        },
+        {
+          "id": "ling-semantic-roles",
+          "name": "Semantic Roles",
+          "description": "Semantic roles that can be manually added or corrected",
+          "level": 1,
+          "mnemonic": "LING-SR",
+          "examples": [
+            "agent",
+            "patient",
+            "theme",
+            "recipient",
+            "location"
+          ],
+          "notes": "Can be manually added or corrected in the annotation tool"
+        },
+        {
+          "id": "ling-animacy",
+          "name": "Animacy",
+          "description": "Animacy classification that can be manually added or corrected",
+          "level": 1,
+          "mnemonic": "LING-ANIM",
+          "examples": [
+            "human",
+            "animate",
+            "inanimate"
+          ],
+          "notes": "Can be manually added or corrected in the annotation tool"
+        }
+      ]
+    },
+    {
+      "id": "content",
+      "name": "Content Features",
+      "description": "Content features corresponding to predefined Named Entities. Most crucial for the project. Includes an 'Other' option for custom features.",
+      "level": 0,
+      "mnemonic": "CONT",
+      "notes": "Necessary features - most crucial for the project",
+      "subcategories": [
+        {
+          "id": "content-animals",
+          "name": "Animals",
+          "description": "Animal-related content features",
+          "level": 1,
+          "mnemonic": "CONT-ANIM",
+          "subcategories": [
+            {
+              "id": "content-animals-yak",
+              "name": "yak",
+              "level": 2,
+              "mnemonic": "CONT-YAK"
+            },
+            {
+              "id": "content-animals-deer",
+              "name": "deer",
+              "level": 2,
+              "mnemonic": "CONT-DEER"
+            },
+            {
+              "id": "content-animals-bird",
+              "name": "bird",
+              "level": 2,
+              "mnemonic": "CONT-BIRD"
+            },
+            {
+              "id": "content-animals-hawk",
+              "name": "hawk",
+              "level": 2,
+              "mnemonic": "CONT-HAWK"
+            },
+            {
+              "id": "content-animals-garuda",
+              "name": "garuda",
+              "level": 2,
+              "mnemonic": "CONT-GAR"
+            },
+            {
+              "id": "content-animals-sheep",
+              "name": "sheep",
+              "level": 2,
+              "mnemonic": "CONT-SHEEP"
+            },
+            {
+              "id": "content-animals-horse",
+              "name": "horse",
+              "level": 2,
+              "mnemonic": "CONT-HORSE"
+            },
+            {
+              "id": "content-animals-goat",
+              "name": "goat",
+              "level": 2,
+              "mnemonic": "CONT-GOAT"
+            },
+            {
+              "id": "content-animals-snake",
+              "name": "snake",
+              "level": 2,
+              "mnemonic": "CONT-SNAKE"
+            },
+            {
+              "id": "content-animals-bird-flying",
+              "name": "bird_flying",
+              "level": 2,
+              "mnemonic": "CONT-BIRD-FLY"
+            },
+            {
+              "id": "content-animals-bird-hatching",
+              "name": "bird_hatching_eggs",
+              "level": 2,
+              "mnemonic": "CONT-BIRD-HATCH"
+            },
+            {
+              "id": "content-animals-bird-head",
+              "name": "bird_head",
+              "level": 2,
+              "mnemonic": "CONT-BIRD-HEAD"
+            }
+          ]
+        },
+        {
+          "id": "content-body-parts",
+          "name": "Body Parts",
+          "description": "Body parts of animals",
+          "level": 1,
+          "mnemonic": "CONT-BP",
+          "subcategories": [
+            {
+              "id": "content-body-parts-yak",
+              "name": "yak_body_parts",
+              "level": 2,
+              "mnemonic": "CONT-BP-YAK"
+            },
+            {
+              "id": "content-body-parts-deer",
+              "name": "deer_body_parts",
+              "level": 2,
+              "mnemonic": "CONT-BP-DEER"
+            },
+            {
+              "id": "content-body-parts-sheep",
+              "name": "sheep_body_parts",
+              "level": 2,
+              "mnemonic": "CONT-BP-SHEEP"
+            }
+          ]
+        },
+        {
+          "id": "content-killing",
+          "name": "Killing Actions",
+          "description": "Actions related to killing animals",
+          "level": 1,
+          "mnemonic": "CONT-KILL",
+          "subcategories": [
+            {
+              "id": "content-killing-chicken",
+              "name": "kill_chicken",
+              "level": 2,
+              "mnemonic": "CONT-KILL-CHICKEN"
+            },
+            {
+              "id": "content-killing-goat",
+              "name": "kill_goat",
+              "level": 2,
+              "mnemonic": "CONT-KILL-GOAT"
+            },
+            {
+              "id": "content-killing-yak",
+              "name": "kill_yak",
+              "level": 2,
+              "mnemonic": "CONT-KILL-YAK"
+            },
+            {
+              "id": "content-killing-demon",
+              "name": "kill_demon",
+              "level": 2,
+              "mnemonic": "CONT-KILL-DEMON"
+            }
+          ]
+        },
+        {
+          "id": "content-materials",
+          "name": "Materials and Objects",
+          "description": "Material objects and substances",
+          "level": 1,
+          "mnemonic": "CONT-MAT",
+          "subcategories": [
+            {
+              "id": "content-materials-gold",
+              "name": "gold",
+              "level": 2,
+              "mnemonic": "CONT-GOLD"
+            },
+            {
+              "id": "content-materials-turquoise",
+              "name": "turquoise",
+              "level": 2,
+              "mnemonic": "CONT-TURQ"
+            },
+            {
+              "id": "content-materials-iron",
+              "name": "iron",
+              "level": 2,
+              "mnemonic": "CONT-IRON"
+            },
+            {
+              "id": "content-materials-felt-mat",
+              "name": "felt_mat",
+              "level": 2,
+              "mnemonic": "CONT-FELT"
+            },
+            {
+              "id": "content-materials-stone",
+              "name": "stone",
+              "level": 2,
+              "mnemonic": "CONT-STONE"
+            },
+            {
+              "id": "content-materials-sacred-stone",
+              "name": "sacred_stone",
+              "level": 2,
+              "mnemonic": "CONT-STONE-SAC"
+            },
+            {
+              "id": "content-materials-minerals",
+              "name": "minerals",
+              "level": 2,
+              "mnemonic": "CONT-MIN"
+            },
+            {
+              "id": "content-materials-metals",
+              "name": "metals",
+              "level": 2,
+              "mnemonic": "CONT-MET"
+            },
+            {
+              "id": "content-materials-turban",
+              "name": "turban",
+              "level": 2,
+              "mnemonic": "CONT-TURB"
+            },
+            {
+              "id": "content-materials-beer",
+              "name": "beer",
+              "level": 2,
+              "mnemonic": "CONT-BEER"
+            },
+            {
+              "id": "content-materials-conch-shell",
+              "name": "conch-shell",
+              "level": 2,
+              "mnemonic": "CONT-CONCH"
+            },
+            {
+              "id": "content-materials-arrows",
+              "name": "arrows",
+              "level": 2,
+              "mnemonic": "CONT-ARR"
+            },
+            {
+              "id": "content-materials-blood",
+              "name": "blood",
+              "level": 2,
+              "mnemonic": "CONT-BLOOD"
+            }
+          ]
+        },
+        {
+          "id": "content-eggs",
+          "name": "Eggs",
+          "description": "Different types of eggs",
+          "level": 1,
+          "mnemonic": "CONT-EGG",
+          "subcategories": [
+            {
+              "id": "content-eggs-egg",
+              "name": "egg",
+              "level": 2,
+              "mnemonic": "CONT-EGG-GEN"
+            },
+            {
+              "id": "content-eggs-turquoise",
+              "name": "turquoise_egg",
+              "level": 2,
+              "mnemonic": "CONT-EGG-TURQ"
+            },
+            {
+              "id": "content-eggs-golden",
+              "name": "golden_egg",
+              "level": 2,
+              "mnemonic": "CONT-EGG-GOLD"
+            },
+            {
+              "id": "content-eggs-iron",
+              "name": "iron_egg",
+              "level": 2,
+              "mnemonic": "CONT-EGG-IRON"
+            }
+          ]
+        },
+        {
+          "id": "content-pollution",
+          "name": "Pollution and Cleansing",
+          "description": "Pollution and cleansing concepts",
+          "level": 1,
+          "mnemonic": "CONT-POL",
+          "subcategories": [
+            {
+              "id": "content-pollution-pollution",
+              "name": "pollution",
+              "level": 2,
+              "mnemonic": "CONT-POL-GEN"
+            },
+            {
+              "id": "content-pollution-cleansing",
+              "name": "cleansing_pollution",
+              "level": 2,
+              "mnemonic": "CONT-POL-CLEAN"
+            }
+          ]
+        },
+        {
+          "id": "content-spiritual-beings",
+          "name": "Spiritual Beings",
+          "description": "Spiritual entities and deities",
+          "level": 1,
+          "mnemonic": "CONT-SPIR",
+          "subcategories": [
+            {
+              "id": "content-spiritual-dgra-bla",
+              "name": "dgra_bla",
+              "level": 2,
+              "mnemonic": "CONT-DGRA-BLA"
+            },
+            {
+              "id": "content-spiritual-lha",
+              "name": "lha",
+              "level": 2,
+              "mnemonic": "CONT-LHA"
+            },
+            {
+              "id": "content-spiritual-btsan",
+              "name": "btsan",
+              "level": 2,
+              "mnemonic": "CONT-BTSAN"
+            },
+            {
+              "id": "content-spiritual-gnyan",
+              "name": "gnyan",
+              "level": 2,
+              "mnemonic": "CONT-GNYAN"
+            },
+            {
+              "id": "content-spiritual-dmu",
+              "name": "dmu",
+              "level": 2,
+              "mnemonic": "CONT-DMU"
+            },
+            {
+              "id": "content-spiritual-klu",
+              "name": "klu",
+              "level": 2,
+              "mnemonic": "CONT-KLU"
+            },
+            {
+              "id": "content-spiritual-demon",
+              "name": "demon",
+              "level": 2,
+              "mnemonic": "CONT-DEMON"
+            },
+            {
+              "id": "content-spiritual-vampire",
+              "name": "vampire",
+              "level": 2,
+              "mnemonic": "CONT-VAMP"
+            },
+            {
+              "id": "content-spiritual-gshen",
+              "name": "gshen",
+              "level": 2,
+              "mnemonic": "CONT-GSHEN"
+            },
+            {
+              "id": "content-spiritual-bon",
+              "name": "bon",
+              "level": 2,
+              "mnemonic": "CONT-BON"
+            }
+          ]
+        },
+        {
+          "id": "content-natural-elements",
+          "name": "Natural Elements",
+          "description": "Natural elements and phenomena",
+          "level": 1,
+          "mnemonic": "CONT-NAT",
+          "subcategories": [
+            {
+              "id": "content-natural-wind",
+              "name": "wind",
+              "level": 2,
+              "mnemonic": "CONT-WIND"
+            },
+            {
+              "id": "content-natural-light",
+              "name": "light",
+              "level": 2,
+              "mnemonic": "CONT-LIGHT"
+            },
+            {
+              "id": "content-natural-water",
+              "name": "water",
+              "level": 2,
+              "mnemonic": "CONT-WATER"
+            },
+            {
+              "id": "content-natural-sky",
+              "name": "sky",
+              "level": 2,
+              "mnemonic": "CONT-SKY"
+            },
+            {
+              "id": "content-natural-earth",
+              "name": "earth",
+              "level": 2,
+              "mnemonic": "CONT-EARTH"
+            },
+            {
+              "id": "content-natural-mountain",
+              "name": "mountain",
+              "level": 2,
+              "mnemonic": "CONT-MOUNT"
+            }
+          ]
+        },
+        {
+          "id": "content-colors",
+          "name": "Colors",
+          "description": "Color-related content features",
+          "level": 1,
+          "mnemonic": "CONT-COL",
+          "subcategories": [
+            {
+              "id": "content-colors-red",
+              "name": "red",
+              "level": 2,
+              "mnemonic": "CONT-RED"
+            },
+            {
+              "id": "content-colors-blue",
+              "name": "blue",
+              "level": 2,
+              "mnemonic": "CONT-BLUE"
+            },
+            {
+              "id": "content-colors-yellow",
+              "name": "yellow",
+              "level": 2,
+              "mnemonic": "CONT-YELLOW"
+            },
+            {
+              "id": "content-colors-green",
+              "name": "green",
+              "level": 2,
+              "mnemonic": "CONT-GREEN"
+            },
+            {
+              "id": "content-colors-black",
+              "name": "black",
+              "level": 2,
+              "mnemonic": "CONT-BLACK"
+            },
+            {
+              "id": "content-colors-white",
+              "name": "white",
+              "level": 2,
+              "mnemonic": "CONT-WHITE"
+            },
+            {
+              "id": "content-colors-grey",
+              "name": "grey",
+              "level": 2,
+              "mnemonic": "CONT-GREY"
+            }
+          ]
+        },
+        {
+          "id": "content-concepts",
+          "name": "Concepts",
+          "description": "Abstract concepts and forces",
+          "level": 1,
+          "mnemonic": "CONT-CONC",
+          "subcategories": [
+            {
+              "id": "content-concepts-gyang",
+              "name": "g.yang",
+              "level": 2,
+              "mnemonic": "CONT-GYANG"
+            },
+            {
+              "id": "content-concepts-phya",
+              "name": "phya",
+              "level": 2,
+              "mnemonic": "CONT-PHYA"
+            },
+            {
+              "id": "content-concepts-dpal",
+              "name": "dpal",
+              "level": 2,
+              "mnemonic": "CONT-DPAL"
+            },
+            {
+              "id": "content-concepts-tshe",
+              "name": "tshe",
+              "level": 2,
+              "mnemonic": "CONT-TSHE"
+            },
+            {
+              "id": "content-concepts-poison",
+              "name": "poison",
+              "level": 2,
+              "mnemonic": "CONT-POISON"
+            }
+          ]
+        },
+        {
+          "id": "content-acquiring-losing",
+          "name": "Acquiring and Losing",
+          "description": "Actions of acquiring or losing concepts",
+          "level": 1,
+          "mnemonic": "CONT-ACQ",
+          "subcategories": [
+            {
+              "id": "content-acq-phya",
+              "name": "acquiring_phya",
+              "level": 2,
+              "mnemonic": "CONT-ACQ-PHYA"
+            },
+            {
+              "id": "content-lose-phya",
+              "name": "losing_phya",
+              "level": 2,
+              "mnemonic": "CONT-LOSE-PHYA"
+            },
+            {
+              "id": "content-acq-gyang",
+              "name": "acquring_g.yang",
+              "level": 2,
+              "mnemonic": "CONT-ACQ-GYANG"
+            },
+            {
+              "id": "content-lose-gyang",
+              "name": "losing_g.yang",
+              "level": 2,
+              "mnemonic": "CONT-LOSE-GYANG"
+            },
+            {
+              "id": "content-acq-dpal",
+              "name": "acquiring_dpal",
+              "level": 2,
+              "mnemonic": "CONT-ACQ-DPAL"
+            },
+            {
+              "id": "content-lose-dpal",
+              "name": "losing_dpal",
+              "level": 2,
+              "mnemonic": "CONT-LOSE-DPAL"
+            }
+          ]
+        },
+        {
+          "id": "content-ritual",
+          "name": "Ritual Actions",
+          "description": "Ritual and ceremonial actions",
+          "level": 1,
+          "mnemonic": "CONT-RIT",
+          "subcategories": [
+            {
+              "id": "content-ritual-ransom",
+              "name": "ransom",
+              "level": 2,
+              "mnemonic": "CONT-RANSOM"
+            },
+            {
+              "id": "content-ritual-effigy",
+              "name": "effigy",
+              "level": 2,
+              "mnemonic": "CONT-EFFIGY"
+            },
+            {
+              "id": "content-ritual-zlog",
+              "name": "zlog_expelling",
+              "level": 2,
+              "mnemonic": "CONT-ZLOG"
+            }
+          ]
+        },
+        {
+          "id": "content-other",
+          "name": "Other",
+          "description": "Custom content features that are not listed above. Users can type their own features here.",
+          "level": 1,
+          "mnemonic": "CONT-OTHER",
+          "notes": "Option for users to add custom content features not in the predefined list"
+        }
+      ]
+    }
+  ]
+}

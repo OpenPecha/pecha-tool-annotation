@@ -88,7 +88,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 pt-16">
+    <div className="bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Admin Sidebar */}
       <AdminSidebar
         sidebarOpen={sidebarOpen}
