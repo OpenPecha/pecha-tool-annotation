@@ -381,6 +381,10 @@ export const RegularUserDashboard: React.FC = () => {
         onUploadComplete={handleBulkUploadComplete}
       />
 
+      <LoadTextModal
+        isOpen={showLoadTextModal}
+        onClose={() => setShowLoadTextModal(false)}
+      />
     
     </div>
   );

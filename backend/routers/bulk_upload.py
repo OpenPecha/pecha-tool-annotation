@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 import json
-import traceback
 from deps import get_db
 from auth import require_admin
 from models.user import User
