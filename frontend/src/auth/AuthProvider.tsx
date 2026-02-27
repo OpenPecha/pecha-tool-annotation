@@ -62,7 +62,6 @@ const AuthContextProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      console.log("Attempting silent authentication...");
       setSilentAuthAttempted(true);
 
       // Try silent authentication first
@@ -74,7 +73,6 @@ const AuthContextProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
     } catch (error: unknown) {
       const authError = error as { error?: string };
-      console.log("Silent auth failed, user will need to login manually:", error);
       
       // Silent auth failed - do NOT automatically redirect
       // User will need to manually click login button

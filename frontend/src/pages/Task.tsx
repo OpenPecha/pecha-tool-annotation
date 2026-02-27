@@ -193,7 +193,7 @@ const Index = () => {
           isOpen={navigationOpen}
           onToggle={toggleNavigation}
           onErrorSelect={(error) => {
-            console.log("Selected error:", error);
+            console.warn("Selected error:", error);
           }}
           searchable={true}
         />

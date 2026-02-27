@@ -272,14 +272,12 @@ const Review = () => {
   const handleHeaderClick = (annotation: Annotation) => {
     // Don't auto-scroll when clicking on table of contents items
     // User can manually navigate if needed
-    console.log("Header clicked:", annotation.id, annotation.text);
   };
 
   // Handle annotation removal from TOC (disabled in review mode)
   const handleRemoveAnnotation = (id: string) => {
     // In review mode, we don't allow removing annotations
     // This function is required by TableOfContents but we'll make it a no-op
-    console.log("Annotation removal not allowed in review mode:", id);
   };
 
   const renderAnnotationInText = (

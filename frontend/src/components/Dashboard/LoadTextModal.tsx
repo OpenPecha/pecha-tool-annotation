@@ -171,7 +171,6 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
           navigate(`/task/${createdText.id}`);
         },
         onError: (error) => {
-          console.log("error ::: ", error);
           toast.error("❌ Failed to load text", {
             description:
               error instanceof Error ? error.message : "Please try again",

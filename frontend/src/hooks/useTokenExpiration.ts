@@ -22,7 +22,6 @@ export const useTokenExpiration = () => {
       // First check localStorage token
       const storedToken = localStorage.getItem("access_token");
       if (storedToken && isTokenExpired(storedToken)) {
-        console.log("Stored token has expired, logging out...");
         logout();
         return;
       }
@@ -31,7 +30,6 @@ export const useTokenExpiration = () => {
       try {
         const currentToken = await getToken();
         if (currentToken && isTokenExpired(currentToken)) {
-          console.log("Current token has expired, logging out...");
           logout();
           return;
         }

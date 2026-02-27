@@ -101,7 +101,6 @@ export const useAnnotationNavigation = (annotations: Annotation[]) => {
   const handleHeaderClick = useCallback((annotation: Annotation) => {
     // Log for debugging, but don't auto-scroll
     // User can manually navigate if needed
-    console.log("Header clicked:", annotation.id, annotation.text);
   }, []);
 
   /**

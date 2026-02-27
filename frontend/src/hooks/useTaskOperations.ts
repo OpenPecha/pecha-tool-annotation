@@ -110,7 +110,6 @@ export const useTaskOperations = (
    * Confirms and executes text skip
    */
   const handleConfirmSkip = useCallback(() => {
-    console.log("handleConfirmSkip");
     setShowSkipConfirmation(false);
     skipTextMutation.mutate(undefined, {
       onSuccess: (nextText: TextResponse) => {
@@ -122,7 +121,6 @@ export const useTaskOperations = (
         navigate(`/task/${nextText.id}`);
       },
       onError: (error) => {
-        console.log("error", error);
         let errorMessage = "Failed to skip text";
         let errorTitle: string = TOAST_MESSAGES.INVALID_TYPE;
 

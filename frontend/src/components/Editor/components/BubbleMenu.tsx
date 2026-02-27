@@ -220,7 +220,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   };
 
   const handleErrorSelection = (errorCategory: CategoryWithBreadcrumb) => {
-    console.log("errorCategory", errorCategory);
     setSelectedErrorCategory(errorCategory);
     setSearchQuery("");
     setIsSearchFocused(false);

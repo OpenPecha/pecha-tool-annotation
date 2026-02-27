@@ -148,7 +148,6 @@ export const useAnnotationColors = () => {
 
           // Save to localStorage
           localStorage.setItem(STORAGE_KEY, JSON.stringify(scheme));
-          console.log("Colors applied and saved:", scheme);
         } catch (error) {
           console.error(
             "Failed to save annotation colors to localStorage:",

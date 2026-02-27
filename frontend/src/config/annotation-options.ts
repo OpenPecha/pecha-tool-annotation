@@ -73,9 +73,7 @@ export const extractLeafNodes = (
 export const loadAnnotationConfig = async (type?: string): Promise<AnnotationConfig> => {
   try {
     const annotationListType = type || "";
-    console.log("annotationListType", annotationListType);
     const { selectedAnnotationListType } = useAnnotationFiltersStore();
-    console.log("selectedAnnotationListType ::", selectedAnnotationListType);
     // Load error list from the server
     const {
       data: response
@@ -83,7 +81,6 @@ export const loadAnnotationConfig = async (type?: string): Promise<AnnotationCon
       type_id: selectedAnnotationListType,
       enabled: !!selectedAnnotationListType,
     });
-    console.log("response", response);
     if (!response) {
       throw new Error(`Failed to load error list for type: ${annotationListType}`);
     }
