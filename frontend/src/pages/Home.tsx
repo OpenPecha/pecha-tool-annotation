@@ -12,9 +12,7 @@ const Home = () => {
     const { isAuthenticated,login,getToken } = useAuth();
 
     useEffect(() => {
-        getToken().then((token) => {
-            console.log(token)
-        })
+        getToken()
     }, [getToken])
     if (isAuthenticated) {
         return <Navigate to="/dashboard" replace />;
