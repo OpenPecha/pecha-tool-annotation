@@ -105,5 +105,18 @@ class UserCRUD:
         """Check if Auth0 user ID is already taken."""
         return db.query(User).filter(User.auth0_user_id == auth0_user_id).first() is not None
 
+    def upsert_by_auth0_id(self, db: Session, obj_in: UserCreate) -> User:
+        """Get or create user by Auth0 ID. Updates existing user with new details."""
+        existing = self.get_by_auth0_id(db, obj_in.auth0_user_id)
+        if existing:
+            update_data = UserUpdate(
+                username=obj_in.username,
+                email=obj_in.email,
+                full_name=obj_in.full_name,
+                picture=obj_in.picture,
+            )
+            return self.update(db, existing, update_data)
+        return self.create(db, obj_in)
+
 
 user_crud = UserCRUD() 

@@ -8,6 +8,8 @@ import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import { setAuthTokenGetter } from "../lib/auth";
 import { AuthContext } from "./auth-context";
 import type { User } from "./types";
+import { usersApi } from "@/api/users";
+import { useNavigate } from "react-router-dom";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -23,11 +25,9 @@ const AuthContextProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout: auth0Logout,
     error,
   } = useAuth0();
-
   useEffect(() => {
     if (!isAuthenticated || !user?.sub) return;
     setAuthTokenGetter(getAccessTokenSilently);
-
 
   }, [isAuthenticated, user, getAccessTokenSilently]);
 
@@ -106,6 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       useRefreshTokens={true}
       useRefreshTokensFallback={true}
       cacheLocation="localstorage"
+     
     >
       <AuthContextProvider>{children}</AuthContextProvider>
     </Auth0Provider>

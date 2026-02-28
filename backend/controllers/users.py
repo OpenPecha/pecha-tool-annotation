@@ -14,9 +14,14 @@ from schemas.user import UserCreate, UserUpdate
 
 
 
-def create_user(db: Session, current_user: User, user_in: UserCreate) -> User:
+def create_user(db: Session, user_in: UserCreate) -> User:
     """Create a new user."""
     return user_crud.create(db=db, obj_in=user_in)
+
+
+def register_user(db: Session, user_in: UserCreate) -> User:
+    """Register or sync user from Auth0 login. Upserts by auth0_user_id (no auth token required)."""
+    return user_crud.upsert_by_auth0_id(db=db, obj_in=user_in)
 
 
 def get_me(current_user: User) -> User:

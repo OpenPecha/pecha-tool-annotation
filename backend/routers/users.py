@@ -21,10 +21,19 @@ security = HTTPBearer()
 def create_user(
     user_in: UserCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    # current_user: User = Depends(require_admin),
 ):
     """Create a new user."""
-    return users_controller.create_user(db, current_user, user_in)
+    return users_controller.create_user(db, user_in)
+
+
+@router.post("/register", response_model=UserResponse)
+def register_user(
+    user_in: UserCreate,
+    db: Session = Depends(get_db),
+):
+    """Register or sync user on login. Upserts by auth0_user_id; no auth token required."""
+    return users_controller.register_user(db, user_in)
 
 @router.get("/me", response_model=UserResponse)
 def read_users_me(current_user: User = Depends(get_current_active_user)):

@@ -1,10 +1,21 @@
 import { apiClient } from "./utils";
-import type { UserResponse, UserUpdate, UserFilters, UserStats, UserCreate } from "./types";
+import type {
+  UserResponse,
+  UserUpdate,
+  UserFilters,
+  UserStats,
+  UserCreate,
+  RegisterUserData,
+} from "./types";
 
 export const usersApi = {
-  // Get current user info
   createUser: async (userData: UserCreate): Promise<UserResponse> => {
     return apiClient.post<UserResponse>("/users/", userData);
+  },
+
+  /** Register or sync user on login. Upserts by auth0_user_id; works without auth token. */
+  registerUser: async (userData: RegisterUserData): Promise<UserResponse> => {
+    return apiClient.post<UserResponse>("/users/register", userData);
   },
   getCurrentUser: async (): Promise<UserResponse> => {
     return apiClient.get<UserResponse>("/users/me");

@@ -2,7 +2,7 @@ import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./auth/AuthProvider";
-import { Suspense,  lazy } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { FullScreenLoading, AppLoading } from "@/components/ui/loading";
 import { useAuth } from "./auth/use-auth-hook";
@@ -17,6 +17,9 @@ import Logout from "./pages/Logout";
 import Callback from "./pages/Callback";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
+import { usersApi } from "./api/users";
+import { useAuth0 } from "@auth0/auth0-react";
+import type { RegisterUserData } from "./api/types";
 // Lazy load page components
 const Task = lazy(() => import("./pages/Task"));
 const Review = lazy(() => import("./pages/Review"));
@@ -24,15 +27,59 @@ const Review = lazy(() => import("./pages/Review"));
 const queryClient = new QueryClient();
 
 
-function Layout({ children }: { children: React.ReactNode }) {
+function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { isAuthenticated } = useAuth();
-  // Initialize annotation colors early when authenticated
+  const { user } = useAuth0();
+  const [isUserSynced, setIsUserSynced] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const { isLoaded: colorsLoaded } = useAnnotationColors();
+
+  // Ensure user exists in DB before loading protected content
+  useEffect(() => {
+    if (!isAuthenticated || !user?.sub) {
+      setIsUserSynced(false);
+      return;
+    }
+    let cancelled = false;
+    const syncUser = async () => {
+      if (!user.sub) return;
+      try {
+        const userData: RegisterUserData = {
+          auth0_user_id: user.sub,
+          username: user.nickname ?? user.name ?? user.sub,
+          email: user.email ?? "",
+          full_name: user.name ?? undefined,
+          picture: user.picture ?? undefined,
+        };
+        await usersApi.registerUser(userData);
+        if (!cancelled) setIsUserSynced(true);
+      } catch (err) {
+        if (!cancelled) {
+          setSyncError(err instanceof Error ? err.message : "Failed to set up account");
+        }
+      }
+    };
+    syncUser();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, user?.sub, user?.nickname, user?.name, user?.email, user?.picture]);
+
   if (!isAuthenticated) {
     return <Welcome />;
   }
 
-  // Show loading if colors are not loaded yet to prevent flash of unstyled annotations
+  if (!isUserSynced) {
+    if (syncError) {
+      return (
+        <div className="flex min-h-screen items-center justify-center">
+          <p className="text-destructive">{syncError}. Please refresh to retry.</p>
+        </div>
+      );
+    }
+    return <AppLoading message="Setting up your account..." />;
+  }
+
   if (!colorsLoaded) {
     return <AppLoading message="Loading settings..." />;
   }
@@ -45,8 +92,6 @@ function Layout({ children }: { children: React.ReactNode }) {
 }
 
 function AppContent() {
-
-
   return (
     <Routes>
       <Route path="/" element={<Home /> } />
@@ -96,17 +141,19 @@ function AppContent() {
 }
 
 function App() {
+
+
   return (
       <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
     <AuthProvider>
         <UserbackProvider>
-          <BrowserRouter>
 
             <AppContent />
             <Toaster />
-          </BrowserRouter>
         </UserbackProvider>
     </AuthProvider>
+          </BrowserRouter>
       </QueryClientProvider>
   );
 }

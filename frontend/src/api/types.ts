@@ -168,6 +168,15 @@ export interface UserCreate extends UserBase {
   is_active: boolean;
 }
 
+/** Data for register/sync on login. auth0_user_id required; works without auth token. */
+export interface RegisterUserData {
+  auth0_user_id: string;
+  username: string;
+  email?: string;
+  full_name?: string;
+  picture?: string;
+}
+
 export interface UserUpdate {
   username?: string;
   email?: string;
