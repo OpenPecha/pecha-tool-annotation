@@ -1,8 +1,11 @@
 import { apiClient } from "./utils";
-import type { UserResponse, UserUpdate, UserFilters, UserStats } from "./types";
+import type { UserResponse, UserUpdate, UserFilters, UserStats, UserCreate } from "./types";
 
 export const usersApi = {
   // Get current user info
+  createUser: async (userData: UserCreate): Promise<UserResponse> => {
+    return apiClient.post<UserResponse>("/users/", userData);
+  },
   getCurrentUser: async (): Promise<UserResponse> => {
     return apiClient.get<UserResponse>("/users/me");
   },

@@ -3,7 +3,7 @@ import Navbar from "@/components/Navbar";
 import { FullScreenLoading } from "@/components/ui/loading";
 import { preloadByUserRole } from "@/utils/componentPreloader";
 import { useCurrentUser } from "@/hooks";
-
+import Home from "./Home";
 
 const RegularUserDashboard = React.lazy(() =>
   import("@/components/Dashboard").then((module) => ({
@@ -21,6 +21,9 @@ const Dashboard = () => {
     }
   }, [currentUser?.role]);
 
+  if (!currentUser) {
+    return <Home/>;
+  }
   return (
     <div className="flex flex-col h-screen">
       <Navbar />
@@ -30,5 +33,9 @@ const Dashboard = () => {
     </div>
   );
 };
+
+
+
+
 
 export default Dashboard;

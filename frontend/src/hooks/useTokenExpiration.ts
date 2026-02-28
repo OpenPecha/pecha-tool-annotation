@@ -11,39 +11,25 @@ export const useTokenExpiration = () => {
   const isCheckingRef = useRef(false);
 
   const checkTokenExpiration = useCallback(async () => {
-    // Prevent multiple simultaneous checks
-    if (isCheckingRef.current || !isAuthenticated) {
-      return;
-    }
+    if (isCheckingRef.current || !isAuthenticated) return;
 
     isCheckingRef.current = true;
 
     try {
-      // First check localStorage token
-      const storedToken = localStorage.getItem("access_token");
-      if (storedToken && isTokenExpired(storedToken)) {
+      // Try getToken first – it calls getAccessTokenSilently, which uses refresh token when access token is expired
+      const currentToken = await getToken();
+      if (!currentToken) {
         logout();
         return;
       }
-
-      // Then check the Auth0 token
-      try {
-        const currentToken = await getToken();
-        if (currentToken && isTokenExpired(currentToken)) {
-          logout();
-          return;
-        }
-      } catch (error) {
-        console.error(
-          "Error getting current token for expiration check:",
-          error
-        );
-        // If we can't get the token, consider it expired
+      if (isTokenExpired(currentToken)) {
+        // Token is still expired after refresh attempt – refresh failed
         logout();
         return;
       }
     } catch (error) {
-      console.error("Error checking token expiration:", error);
+      console.error("Error checking token for expiration:", error);
+      logout();
     } finally {
       isCheckingRef.current = false;
     }

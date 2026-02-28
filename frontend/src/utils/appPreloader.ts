@@ -34,19 +34,4 @@ export const preloadAllPages = () => {
   import("../pages/Callback");
 };
 
-// Preload based on current route to anticipate next navigation
-export const preloadByCurrentRoute = (currentPath: string) => {
-  switch (currentPath) {
-    case "/":
-    case "/dashboard":
-      // From dashboard, user might go to task
-      preloadTaskPage();
-      break;
-    case "/login":
-      // From login, user will go to dashboard after auth
-      preloadAuthenticatedRoutes();
-      break;
-    default:
-      break;
-  }
-};
+

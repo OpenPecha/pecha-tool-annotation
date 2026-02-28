@@ -89,6 +89,13 @@ class AnnotationUpdate(BaseModel):
         return v
 
 
+class ValidatePositionsRequest(BaseModel):
+    """Request body for POST /annotations/validate-positions."""
+    text_id: int
+    start_position: int
+    end_position: int
+
+
 class AnnotationResponse(AnnotationBase):
     model_config = ConfigDict(from_attributes=True)
     
@@ -97,4 +104,4 @@ class AnnotationResponse(AnnotationBase):
     annotator_id: Optional[int] = None  # Can be null for system annotations
     created_at: datetime
     updated_at: Optional[datetime] = None
-    is_agreed: Optional[bool] = False  # Whether annotation has been agreed upon by a reviewer 
+    is_agreed: Optional[bool] = False  # Whether annotation has been agreed upon by a reviewer

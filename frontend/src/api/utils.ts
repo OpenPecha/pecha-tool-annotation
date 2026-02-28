@@ -1,103 +1,115 @@
-import type { ValidationError } from "./types";
+import { ApiError } from "./errors"
+import { getAuthHeaders } from "../lib/auth"
+import { isTokenExpired } from "../utils/tokenUtils"
+
+export { ApiError, handleApiError, isValidationError } from "./errors"
 
 const SERVER_URL =
-  import.meta.env.VITE_SERVER_URL || "http://localhost:8000/v1";
+  import.meta.env.VITE_SERVER_URL || "http://localhost:8000/v1"
 
-type CustomHeaders = Record<string, string>;
+type CustomHeaders = Record<string, string>
 
-// This is a synchronous function that returns the token from localStorage
-// It's used as a fallback when we can't use the Auth0 hooks (outside of React components)
-const getBaseHeaders = (): CustomHeaders => {
-  // Try different token names that might be used in the application
-  const token =
+function getStorageToken(): string {
+  return (
     localStorage.getItem("auth_token") ??
     localStorage.getItem("access_token") ??
     sessionStorage.getItem("auth_token") ??
     sessionStorage.getItem("access_token") ??
-    "";
+    ""
+  )
+}
 
-  return {
-    Authorization: `Bearer ${token}`,
-  };
-};
+/** Uses Auth0 getAccessTokenSilently so refresh token is used when access token expires. */
+async function getBaseHeadersAsync(): Promise<CustomHeaders> {
+  const headers = await getAuthHeaders("none", true)
+  if (headers.Authorization) return headers
 
-// This is an async function that gets the token from Auth0
-// It should be used when possible, but requires being in a React component context
-export const getAuthToken = async (): Promise<string> => {
-  try {
-    // If we're in a browser environment with localStorage
-    if (typeof window !== "undefined" && window.localStorage) {
-      // Check if we have a cached token
-      const cachedToken = localStorage.getItem("auth_token");
-      if (cachedToken) {
-        return cachedToken;
-      }
-    }
+  const token = getStorageToken()
+  if (!token) return {}
 
-    // If no cached token, we need to be in a component context to get it from Auth0
-    throw new Error(
-      "No authentication token available. Make sure you are logged in."
-    );
-  } catch (error) {
-    console.error("Error getting auth token:", error);
-    throw error;
+  if (isTokenExpired(token)) {
+    return {}
   }
-};
+  return { Authorization: `Bearer ${token}` }
+}
 
-export const getHeaders = (): CustomHeaders => ({
-  ...getBaseHeaders(),
-  "Content-Type": "application/json",
-});
+/**
+ * JSON request headers with auth. Use for API calls so token refresh works.
+ */
+export async function getHeaders(): Promise<CustomHeaders> {
+  const base = await getBaseHeadersAsync()
+  return { ...base, "Content-Type": "application/json" }
+}
 
-export const getHeadersMultipart = (): CustomHeaders => getBaseHeaders();
+/**
+ * Multipart headers (FormData). Use for file uploads.
+ */
+export async function getHeadersMultipart(): Promise<CustomHeaders> {
+  return getBaseHeadersAsync()
+}
 
-// API client with error handling
+/**
+ * Returns a valid token. Prefer getHeaders() for API calls.
+ */
+export async function getAuthToken(): Promise<string> {
+  const headers = await getAuthHeaders("none", true)
+  const auth = headers.Authorization
+  if (auth?.startsWith("Bearer ")) return auth.slice(7)
+  const cached = typeof window !== "undefined" && window.localStorage && localStorage.getItem("auth_token")
+  if (cached) return cached
+  throw new Error(
+    "No authentication token available. Make sure you are logged in."
+  )
+}
+
+function buildQueryString(
+  params: Record<string, string | number | boolean | undefined>
+): string {
+  return "?" + new URLSearchParams(
+    Object.entries(params).reduce((acc, [key, value]) => {
+      if (value !== undefined) acc[key] = String(value)
+      return acc
+    }, {} as Record<string, string>)
+  ).toString()
+}
+
+/**
+ * Central API client. All backend calls should go through apiClient or domain modules (textApi, etc.).
+ */
 class ApiClient {
-  private baseURL: string;
-
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
-  }
+  constructor(private readonly baseURL: string) {}
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    const headers = getHeaders();
-
+    const url = `${this.baseURL}${endpoint}`
+    const headers = await getHeaders()
     const config: RequestInit = {
       ...options,
-      headers: {
-        ...headers,
-        ...options.headers,
-      },
-    };
+      headers: { ...headers, ...options.headers },
+    }
 
     try {
-      const response = await fetch(url, config);
+      const response = await fetch(url, config)
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new ApiError(
-          errorData.detail || `HTTP error! status: ${response.status}`,
-          response.status
-        );
+        const errorData = await response.json().catch(() => ({}))
+        const message =
+          typeof errorData.detail === "string"
+            ? errorData.detail
+            : `HTTP error! status: ${response.status}`
+        throw new ApiError(message, response.status)
       }
 
-      // Handle 204 No Content
-      if (response.status === 204) {
-        return {} as T;
-      }
+      if (response.status === 204) return {} as T
 
-      return await response.json();
+      return await response.json()
     } catch (error) {
-      if (error instanceof ApiError) {
-        throw error;
-      }
+      if (error instanceof ApiError) throw error
       throw new ApiError(
         error instanceof Error ? error.message : "An unknown error occurred"
-      );
+      )
     }
   }
 
@@ -105,122 +117,60 @@ class ApiClient {
     endpoint: string,
     params?: Record<string, string | number | boolean | undefined>
   ): Promise<T> {
-    const urlParams = params
-      ? "?" +
-        new URLSearchParams(
-          Object.entries(params).reduce((acc, [key, value]) => {
-            if (value !== undefined) {
-              acc[key] = String(value);
-            }
-            return acc;
-          }, {} as Record<string, string>)
-        ).toString()
-      : "";
-
-    return this.request<T>(`${endpoint}${urlParams}`, {
-      method: "GET",
-    });
+    const query = params ? buildQueryString(params) : ""
+    return this.request<T>(`${endpoint}${query}`, { method: "GET" })
   }
 
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
-    // Handle FormData differently - don't stringify and use different headers
     if (data instanceof FormData) {
-      const url = `${this.baseURL}${endpoint}`;
-      const headers = getHeadersMultipart(); // Only auth headers, no content-type
-
-      const config: RequestInit = {
-        method: "POST",
-        body: data,
-        headers,
-      };
-
+      const url = `${this.baseURL}${endpoint}`
+      const headers = await getHeadersMultipart()
       try {
-        const response = await fetch(url, config);
-
+        const response = await fetch(url, {
+          method: "POST",
+          body: data,
+          headers,
+        })
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new ApiError(
-            errorData.detail || `HTTP error! status: ${response.status}`,
-            response.status
-          );
+          const errorData = await response.json().catch(() => ({}))
+          const message =
+            typeof errorData.detail === "string"
+              ? errorData.detail
+              : `HTTP error! status: ${response.status}`
+          throw new ApiError(message, response.status)
         }
-
-        // Handle 204 No Content
-        if (response.status === 204) {
-          return {} as T;
-        }
-
-        return await response.json();
+        if (response.status === 204) return {} as T
+        return await response.json()
       } catch (error) {
-        if (error instanceof ApiError) {
-          throw error;
-        }
+        if (error instanceof ApiError) throw error
         throw new ApiError(
           error instanceof Error ? error.message : "An unknown error occurred"
-        );
+        )
       }
     }
-
-    // Regular JSON handling
     return this.request<T>(endpoint, {
       method: "POST",
       body: data ? JSON.stringify(data) : undefined,
-    });
+    })
   }
 
   async put<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: "PUT",
       body: data ? JSON.stringify(data) : undefined,
-    });
+    })
   }
 
   async patch<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: "PATCH",
       body: data ? JSON.stringify(data) : undefined,
-    });
+    })
   }
 
   async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: "DELETE",
-    });
+    return this.request<T>(endpoint, { method: "DELETE" })
   }
 }
 
-// Create the main API client instance
-export const apiClient = new ApiClient(SERVER_URL);
-
-// Error handling utilities
-export const handleApiError = (error: unknown): string => {
-  if (error instanceof ApiError) {
-    return error.detail;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "An unknown error occurred";
-};
-
-export const isValidationError = (error: unknown): error is ValidationError => {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "detail" in error &&
-    Array.isArray((error as ValidationError).detail)
-  );
-};
-
-// Create custom ApiError class
-class ApiError extends Error {
-  constructor(message: string, public status_code?: number) {
-    super(message);
-    this.name = "ApiError";
-    this.detail = message;
-  }
-
-  detail: string;
-}
+export const apiClient = new ApiClient(SERVER_URL)

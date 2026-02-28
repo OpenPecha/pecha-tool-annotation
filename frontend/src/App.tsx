@@ -1,57 +1,33 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./auth/AuthProvider";
-import { Suspense, useEffect, lazy } from "react";
+import { Suspense,  lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { FullScreenLoading, AppLoading } from "@/components/ui/loading";
 import { useAuth } from "./auth/use-auth-hook";
 import { useAnnotationColors } from "./hooks/use-annotation-colors";
-import {
-  preloadByAuthState,
-  preloadByCurrentRoute,
-} from "./utils/appPreloader";
+
 import { UserbackProvider } from "./providers/UserbackProvider";
-import { useTokenExpiration } from "./hooks/useTokenExpiration";
 import { Welcome } from "./components/Welcome";
 import { AdminDashboard } from "./components/Dashboard";
 import Navbar from "./components/Navbar";
+import Login from "./pages/Login";
+import Logout from "./pages/Logout";
+import Callback from "./pages/Callback";
+import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 // Lazy load page components
 const Task = lazy(() => import("./pages/Task"));
 const Review = lazy(() => import("./pages/Review"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Login = lazy(() => import("./pages/Login"));
-const Logout = lazy(() => import("./pages/Logout"));
-const Callback = lazy(() => import("./pages/Callback"));
 
 const queryClient = new QueryClient();
 
 
 function Layout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, login, isLoading, getToken } = useAuth();
-  useTokenExpiration()
+  const { isAuthenticated } = useAuth();
   // Initialize annotation colors early when authenticated
   const { isLoaded: colorsLoaded } = useAnnotationColors();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      getToken()
-      return;
-    }
-    // if (!isAuthenticated && !isLoading) {
-    //   login(true);
-    // }
-  }, [isAuthenticated, isLoading]);
-
-  // Intelligent preloading based on authentication state
-  useEffect(() => {
-    // Delay preloading to not interfere with initial render
-    const timeoutId = setTimeout(() => {
-      preloadByAuthState(isAuthenticated);
-    }, 100);
-    return () => clearTimeout(timeoutId);
-  }, [isAuthenticated]);
-
   if (!isAuthenticated) {
     return <Welcome />;
   }
@@ -69,27 +45,22 @@ function Layout({ children }: { children: React.ReactNode }) {
 }
 
 function AppContent() {
-  const location = useLocation();
-
-  // Preload components based on current route
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      preloadByCurrentRoute(location.pathname);
-    }, 200);
-    return () => clearTimeout(timeoutId);
-  }, [location.pathname]);
 
 
   return (
     <Routes>
-      <Route
-        path="/"
+      <Route path="/" element={<Home /> } />
+        <Route
+        path="/dashboard"
         element={
           <Layout>
             <Dashboard />
           </Layout>
         }
       />
+    <Route path="/login" element={<Login />} />
+     <Route path="/logout" element={<Logout />} />
+     <Route path="/callback" element={<Callback />} />
       <Route
         path="/admin"
         element={
@@ -101,32 +72,7 @@ function AppContent() {
           </Layout>
         }
       />
-      <Route
-        path="/login"
-        element={
-          <Suspense fallback={<FullScreenLoading message="Loading Login..." />}>
-            <Login />
-          </Suspense>
-        }
-      />
-      <Route
-        path="/logout"
-        element={
-          <Suspense fallback={<FullScreenLoading message="Logging out..." />}>
-            <Logout />
-          </Suspense>
-        }
-      />
-      <Route
-        path="/callback"
-        element={
-          <Suspense
-            fallback={<FullScreenLoading message="Authenticating..." />}
-          >
-            <Callback />
-          </Suspense>
-        }
-      />
+  
       <Route
         path="/task/:textId"
         element={
@@ -151,8 +97,8 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
       <QueryClientProvider client={queryClient}>
+    <AuthProvider>
         <UserbackProvider>
           <BrowserRouter>
 
@@ -160,8 +106,8 @@ function App() {
             <Toaster />
           </BrowserRouter>
         </UserbackProvider>
-      </QueryClientProvider>
     </AuthProvider>
+      </QueryClientProvider>
   );
 }
 

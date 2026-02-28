@@ -3,13 +3,23 @@ import os
 import uvicorn
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
 from database import Base, engine
 from deps import get_db
-from models import User, Text, Annotation, AnnotationType, AnnotationList
-from routers import users, texts, annotations, bulk_upload, reviews, export, annotation_types, annotation_list, openpech
+from routers import (
+    users,
+    texts,
+    annotations,
+    bulk_upload,
+    reviews,
+    export,
+    annotation_types,
+    annotation_list,
+    openpech,
+)
 
 # Load environment variables
 load_dotenv()
@@ -72,7 +82,7 @@ def health_check(db: Session = Depends(get_db)):
     """Health check endpoint with Auth0 configuration status."""
     # Check database connection
     try:
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db_status = "✅ Connected"
     except Exception as e:
         db_status = f"❌ Error: {str(e)}"

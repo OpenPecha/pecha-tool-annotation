@@ -51,7 +51,7 @@ export const exportApi = {
 
     const response = await fetch(`${url}?${params}`, {
       method: "GET",
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
 
     if (!response.ok) {

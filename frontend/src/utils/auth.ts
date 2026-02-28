@@ -1,5 +1,6 @@
 import { useContext } from "react";
-import { AuthContext } from "@/auth/auth-context-provider";
+import { AuthContext } from "@/auth/auth-context";
+import { getAccessToken } from "@/lib/auth";
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -9,23 +10,16 @@ export const useAuth = () => {
   return context;
 };
 
+/**
+ * Gets auth token. Uses Auth0 getAccessTokenSilently (triggers refresh when expired).
+ * Prefer useAuth().getToken() from React components.
+ */
 export const getAuthToken = async (): Promise<string> => {
-  try {
-    // Try to get the auth context from the window object
-    // This is a workaround for non-component contexts
-    const authContext = (window as any).__AUTH_CONTEXT__;
-    if (authContext && typeof authContext.getToken === "function") {
-      const token = await authContext.getToken();
-      if (token) return token;
-    }
+  const token = await getAccessToken();
+  if (token) return token;
 
-    // Fallback to localStorage if available
-    const token = localStorage.getItem("auth_token");
-    if (token) return token;
+  const cached = typeof window !== "undefined" && localStorage.getItem("auth_token");
+  if (cached) return cached;
 
-    throw new Error("No authentication token available");
-  } catch (error) {
-    console.error("Error getting auth token:", error);
-    throw error;
-  }
+  throw new Error("No authentication token available");
 };
