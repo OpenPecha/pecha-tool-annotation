@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session, joinedload, defer
 from sqlalchemy import func, and_, exists, select
 from models.text import Text, INITIALIZED, ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION, SKIPPED, PROGRESS, VALID_STATUSES
@@ -24,9 +24,13 @@ class TextCRUD:
         db.refresh(db_obj)
         return db_obj
 
+    def _not_deleted(self, query):
+        """Filter out soft-deleted texts."""
+        return query.filter(Text.deleted_at.is_(None))
+
     def get(self, db: Session, text_id: int) -> Optional[Text]:
         """Get text by ID with user relationships."""
-        return db.query(Text).options(
+        return self._not_deleted(db.query(Text)).options(
             joinedload(Text.annotator),
             joinedload(Text.reviewer),
             joinedload(Text.uploader)
@@ -34,7 +38,7 @@ class TextCRUD:
 
     def get_with_annotations(self, db: Session, text_id: int) -> Optional[Text]:
         """Get text with its annotations."""
-        return db.query(Text).options(
+        return self._not_deleted(db.query(Text)).options(
             joinedload(Text.annotator),
             joinedload(Text.reviewer),
             joinedload(Text.uploader)
@@ -42,7 +46,7 @@ class TextCRUD:
 
     def get_by_title(self, db: Session, title: str) -> Optional[Text]:
         """Get text by title."""
-        return db.query(Text).filter(Text.title == title).first()
+        return self._not_deleted(db.query(Text)).filter(Text.title == title).first()
 
     def get_multi(
         self, 
@@ -56,7 +60,7 @@ class TextCRUD:
     ) -> List[TextListResponse]:
         """Get multiple texts with optional filtering and user relationships.
         Excludes content and translation fields for better performance."""
-        query = db.query(Text).options(
+        query = self._not_deleted(db.query(Text)).options(
             joinedload(Text.annotator),
             joinedload(Text.reviewer),
             joinedload(Text.uploader),
@@ -127,7 +131,7 @@ class TextCRUD:
 
     def update_status(self, db: Session, text_id: int, status: str, reviewer_id: Optional[int] = None) -> Optional[Text]:
         """Update text status."""
-        db_obj = db.query(Text).filter(Text.id == text_id).first()
+        db_obj = self._not_deleted(db.query(Text)).filter(Text.id == text_id).first()
         if db_obj:
             db_obj.status = status
             if reviewer_id:
@@ -138,26 +142,36 @@ class TextCRUD:
         return db_obj
 
     def delete(self, db: Session, text_id: int) -> Optional[Text]:
-        """Delete text."""
+        """Hard delete text (admin only - removes record)."""
         obj = db.query(Text).filter(Text.id == text_id).first()
         if obj:
             db.delete(obj)
             db.commit()
         return obj
 
+    def soft_delete(self, db: Session, text_id: int) -> Optional[Text]:
+        """Soft delete text - set deleted_at timestamp."""
+        obj = db.query(Text).filter(Text.id == text_id).first()
+        if obj:
+            obj.deleted_at = datetime.now(timezone.utc)
+            db.add(obj)
+            db.commit()
+            db.refresh(obj)
+        return obj
+
     def search(self, db: Session, query: str, skip: int = 0, limit: int = 100) -> List[Text]:
         """Search texts by title or content."""
         search_filter = Text.title.contains(query) | Text.content.contains(query)
-        return db.query(Text).filter(search_filter).offset(skip).limit(limit).all()
+        return self._not_deleted(db.query(Text)).filter(search_filter).offset(skip).limit(limit).all()
 
     def get_by_status(self, db: Session, status: str, skip: int = 0, limit: int = 100) -> List[Text]:
         """Get texts by status."""
-        return db.query(Text).filter(Text.status == status).offset(skip).limit(limit).all()
+        return self._not_deleted(db.query(Text)).filter(Text.status == status).offset(skip).limit(limit).all()
 
     def get_texts_for_annotation(self, db: Session, skip: int = 0, limit: int = 100, user_id: int = None, user_role: str = None) -> List[Text]:
         """Get texts available for annotation (initialized status or needs revision)."""
         from models.text import REVIEWED_NEEDS_REVISION
-        query = db.query(Text).options(
+        query = self._not_deleted(db.query(Text)).options(
             joinedload(Text.annotator),
             joinedload(Text.reviewer),
             joinedload(Text.uploader)
@@ -178,7 +192,7 @@ class TextCRUD:
 
     def get_texts_for_review(self, db: Session, skip: int = 0, limit: int = 100, reviewer_id: Optional[int] = None) -> List[Text]:
         """Get texts ready for review (annotated status), excluding texts annotated by the current reviewer and user-uploaded texts."""
-        query = db.query(Text).options(
+        query = self._not_deleted(db.query(Text)).options(
             joinedload(Text.annotator),
             joinedload(Text.reviewer),
             joinedload(Text.uploader)
@@ -195,13 +209,14 @@ class TextCRUD:
 
     def get_stats(self, db: Session) -> dict:
         """Get text statistics."""
-        total = db.query(Text).count()
-        initialized = db.query(Text).filter(Text.status == INITIALIZED).count()
-        annotated = db.query(Text).filter(Text.status == ANNOTATED).count()
-        reviewed = db.query(Text).filter(Text.status == REVIEWED).count()
-        reviewed_needs_revision = db.query(Text).filter(Text.status == REVIEWED_NEEDS_REVISION).count()
-        skipped = db.query(Text).filter(Text.status == SKIPPED).count()
-        progress = db.query(Text).filter(Text.status == PROGRESS).count()
+        base = self._not_deleted(db.query(Text))
+        total = base.count()
+        initialized = base.filter(Text.status == INITIALIZED).count()
+        annotated = base.filter(Text.status == ANNOTATED).count()
+        reviewed = base.filter(Text.status == REVIEWED).count()
+        reviewed_needs_revision = base.filter(Text.status == REVIEWED_NEEDS_REVISION).count()
+        skipped = base.filter(Text.status == SKIPPED).count()
+        progress = base.filter(Text.status == PROGRESS).count()
         
         return {
             "total": total,
@@ -216,14 +231,14 @@ class TextCRUD:
     def get_work_in_progress(self, db: Session, user_id: int, user_role: str = None) -> Optional[Text]:
         """Get text that user is currently working on (progress status)."""
         if user_role == "annotator":
-            # For users, return text where source is not 'Bulk Upload'
-            return db.query(Text).filter(
+            # For annotators, return text where source is not 'Bulk Upload'
+            return self._not_deleted(db.query(Text)).filter(
                 Text.annotator_id == user_id,
                 Text.status == PROGRESS,
                 Text.source == 'Bulk Upload'
             ).first()
         elif user_role == "user":
-            return db.query(Text).filter(
+            return self._not_deleted(db.query(Text)).filter(
                 Text.annotator_id == user_id,
                 Text.status == PROGRESS,
                 Text.source != 'Bulk Upload'
@@ -233,7 +248,7 @@ class TextCRUD:
 
     def get_unassigned_text(self, db: Session) -> Optional[Text]:
         """Get an unassigned text with initialized status."""
-        return db.query(Text).filter(
+        return self._not_deleted(db.query(Text)).filter(
             Text.status == INITIALIZED,
             Text.annotator_id.is_(None)
         ).first()
@@ -246,7 +261,7 @@ class TextCRUD:
         rejected_text_ids = (select(UserRejectedText.text_id).where(UserRejectedText.user_id == user_id))
         
         # Base query for available texts
-        query = db.query(Text).filter(
+        query = self._not_deleted(db.query(Text)).filter(
             Text.status == INITIALIZED,
             Text.annotator_id.is_(None),
             ~Text.id.in_(rejected_text_ids)
@@ -265,7 +280,7 @@ class TextCRUD:
 
     def assign_text_to_user(self, db: Session, text_id: int, user_id: int) -> Optional[Text]:
         """Assign a text to a user and set status to progress."""
-        text = db.query(Text).filter(Text.id == text_id).first()
+        text = self._not_deleted(db.query(Text)).filter(Text.id == text_id).first()
         if text:
             text.annotator_id = user_id
             text.status = PROGRESS
@@ -296,7 +311,7 @@ class TextCRUD:
     def get_recent_activity(self, db: Session, user_id: int, limit: int = 10, user_role: str = None) -> List[Text]:
         """Get recent texts annotated or reviewed by the user."""
         # Get texts where user was annotator or reviewer, ordered by updated_at desc
-        query = db.query(Text).filter(
+        query = self._not_deleted(db.query(Text)).filter(
             (Text.annotator_id == user_id) | (Text.reviewer_id == user_id)
         ).filter(
             Text.status.in_([ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION])  # Only completed work
@@ -366,13 +381,13 @@ class TextCRUD:
     def get_user_stats(self, db: Session, user_id: int) -> dict:
         """Get statistics for a specific user."""
         # Count texts annotated by user (where user is annotator and status is annotated/reviewed/reviewed_needs_revision)
-        texts_annotated = db.query(Text).filter(
+        texts_annotated = self._not_deleted(db.query(Text)).filter(
             Text.annotator_id == user_id,
             Text.status.in_([ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION])
         ).count()
         
         # Count texts reviewed by user (where user is reviewer and status is reviewed)
-        reviews_completed = db.query(Text).filter(
+        reviews_completed = self._not_deleted(db.query(Text)).filter(
             Text.reviewer_id == user_id,
             Text.status == REVIEWED
         ).count()
@@ -385,13 +400,13 @@ class TextCRUD:
         
         # Calculate accuracy rate (for now, simple calculation based on reviewed texts)
         # This could be enhanced with more sophisticated metrics
-        total_user_texts = db.query(Text).filter(
+        total_user_texts = self._not_deleted(db.query(Text)).filter(
             Text.annotator_id == user_id,
             Text.status.in_([ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION])
         ).count()
         
         if total_user_texts > 0:
-            reviewed_by_others = db.query(Text).filter(
+            reviewed_by_others = self._not_deleted(db.query(Text)).filter(
                 Text.annotator_id == user_id,
                 Text.status == REVIEWED,
                 Text.reviewer_id.isnot(None),
@@ -435,7 +450,7 @@ class TextCRUD:
 
     def cancel_work(self, db: Session, user_id: int, text_id: int) -> bool:
         """Cancel current work on a text - make it available for others."""
-        text = db.query(Text).filter(
+        text = self._not_deleted(db.query(Text)).filter(
             Text.id == text_id,
             Text.annotator_id == user_id,
             Text.status == PROGRESS
@@ -454,7 +469,7 @@ class TextCRUD:
 
     def get_user_work_in_progress(self, db: Session, user_id: int, user_role: str = None) -> List[Text]:
         """Get all texts that user is currently working on (progress status)."""
-        query = db.query(Text).filter(
+        query = self._not_deleted(db.query(Text)).filter(
             Text.annotator_id == user_id,
             Text.status == PROGRESS
         )
@@ -476,7 +491,7 @@ class TextCRUD:
         """Get texts annotated by a specific user that have been reviewed."""
         from models.text import REVIEWED, REVIEWED_NEEDS_REVISION
         
-        return db.query(Text).filter(
+        return self._not_deleted(db.query(Text)).filter(
             Text.annotator_id == annotator_id,
             Text.status.in_([REVIEWED, REVIEWED_NEEDS_REVISION])
         ).offset(skip).limit(limit).all()
@@ -485,7 +500,7 @@ class TextCRUD:
         self, db: Session, annotator_id: int, status: str, skip: int = 0, limit: int = 100
     ) -> List[Text]:
         """Get texts by annotator and specific status."""
-        return db.query(Text).filter(
+        return self._not_deleted(db.query(Text)).filter(
             Text.annotator_id == annotator_id,
             Text.status == status
         ).offset(skip).limit(limit).all()
@@ -498,7 +513,7 @@ class TextCRUD:
         end_date_inclusive = datetime.combine(end_date.date(), datetime.max.time())
         start_date_inclusive = datetime.combine(start_date.date(), datetime.min.time())
         
-        return db.query(Text).filter(
+        return self._not_deleted(db.query(Text)).filter(
             and_(
                 Text.created_at >= start_date_inclusive,
                 Text.created_at <= end_date_inclusive
@@ -512,7 +527,7 @@ class TextCRUD:
         # Add one day to end_date to include the entire end date
         end_date_inclusive = datetime.combine(end_date.date(), datetime.max.time())
         start_date_inclusive = datetime.combine(start_date.date(), datetime.min.time())
-        base_query = db.query(Text).filter(
+        base_query = self._not_deleted(db.query(Text)).filter(
             and_(
                 Text.created_at >= start_date_inclusive,
                 Text.created_at <= end_date_inclusive,

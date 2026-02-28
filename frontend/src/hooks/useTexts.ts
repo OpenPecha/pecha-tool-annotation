@@ -216,7 +216,7 @@ export const useUpdateTextStatus = () => {
 };
 
 /**
- * Delete text
+ * Delete text (admin only - hard delete)
  */
 export const useDeleteText = () => {
   const queryClient = useQueryClient();
@@ -229,8 +229,41 @@ export const useDeleteText = () => {
   });
 };
 
+/**
+ * Soft delete a text that the current user uploaded
+ */
+export const useSoftDeleteMyText = (options?: { onSuccess?: () => void; onError?: (error: Error) => void }) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => textApi.softDeleteMyText(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.texts.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.texts.myWorkInProgress });
+      queryClient.invalidateQueries({ queryKey: queryKeys.texts.forAnnotation });
+      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
+      toast.success("Text deleted", {
+        description: "Your uploaded text has been deleted",
+      });
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      toast.error("Delete failed", {
+        description: error.message || "Failed to delete text",
+      });
+      options?.onError?.(error);
+    },
+  });
+};
+
+interface UploadTextFileVariables {
+  file: File;
+  annotation_type_id: string;
+  language: string;
+}
+
 interface UseUploadTextFileOptions {
-  onSuccess?: (data: TextResponse) => void;
+  onSuccess?: (data: TextResponse, variables: UploadTextFileVariables) => void;
   onError?: (error: Error) => void;
   showToast?: boolean;
 }
@@ -244,7 +277,7 @@ export const useUploadTextFile = (options?: UseUploadTextFileOptions) => {
 
   return useMutation({
     mutationFn: ({file, annotation_type_id, language}: {file: File, annotation_type_id: string, language: string}) => textApi.uploadTextFile(file, annotation_type_id, language),
-    onSuccess: (data: TextResponse) => {
+    onSuccess: (data: TextResponse, variables: UploadTextFileVariables) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: queryKeys.texts.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.texts.myWorkInProgress });
@@ -256,7 +289,7 @@ export const useUploadTextFile = (options?: UseUploadTextFileOptions) => {
         });
       }
 
-      options?.onSuccess?.(data);
+      options?.onSuccess?.(data, variables);
     },
     onError: (error: Error) => {
       if (showToast) {

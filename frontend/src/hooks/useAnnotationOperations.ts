@@ -4,7 +4,12 @@ import { useAnnotationStore } from "@/store/annotation";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 import type { AnnotationCreate, AnnotationResponse, TextWithAnnotations } from "@/api/types";
 import { useCreateAnnotation, useUpdateAnnotation, useDeleteAnnotation } from "@/hooks";
-import { extractLeafNodes, isValidAnnotationType } from "@/config/annotation-options";
+import {
+  extractLeafNodes,
+  isValidAnnotationType,
+  type AnnotationOption,
+} from "@/config/annotation-options";
+import { useCustomAnnotationsStore } from "@/store/customAnnotations";
 import { TOAST_MESSAGES } from "@/constants/taskConstants";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/constants/queryKeys";
@@ -27,7 +32,12 @@ export const useAnnotationOperations = (
   annotationList: any // TODO: Type this properly
 ) => {
   const { toast } = useToast();
-  const { selectedAnnotationTypes, setSelectedAnnotationTypes } = useAnnotationFiltersStore();
+  const {
+    selectedAnnotationTypes,
+    setSelectedAnnotationTypes,
+    selectedAnnotationListType,
+  } = useAnnotationFiltersStore();
+  const { getCustomOptions } = useCustomAnnotationsStore();
   const queryClient = useQueryClient();
   
   const [pendingHeader, setPendingHeader] = useState<{
@@ -42,19 +52,34 @@ export const useAnnotationOperations = (
   const deleteAnnotationMutation = useDeleteAnnotation();
 
   /**
-   * Validates annotation type against current navigation mode
+   * Validates annotation type against current navigation mode.
+   * Also accepts custom annotations added by the user.
    */
-  const validateAnnotationType = useCallback(async (type: string): Promise<boolean> => {
-    const currentMode = useAnnotationStore.getState().currentNavigationMode;
+  const validateAnnotationType = useCallback(
+    async (type: string): Promise<boolean> => {
+      const currentMode = useAnnotationStore.getState().currentNavigationMode;
 
-    if (currentMode === "table-of-contents") {
-      const { STRUCTURAL_ANNOTATION_TYPES } = await import("@/config/structural-annotations");
-      return STRUCTURAL_ANNOTATION_TYPES.some((structuralType) => structuralType.id === type) || type === "header";
-    } else {
-      const config = extractLeafNodes(annotationList?.categories || [], 0);
-      return isValidAnnotationType({ options: config }, type) || type === "header";
-    }
-  }, [annotationList]);
+      if (currentMode === "table-of-contents") {
+        const { STRUCTURAL_ANNOTATION_TYPES } = await import(
+          "@/config/structural-annotations"
+        );
+        return (
+          STRUCTURAL_ANNOTATION_TYPES.some((t) => t.id === type) ||
+          type === "header"
+        );
+      }
+
+      const apiOptions = extractLeafNodes(annotationList?.categories || [], 0);
+      const customOptions: AnnotationOption[] = selectedAnnotationListType
+        ? getCustomOptions(selectedAnnotationListType)
+        : [];
+      const allOptions = [...apiOptions, ...customOptions];
+      return (
+        isValidAnnotationType({ options: allOptions }, type) || type === "header"
+      );
+    },
+    [annotationList, selectedAnnotationListType, getCustomOptions]
+  );
 
   /**
    * Automatically checks annotation type in filter

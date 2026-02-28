@@ -67,6 +67,8 @@ export interface TextResponse extends TextBase {
   reviewer?: UserInfo;
   uploader?: UserInfo;
   annotation_type_id?: string;
+  /** For TEI XML upload: annotation types created (e.g. ["pos", "tei_editorial"]) for filter selection */
+  annotation_types_created?: string[];
 }
 
 export interface TextFilters extends PaginationParams {

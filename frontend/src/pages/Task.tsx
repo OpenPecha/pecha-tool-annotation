@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useAnnotationStore } from "@/store/annotation";
 import { TextAnnotator } from "@/components/TextAnnotator";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
@@ -16,16 +16,18 @@ import {
   useRecentActivity,
   useAnnotationListHierarchical,
   useCurrentUser,
+  useSoftDeleteMyText,
 } from "@/hooks";
 import { convertApiAnnotationsSync } from "@/utils/annotationConverter";
 import type { Annotation } from "@/utils/annotationConverter";
 import { useAnnotationOperations } from "@/hooks/useAnnotationOperations";
 import { useTaskOperations } from "@/hooks/useTaskOperations";
 import { useAnnotationNavigation } from "@/hooks/useAnnotationNavigation";
-import { exportAsJsonFile } from "@/utils/exportAnnotation";
+import { exportAsJsonFile, exportAsTeiXmlFile } from "@/utils/exportAnnotation";
 
 const Index = () => {
   const { textId } = useParams<{ textId: string }>();
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { data: currentUserData } = useCurrentUser();
 
@@ -36,7 +38,12 @@ const Index = () => {
 
   // Global state from Zustand stores
   const { navigationOpen, sidebarOpen, toggleNavigation, toggleSidebar } = useAnnotationStore();
-  const { selectedAnnotationListType, selectedAnnotationTypes } = useAnnotationFiltersStore();
+  const {
+    selectedAnnotationListType,
+    selectedAnnotationTypes,
+    addSelectedAnnotationTypes,
+  } = useAnnotationFiltersStore();
+  const location = useLocation();
 
   // UI-only selection state
   const [selectedText, setSelectedText] = useState<{
@@ -117,6 +124,21 @@ const Index = () => {
    */
   const { textAnnotatorRef, highlightedAnnotationId, handleAnnotationClick } = useAnnotationNavigation(annotationsForUI);
 
+  const softDeleteMutation = useSoftDeleteMyText({
+    onSuccess: () => navigate("/"),
+  });
+
+  /**
+   * Effect: Add annotation types from XML upload to selected filter so markings show
+   */
+  useEffect(() => {
+    const types = (location.state as { annotationTypesToSelect?: string[] } | null)
+      ?.annotationTypesToSelect;
+    if (types?.length) {
+      addSelectedAnnotationTypes(types);
+    }
+  }, [location.state, addSelectedAnnotationTypes]);
+
   /**
    * Effect: Check annotation acceptance status from recent activity
    */
@@ -159,12 +181,29 @@ const Index = () => {
     return filteredAnnotations.filter((ann) => ann.type !== "header");
   }, [filteredAnnotations]);
 
+  const dbUserId = currentUserData?.id;
+  const canDeleteMyText =
+    !!parsedTextId &&
+    !!textData &&
+    dbUserId !== undefined &&
+    dbUserId !== null &&
+    textData.uploaded_by === dbUserId;
+
+  const handleDeleteMyText = () => {
+    if (!parsedTextId || !canDeleteMyText) return;
+    if (!window.confirm(`Are you sure you want to delete "${textData?.title}"? This cannot be undone.`)) return;
+    softDeleteMutation.mutate(parsedTextId);
+  };
+
   /**
-   * Handle export for regular users
+   * Handle export for regular users (JSON or TEI XML)
    */
-  const handleExport = () => {
-    if (textData) {
+  const handleExport = (format: "json" | "tei") => {
+    if (!textData) return;
+    if (format === "json") {
       exportAsJsonFile(textData);
+    } else {
+      exportAsTeiXmlFile(textData);
     }
   };
 
@@ -248,6 +287,9 @@ const Index = () => {
             onUndoAnnotations={handleUndoAnnotations}
             onRevertWork={handleRevertWork}
             onExport={handleExport}
+            onDeleteMyText={handleDeleteMyText}
+            canDeleteMyText={canDeleteMyText}
+            isDeletingText={softDeleteMutation.isPending}
             textData={textData}
             userRole={userRole}
             userAnnotationsCount={getUserAnnotationsCount()}

@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
 import type { Annotation } from "@/utils/annotationConverter";
 import type { TextWithAnnotations, UserRole } from "@/api/types";
@@ -7,8 +8,73 @@ import {
   IoArrowUndo,
   IoRefresh,
   IoDownload,
+  IoChevronDown,
+  IoTrashOutline,
 } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
+
+function ExportDropdown({
+  textData,
+  onExport,
+  disabled,
+}: {
+  textData: TextWithAnnotations;
+  onExport: (format: "json" | "tei") => void;
+  disabled?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <Button
+        onClick={() => setIsOpen((v) => !v)}
+        className="bg-blue-600 h-20 hover:bg-blue-700 text-white cursor-pointer w-full"
+        disabled={disabled}
+        size="lg"
+        title="Export text and annotations (JSON or TEI XML)"
+      >
+        <IoDownload className="w-4 h-4 mr-2" />
+        Export
+        <IoChevronDown className="w-4 h-4 ml-1" />
+      </Button>
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 w-full rounded-md border border-slate-200 bg-white shadow-lg z-50 py-1">
+          <button
+            type="button"
+            className="w-full px-4 py-2 text-left text-sm hover:bg-slate-100"
+            onClick={() => {
+              onExport("json");
+              setIsOpen(false);
+            }}
+          >
+            Export as JSON
+          </button>
+          <button
+            type="button"
+            className="w-full px-4 py-2 text-left text-sm hover:bg-slate-100"
+            onClick={() => {
+              onExport("tei");
+              setIsOpen(false);
+            }}
+          >
+            Export as TEI XML
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ActionButtons({
   annotations,
@@ -17,6 +83,9 @@ function ActionButtons({
   onUndoAnnotations,
   onRevertWork,
   onExport,
+  onDeleteMyText,
+  canDeleteMyText = false,
+  isDeletingText = false,
   textData,
   userRole,
   userAnnotationsCount = 0,
@@ -30,7 +99,10 @@ function ActionButtons({
   readonly onSkipText?: () => void;
   readonly onUndoAnnotations?: () => void;
   readonly onRevertWork?: () => void;
-  readonly onExport?: () => void;
+  readonly onExport?: (format: "json" | "tei") => void;
+  readonly onDeleteMyText?: () => void;
+  readonly canDeleteMyText?: boolean;
+  readonly isDeletingText?: boolean;
   readonly textData?: TextWithAnnotations;
   readonly userRole?: UserRole;
   readonly userAnnotationsCount?: number;
@@ -95,18 +167,13 @@ function ActionButtons({
         </Button>
       )}
 
-      {/* Export button - only show for regular users */}
+      {/* Export button with format choice - only show for regular users */}
       {canOnlyExport && onExport && textData && (
-        <Button
-          onClick={onExport}
-          className="bg-blue-600 h-20 hover:bg-blue-700 text-white cursor-pointer"
+        <ExportDropdown
+          textData={textData}
+          onExport={onExport}
           disabled={!textData}
-          size={"lg"}
-          title="Export text and annotations as JSON file"
-        >
-          <IoDownload className="w-4 h-4 mr-2" />
-          Export JSON
-        </Button>
+        />
       )}
 
       {/* Skip button - only show for new tasks, not completed ones */}
@@ -134,6 +201,21 @@ function ActionButtons({
         >
           <IoRefresh className="w-4 h-4 mr-2" />
           Revert Work
+        </Button>
+      )}
+
+      {/* Delete my text - only for user's uploaded texts */}
+      {canDeleteMyText && onDeleteMyText && (
+        <Button
+          onClick={onDeleteMyText}
+          variant="outline"
+          className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+          disabled={isSubmitting || isSkipping || isUndoing || isDeletingText}
+          size="lg"
+          title="Delete this text (you uploaded it)"
+        >
+          <IoTrashOutline className="w-4 h-4 mr-2" />
+          {isDeletingText ? "Deleting..." : "Delete Text"}
         </Button>
       )}
 

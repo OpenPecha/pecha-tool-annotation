@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { IoClose, IoSearch } from "react-icons/io5";
+import { IoClose, IoSearch, IoAdd } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import type { BubbleMenuProps } from "../types";
 import { useAuth } from "@/auth/use-auth-hook";
@@ -14,6 +14,7 @@ import { useAnnotationStore } from "@/store/annotation";
 import type { CategoryOutput } from "@/api/annotation_list";
 import { useAnnotationListHierarchical } from "@/hooks/";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
+import { useCustomAnnotationsStore } from "@/store/customAnnotations";
 
 // Type definitions for error typology (using API types)
 interface ErrorCategory extends CategoryOutput {
@@ -51,7 +52,13 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [customInput, setCustomInput] = useState("");
   const { currentUser } = useAuth();
+  const {
+    getCustomOptions,
+    addCustomAnnotation,
+    customOptionsByListType,
+  } = useCustomAnnotationsStore();
 
   // Get annotation mode from Zustand store
   const { currentNavigationMode: annotationMode } = useAnnotationStore();
@@ -150,6 +157,18 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     return breadcrumbParts.join(" > ");
   };
 
+  const customErrorOptions = useMemo((): CategoryWithBreadcrumb[] => {
+    if (!selectedAnnotationListType || effectiveMode !== "error-list") return []
+    const opts = getCustomOptions(selectedAnnotationListType)
+    return opts.map((o) => ({
+      id: o.id,
+      name: o.label,
+      breadcrumb: o.label,
+      mnemonic: "",
+      level: 0,
+    }))
+  }, [selectedAnnotationListType, effectiveMode, customOptionsByListType])
+
   // Filter items based on mode
   const filteredItems = useMemo((): (StructuralAnnotationType | CategoryWithBreadcrumb)[] => {
     if (effectiveMode === "table-of-contents") {
@@ -167,36 +186,34 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
             type.examples.some((ex) => ex.toLowerCase().includes(query)))
       );
     } else {
-      // Filter error categories
-      if (!errorData?.categories) return [];
-
-      const innermostCategories = getInnermostCategories(
-        errorData.categories
-      );
-
-      if (!searchQuery.trim()) {
-        return innermostCategories.map((category) => ({
-          ...category,
-          breadcrumb: buildBreadcrumb(category),
-        }));
-      }
-
-      const query = searchQuery.toLowerCase();
-      const matchingCategories = innermostCategories.filter(
-        (cat) =>
-          cat.name.toLowerCase().includes(query) ||
-          cat.description?.toLowerCase().includes(query) ||
-          cat.mnemonic?.toLowerCase().includes(query) ||
-          (cat.examples &&
-            cat.examples.some((ex) => ex.toLowerCase().includes(query)))
-      );
-
-      return matchingCategories.map((category) => ({
+      // Filter error categories (including custom options)
+      const innermostCategories = errorData?.categories
+        ? getInnermostCategories(errorData.categories)
+        : []
+      const apiItems = innermostCategories.map((category) => ({
         ...category,
         breadcrumb: buildBreadcrumb(category),
-      }));
+      }))
+
+      let items: CategoryWithBreadcrumb[] = [...apiItems, ...customErrorOptions]
+
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase()
+        items = items.filter(
+          (cat) =>
+            cat.name.toLowerCase().includes(query) ||
+            cat.description?.toLowerCase().includes(query) ||
+            cat.mnemonic?.toLowerCase().includes(query) ||
+            (cat.examples &&
+              cat.examples.some((ex) =>
+                typeof ex === "string" ? ex.toLowerCase().includes(query) : false
+              ))
+        )
+      }
+
+      return items
     }
-  }, [errorData, searchQuery, effectiveMode]);
+  }, [errorData, searchQuery, effectiveMode, customErrorOptions])
 
   if (!visible || !currentSelection) return null;
 
@@ -333,6 +350,75 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
                       : `${filteredItems.length} total errors`}
                   </p>
                 )}
+              {/* Add your own annotation - error-list mode */}
+              {effectiveMode === "error-list" && !isCreatingAnnotation && (
+                <div className="mt-2 flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Can't find it? Add your own..."
+                    value={customInput}
+                    onChange={(e) => setCustomInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        const trimmed = customInput.trim()
+                        if (
+                          trimmed &&
+                          selectedAnnotationListType
+                        ) {
+                          addCustomAnnotation(
+                            selectedAnnotationListType,
+                            trimmed
+                          )
+                          const customItem: CategoryWithBreadcrumb = {
+                            id: `custom-${trimmed.toLowerCase().replaceAll(/\s+/g, "-")}`,
+                            name: trimmed,
+                            breadcrumb: trimmed,
+                            mnemonic: "",
+                            level: 0,
+                          }
+                          setSelectedErrorCategory(customItem)
+                          setCustomInput("")
+                          setSearchQuery("")
+                          setShowDropdown(false)
+                        }
+                      }
+                    }}
+                    className="flex-1 px-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={
+                      !customInput.trim() || !selectedAnnotationListType
+                    }
+                    onClick={() => {
+                      const trimmed = customInput.trim()
+                      if (trimmed && selectedAnnotationListType) {
+                        addCustomAnnotation(
+                          selectedAnnotationListType,
+                          trimmed
+                        )
+                        const customItem: CategoryWithBreadcrumb = {
+                          id: `custom-${trimmed.toLowerCase().replaceAll(/\s+/g, "-")}`,
+                          name: trimmed,
+                          breadcrumb: trimmed,
+                          mnemonic: "",
+                          level: 0,
+                        }
+                        setSelectedErrorCategory(customItem)
+                        setCustomInput("")
+                        setSearchQuery("")
+                        setShowDropdown(false)
+                      }
+                    }}
+                    className="shrink-0 px-2 py-1.5 text-xs"
+                  >
+                    <IoAdd className="w-3 h-3" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
@@ -340,7 +426,9 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
         {effectiveMode === "error-list" && selectedErrorCategory && (
           <div className="mb-3 p-3 bg-orange-50 border border-orange-200 rounded-md">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-gray-500">Selected Error:</p>
+            <div className="text-sm font-medium text-orange-900">
+              {selectedErrorCategory.name}
+            </div>
               <button
                 onClick={() => {
                   setSelectedErrorCategory(null);
@@ -352,9 +440,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
                 <IoClose className="w-3 h-3" />
               </button>
             </div>
-            <div className="text-sm font-medium text-orange-900">
-              {selectedErrorCategory.name}
-            </div>
+           
             {selectedErrorCategory.breadcrumb && (
               <div className="text-xs text-orange-700 mt-1">
                 {selectedErrorCategory.breadcrumb}
@@ -367,7 +453,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
         )}
 
         {/* Level Selection - for error-list mode */}
-        {effectiveMode === "error-list" && selectedErrorCategory && (
+        {/* {effectiveMode === "error-list" && selectedErrorCategory && (
           <div className="mb-3">
             <p className="text-xs text-gray-500 mb-2">
               Importance level (optional):
@@ -384,7 +470,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
               <option value="critical">🔴 Critical</option>
             </select>
           </div>
-        )}
+        )} */}
 
         {/* Loading/error states */}
         {loading && effectiveMode === "error-list" && (

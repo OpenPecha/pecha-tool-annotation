@@ -434,7 +434,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                 const viewportWidth = window.innerWidth;
                 const viewportHeight = window.innerHeight;
                 const bubbleWidth = 380;
-                const bubbleHeight = 250;
+                const bubbleHeight = 350; // Must match BubbleMenu actual height (search, list max-h-60, buttons) to avoid overlapping selection
                 const margin = 10;
 
                 // Determine positioning with more spacing
@@ -971,6 +971,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           visible={editPopupVisible}
           position={editPopupPosition}
           annotation={annotationToEdit}
+          content={text}
           isUpdatingAnnotation={isDeletingAnnotation}
           onUpdate={handleUpdateAnnotation}
           onDelete={handleDeleteFromEdit}

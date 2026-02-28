@@ -85,6 +85,8 @@ export interface EditPopupProps {
   visible: boolean;
   position: DeletePopupPosition;
   annotation: Annotation | null;
+  /** Full document content - used to derive selected text display (fixes XML encoding issues) */
+  content?: string;
   isUpdatingAnnotation: boolean;
   onUpdate: (
     annotationId: string,

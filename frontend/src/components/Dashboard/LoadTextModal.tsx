@@ -48,8 +48,19 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
 
   // File upload mutation
   const uploadTextFileMutation = useUploadTextFile({
-    onSuccess: (uploadedText) => {
-      navigate(`/task/${uploadedText.id}`);
+    onSuccess: (uploadedText, variables: { file: File; annotation_type_id: string; language: string }) => {
+      const isXml =
+        variables.file.type === "text/xml" ||
+        variables.file.type === "application/xml" ||
+        variables.file.name.toLowerCase().endsWith(".xml");
+      const typesToSelect = isXml
+        ? (uploadedText.annotation_types_created?.length
+            ? uploadedText.annotation_types_created
+            : ["pos"])
+        : undefined;
+      navigate(`/task/${uploadedText.id}`, {
+        state: typesToSelect ? { annotationTypesToSelect: typesToSelect } : undefined,
+      });
       setIsUploadingFile(false);
       onClose();
     },
@@ -99,10 +110,13 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check if file is a text file
-    if (!file.type.startsWith("text/")) {
+    // Check if file is a text file or TEI XML
+    const isText = file.type.startsWith("text/");
+    const isXml = file.type === "text/xml" || file.type === "application/xml";
+    const isXmlByExt = file.name.toLowerCase().endsWith(".xml");
+    if (!isText && !isXml && !isXmlByExt) {
       toast.error("Invalid file type", {
-        description: "Please select a text file (.txt, .md, etc.)",
+        description: "Please select a text file (.txt, .md) or TEI XML (.xml)",
       });
       event.target.value = "";
       return;
@@ -349,13 +363,13 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
                   <p className="text-sm text-gray-600 mb-6">
                     {uploadedFile 
                       ? "Configure language and annotation type below" 
-                      : "Select a text file (.txt, .md) to start annotating"}
+                      : "Select a text file (.txt, .md) or TEI XML (.xml) to start annotating"}
                   </p>
                   {!uploadedFile && (
                     <div className="relative inline-block">
                       <input
                         type="file"
-                        accept=".txt,.md,.text"
+                        accept=".txt,.md,.text,.xml"
                         onChange={handleFileSelect}
                         disabled={isUploadingFile}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"

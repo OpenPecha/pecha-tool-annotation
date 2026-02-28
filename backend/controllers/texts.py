@@ -8,13 +8,17 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from crud.text import text_crud
+from crud.annotation import annotation_crud
+from crud.annotation_type import annotation_type_crud
 from crud.user_rejected_text import user_rejected_text_crud
 from models.user import User
 from models.text import VALID_STATUSES, INITIALIZED, ANNOTATED, REVIEWED, SKIPPED, PROGRESS
 from models.user_rejected_text import UserRejectedText
 from schemas.text import TextCreate, TextUpdate, TaskSubmissionResponse, RecentActivityWithReviewCounts
+from schemas.annotation import AnnotationCreate
 from schemas.combined import TextWithAnnotations
 from schemas.user_rejected_text import RejectedTextWithDetails
+from utils.tei_parser import parse_tei, TEIAnnotation
 
 
 def get_status_options() -> dict:
@@ -83,38 +87,74 @@ def create_text(db: Session, current_user: User, text_in: TextCreate):
     return created_text
 
 
+def _is_tei_xml(filename: str, content: str) -> bool:
+    """Detect if content is TEI XML by filename or root element."""
+    if filename and filename.lower().endswith(".xml"):
+        return True
+    content_stripped = content.strip()
+    if content_stripped.startswith("<?xml") or content_stripped.startswith("<"):
+        return "<TEI" in content_stripped[:200] or "<tei" in content_stripped[:200]
+    return False
+
+
 def upload_text_file(
     db: Session, current_user: User, annotation_type_id: str, language: str, file: UploadFile
 ):
-    """Upload a text file and create a new text record."""
+    """Upload a text file and create a new text record. Supports .txt and TEI XML (.xml)."""
     if current_user.role.value not in ("user", "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Role '{current_user.role.value}' is not allowed to upload text files",
         )
 
-    if not file.content_type or not file.content_type.startswith("text/"):
+    is_xml = (
+        file.content_type in ("text/xml", "application/xml")
+        or (file.filename and file.filename.lower().endswith(".xml"))
+    )
+    is_text = file.content_type and file.content_type.startswith("text/")
+    if not is_text and not is_xml:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only text files are allowed",
+            detail="Only text files (.txt, .md) or TEI XML (.xml) are allowed",
         )
 
     try:
-        content = file.file.read().decode("utf-8")
+        raw_content = file.file.read().decode("utf-8")
     except UnicodeDecodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File must be valid UTF-8 encoded text",
         )
 
-    base_title = file.filename.rsplit(".", 1)[0] if file.filename else "Uploaded Text"
+    filename = file.filename or ""
+    tei_annotations: list[TEIAnnotation] = []
+    tei_editorial_annotations: list[TEIAnnotation] = []
+
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    title = f"{base_title}_{current_time}"
+
+    if _is_tei_xml(filename, raw_content):
+        try:
+            parsed = parse_tei(raw_content, filename)
+            title = f"{parsed.title}_{current_time}"
+            content = parsed.content
+            tei_annotations = parsed.annotations  # POS from annotated layer
+            tei_editorial_annotations = parsed.editorial_annotations  # add, unclear, hi, decoration
+            source = parsed.source
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid TEI XML: {e}",
+            ) from e
+    else:
+        base_title = filename.rsplit(".", 1)[0] if filename else "Uploaded Text"
+        title = f"{base_title}_{current_time}"
+        content = raw_content
+        source = filename
 
     text_create = TextCreate(
         title=title,
         content=content,
-        source=file.filename,
+        source=source,
         language=language,
         annotation_type_id=annotation_type_id,
         uploaded_by=current_user.id,
@@ -126,6 +166,52 @@ def upload_text_file(
             created_text = text_crud.assign_text_to_user(
                 db=db, text_id=created_text.id, user_id=current_user.id
             )
+        # Resolve selected annotation type name for editorial annotations
+        selected_type_name: Optional[str] = None
+        at = annotation_type_crud.get(db=db, type_id=annotation_type_id)
+        if at:
+            selected_type_name = at.name
+        # Create POS annotations from TEI annotated layer (output_combined style)
+        for ann in tei_annotations:
+            ann_create = AnnotationCreate(
+                text_id=created_text.id,
+                annotation_type="pos",
+                start_position=ann.start_position,
+                end_position=ann.end_position,
+                selected_text=ann.selected_text,
+                label=ann.label,
+                meta=ann.meta,
+            )
+            annotation_crud.create_bulk(
+                db=db, obj_in=ann_create, annotator_id=None
+            )
+        # Create editorial annotations (add, unclear, hi, decoration) with selected type (tei.xml style)
+        if tei_editorial_annotations and selected_type_name:
+            for ann in tei_editorial_annotations:
+                meta = ann.meta or {}
+                if ann.label:
+                    meta["tei_element"] = ann.label
+                ann_create = AnnotationCreate(
+                    text_id=created_text.id,
+                    annotation_type=selected_type_name,
+                    start_position=ann.start_position,
+                    end_position=ann.end_position,
+                    selected_text=ann.selected_text,
+                    label=ann.label,
+                    meta=meta,
+                )
+                annotation_crud.create_bulk(
+                    db=db, obj_in=ann_create, annotator_id=None
+                )
+        # Attach annotation types for frontend filter selection (XML upload only)
+        types_created: List[str] = []
+        if tei_annotations:
+            types_created.append("pos")
+        if tei_editorial_annotations and selected_type_name:
+            if selected_type_name not in types_created:
+                types_created.append(selected_type_name)
+        if types_created:
+            setattr(created_text, "annotation_types_created", types_created)
         return created_text
     except Exception as e:
         raise HTTPException(
@@ -430,7 +516,7 @@ def update_text_status(
 
 
 def delete_text(db: Session, current_user: User, text_id: int) -> None:
-    """Delete text (admin only)."""
+    """Delete text (admin only - hard delete)."""
     text = text_crud.get(db=db, text_id=text_id)
     if not text:
         raise HTTPException(
@@ -438,3 +524,20 @@ def delete_text(db: Session, current_user: User, text_id: int) -> None:
             detail="Text not found",
         )
     text_crud.delete(db=db, text_id=text_id)
+
+
+def soft_delete_my_text(db: Session, current_user: User, text_id: int):
+    """Soft delete a text that the current user uploaded (user only)."""
+    text = text_crud.get(db=db, text_id=text_id)
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Text not found",
+        )
+    if text.uploaded_by != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only delete texts you uploaded",
+        )
+    text_crud.soft_delete(db=db, text_id=text_id)
+    return {"message": "Text deleted successfully"}

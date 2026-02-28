@@ -68,6 +68,7 @@ class TextResponse(TextBase):
     
     id: int
     status: str
+    annotation_types_created: Optional[list] = None  # For upload: types created (e.g. ["pos", "tei_editorial"])
     content: Optional[str] = ""  # Optional for list views
     translation: Optional[str] = None
     annotator_id: Optional[int] = None

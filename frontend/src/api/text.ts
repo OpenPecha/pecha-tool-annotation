@@ -59,9 +59,14 @@ export const textApi = {
     return apiClient.put<TextResponse>(`/texts/${id}/status`, status);
   },
 
-  // Delete text
+  // Delete text (admin only - hard delete)
   deleteText: async (id: number): Promise<void> => {
     return apiClient.delete<void>(`/texts/${id}`);
+  },
+
+  // Soft delete a text that the current user uploaded
+  softDeleteMyText: async (id: number): Promise<{ message: string }> => {
+    return apiClient.delete<{ message: string }>(`/texts/${id}/my-text`);
   },
 
   // Get texts for annotation (status: initialized)

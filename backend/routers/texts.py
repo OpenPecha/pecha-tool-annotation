@@ -281,5 +281,15 @@ def delete_text(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
-    """Delete text - Admin only."""
+    """Delete text - Admin only (hard delete)."""
     texts_controller.delete_text(db, current_user, text_id)
+
+
+@router.delete("/{text_id}/my-text", status_code=200)
+def soft_delete_my_text(
+    text_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Soft delete a text that the current user uploaded. Only uploader can delete."""
+    return texts_controller.soft_delete_my_text(db, current_user, text_id)

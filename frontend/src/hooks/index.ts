@@ -17,6 +17,7 @@ export {
   useUpdateText,
   useUpdateTextStatus,
   useDeleteText,
+  useSoftDeleteMyText,
   useUploadTextFile,
   useStartWork,
   useSkipText,

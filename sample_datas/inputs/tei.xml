@@ -1,0 +1,999 @@
+<?xml version="1.0" encoding="UTF-8"?><TEI xmlns="http://www.tei-c.org/ns/1.0">
+   <teiHeader>
+      <fileDesc>
+         <titleStmt>
+            <title type="main">Corr10_20240702_GT</title>
+         </titleStmt>
+         <publicationStmt>
+            <p>PaganTibet Ground Truth</p>
+         </publicationStmt>
+         <sourceDesc>
+            <bibl>
+            <title type="main">Corr10_20240702_GT</title>
+               <idno type="Transkribus">7287432</idno>
+            </bibl>
+         </sourceDesc>
+      </fileDesc>
+      <profileDesc>
+      </profileDesc>
+   </teiHeader>
+   <facsimile>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_166">
+         <graphic height="2448px" url="75248256.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=BPXIPFJCAXJQCVDREBAZKGAJ" width="3264px"/>
+         <zone points="641,696 2513,696 2513,1016 641,1016" rendition="TextRegion" xml:id="facs_166_tr_1" subtype="Title">
+            <zone points="802,758 2197,758 2197,975 802,975" rendition="Line" xml:id="facs_166_l_1" subtype="Title"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_167">
+         <graphic height="2448px" url="75248171.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=SSYNBRSBMAIRQXKMPFKXEERS" width="3264px"/>
+         <zone points="247,363 3185,363 3185,1284 247,1284" rendition="TextRegion" xml:id="facs_167_r">
+            <zone points="326,271 3029,271 3029,575 326,575" rendition="Line" xml:id="facs_167_l"/>
+            <zone points="396,487 2981,487 2981,692 396,692" rendition="Line" xml:id="facs_167_l_1"/>
+            <zone points="363,590 3018,590 3018,813 363,813" rendition="Line" xml:id="facs_167_l_2"/>
+            <zone points="344,714 3011,714 3011,905 344,905" rendition="Line" xml:id="facs_167_l_3"/>
+            <zone points="300,842 2992,842 2992,1036 300,1036" rendition="Line" xml:id="facs_167_l_4"/>
+         </zone>
+         <zone points="247,1284 3185,1284 3185,2257 247,2257" rendition="TextRegion" xml:id="facs_167_r_1">
+            <zone points="260,1443 3135,1443 3135,1677 260,1677" rendition="Line" xml:id="facs_167_l_5"/>
+            <zone points="234,1586 3102,1586 3102,1795 234,1795" rendition="Line" xml:id="facs_167_l_6"/>
+            <zone points="260,1718 3120,1718 3120,1926 260,1926" rendition="Line" xml:id="facs_167_l_7"/>
+            <zone points="223,1820 3139,1820 3139,2044 223,2044" rendition="Line" xml:id="facs_167_l_8"/>
+            <zone points="264,1948 3102,1948 3102,2179 264,2179" rendition="Line" xml:id="facs_167_l_9"/>
+            <zone points="231,2066 3183,2066 3183,2322 231,2322" rendition="Line" xml:id="facs_167_l_10"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_168">
+         <graphic height="2448px" url="75248258.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=ODSUTAJUKAQORFOPLVVRYDYL" width="3264px"/>
+         <zone points="230,204 3197,204 3197,1170 230,1170" rendition="TextRegion" xml:id="facs_168_r">
+            <zone points="252,113 3125,113 3125,384 252,384" rendition="Line" xml:id="facs_168_l"/>
+            <zone points="311,285 3114,285 3114,490 311,490" rendition="Line" xml:id="facs_168_l_1"/>
+            <zone points="314,395 3092,395 3092,592 314,592" rendition="Line" xml:id="facs_168_l_2"/>
+            <zone points="281,523 3081,523 3081,731 281,731" rendition="Line" xml:id="facs_168_l_3"/>
+            <zone points="303,636 3162,636 3162,822 303,822" rendition="Line" xml:id="facs_168_l_4"/>
+            <zone points="322,760 3187,760 3187,980 322,980" rendition="Line" xml:id="facs_168_l_5"/>
+         </zone>
+         <zone points="230,1170 3197,1170 3197,2127 230,2127" rendition="TextRegion" xml:id="facs_168_r_1">
+            <zone points="219,1287 3151,1287 3151,1539 219,1539" rendition="Line" xml:id="facs_168_l_6"/>
+            <zone points="208,1455 3026,1455 3026,1659 208,1659" rendition="Line" xml:id="facs_168_l_7"/>
+            <zone points="238,1568 3143,1568 3143,1784 238,1784" rendition="Line" xml:id="facs_168_l_8"/>
+            <zone points="238,1692 3125,1692 3125,1915 238,1915" rendition="Line" xml:id="facs_168_l_9"/>
+            <zone points="238,1824 3118,1824 3118,2054 238,2054" rendition="Line" xml:id="facs_168_l_10"/>
+            <zone points="249,1926 3147,1926 3147,2189 249,2189" rendition="Line" xml:id="facs_168_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_169">
+         <graphic height="2448px" url="75248275.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=DZVHWOVNSSYHYPCQNJSPBRWJ" width="3264px"/>
+         <zone points="214,231 3254,231 3254,1192 214,1192" rendition="TextRegion" xml:id="facs_169_r">
+            <zone points="240,140 3179,140 3179,370 240,370" rendition="Line" xml:id="facs_169_l"/>
+            <zone points="275,303 3138,303 3138,506 275,506" rendition="Line" xml:id="facs_169_l_1"/>
+            <zone points="266,425 3094,425 3094,628 266,628" rendition="Line" xml:id="facs_169_l_2"/>
+            <zone points="240,536 3153,536 3153,773 240,773" rendition="Line" xml:id="facs_169_l_3"/>
+            <zone points="270,662 3194,662 3194,898 270,898" rendition="Line" xml:id="facs_169_l_4"/>
+            <zone points="251,773 3205,773 3205,1020 251,1020" rendition="Line" xml:id="facs_169_l_5"/>
+         </zone>
+         <zone points="214,1192 3254,1192 3254,2230 214,2230" rendition="TextRegion" xml:id="facs_169_r_1">
+            <zone points="259,1301 3160,1301 3160,1612 259,1612" rendition="Line" xml:id="facs_169_l_6"/>
+            <zone points="189,1467 3138,1467 3138,1748 189,1748" rendition="Line" xml:id="facs_169_l_7"/>
+            <zone points="248,1619 3090,1619 3090,1896 248,1896" rendition="Line" xml:id="facs_169_l_8"/>
+            <zone points="277,1704 3131,1704 3131,2011 277,2011" rendition="Line" xml:id="facs_169_l_9"/>
+            <zone points="229,1819 3186,1819 3186,2155 229,2155" rendition="Line" xml:id="facs_169_l_10"/>
+            <zone points="270,1941 3253,1941 3253,2292 270,2292" rendition="Line" xml:id="facs_169_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_170">
+         <graphic height="2448px" url="75248313.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=FLRVFXEGXSBVIWHLAIRNWYAY" width="3264px"/>
+         <zone points="226,185 3254,185 3254,1192 226,1192" rendition="TextRegion" xml:id="facs_170_r">
+            <zone points="253,68 3075,68 3075,374 253,374" rendition="Line" xml:id="facs_170_l"/>
+            <zone points="223,261 3060,261 3060,488 223,488" rendition="Line" xml:id="facs_170_l_1"/>
+            <zone points="242,382 3098,382 3098,617 242,617" rendition="Line" xml:id="facs_170_l_2"/>
+            <zone points="235,496 3132,496 3132,738 235,738" rendition="Line" xml:id="facs_170_l_3"/>
+            <zone points="238,628 3117,628 3117,878 238,878" rendition="Line" xml:id="facs_170_l_4"/>
+            <zone points="246,772 3117,772 3117,1006 246,1006" rendition="Line" xml:id="facs_170_l_5"/>
+         </zone>
+         <zone points="226,1192 3254,1192 3254,2208 226,2208" rendition="TextRegion" xml:id="facs_170_r_1">
+            <zone points="223,1328 3215,1328 3215,1581 223,1581" rendition="Line" xml:id="facs_170_l_6"/>
+            <zone points="204,1449 3189,1449 3189,1713 204,1713" rendition="Line" xml:id="facs_170_l_7"/>
+            <zone points="261,1585 3162,1585 3162,1857 261,1857" rendition="Line" xml:id="facs_170_l_8"/>
+            <zone points="238,1691 3189,1691 3189,2005 238,2005" rendition="Line" xml:id="facs_170_l_9"/>
+            <zone points="242,1838 3185,1838 3185,2122 242,2122" rendition="Line" xml:id="facs_170_l_10"/>
+            <zone points="204,1937 3249,1937 3249,2277 204,2277" rendition="Line" xml:id="facs_170_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_171">
+         <graphic height="2448px" url="75248294.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=CYRTAUBQRIJYFNNZJRURJIRF" width="3264px"/>
+         <zone points="256,268 3212,268 3212,1225 256,1225" rendition="TextRegion" xml:id="facs_171_r">
+            <zone points="233,144 3201,144 3201,414 233,414" rendition="Line" xml:id="facs_171_l"/>
+            <zone points="255,347 3175,347 3175,529 255,529" rendition="Line" xml:id="facs_171_l_1"/>
+            <zone points="274,466 3201,466 3201,688 274,688" rendition="Line" xml:id="facs_171_l_2"/>
+            <zone points="270,591 3112,591 3112,780 270,780" rendition="Line" xml:id="facs_171_l_3"/>
+            <zone points="281,702 3179,702 3179,928 281,928" rendition="Line" xml:id="facs_171_l_4"/>
+            <zone points="259,843 3194,843 3194,1065 259,1065" rendition="Line" xml:id="facs_171_l_5"/>
+         </zone>
+         <zone points="256,1225 3212,1225 3212,2279 256,2279" rendition="TextRegion" xml:id="facs_171_r_1">
+            <zone points="340,1364 3175,1364 3175,1656 340,1656" rendition="Line" xml:id="facs_171_l_6"/>
+            <zone points="266,1512 3182,1512 3182,1774 266,1774" rendition="Line" xml:id="facs_171_l_7"/>
+            <zone points="336,1645 3208,1645 3208,1896 336,1896" rendition="Line" xml:id="facs_171_l_8"/>
+            <zone points="336,1778 3157,1778 3157,2055 336,2055" rendition="Line" xml:id="facs_171_l_9"/>
+            <zone points="340,1896 3179,1896 3179,2173 340,2173" rendition="Line" xml:id="facs_171_l_10"/>
+            <zone points="322,2007 3160,2007 3160,2329 322,2329" rendition="Line" xml:id="facs_171_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_172">
+         <graphic height="2448px" url="75248279.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=FISRGAHCOUXCZHGSKTDVESNE" width="3264px"/>
+         <zone points="244,192 3194,192 3194,1162 244,1162" rendition="TextRegion" xml:id="facs_172_r">
+            <zone points="299,106 3108,106 3108,347 299,347" rendition="Line" xml:id="facs_172_l"/>
+            <zone points="303,255 3119,255 3119,460 303,460" rendition="Line" xml:id="facs_172_l_1"/>
+            <zone points="295,372 3111,372 3111,580 295,580" rendition="Line" xml:id="facs_172_l_2"/>
+            <zone points="314,522 3086,522 3086,708 314,708" rendition="Line" xml:id="facs_172_l_3"/>
+            <zone points="317,638 3093,638 3093,824 317,824" rendition="Line" xml:id="facs_172_l_4"/>
+            <zone points="295,762 3137,762 3137,981 295,981" rendition="Line" xml:id="facs_172_l_5"/>
+         </zone>
+         <zone points="244,1162 3194,1162 3194,2158 244,2158" rendition="TextRegion" xml:id="facs_172_r_1">
+            <zone points="263,1335 3151,1335 3151,1568 263,1568" rendition="Line" xml:id="facs_172_l_6"/>
+            <zone points="222,1470 3137,1470 3137,1685 222,1685" rendition="Line" xml:id="facs_172_l_7"/>
+            <zone points="288,1568 3181,1568 3181,1816 288,1816" rendition="Line" xml:id="facs_172_l_8"/>
+            <zone points="255,1736 3192,1736 3192,1944 255,1944" rendition="Line" xml:id="facs_172_l_9"/>
+            <zone points="288,1871 3181,1871 3181,2079 288,2079" rendition="Line" xml:id="facs_172_l_10"/>
+            <zone points="285,1970 3173,1970 3173,2232 285,2232" rendition="Line" xml:id="facs_172_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_173">
+         <graphic height="2448px" url="75248281.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=VFQNGHJHXJVJMYAKFUFRCERY" width="3264px"/>
+         <zone points="173,244 3230,244 3230,1246 173,1246" rendition="TextRegion" xml:id="facs_173_r">
+            <zone points="152,156 3107,156 3107,393 152,393" rendition="Line" xml:id="facs_173_l"/>
+            <zone points="178,319 3085,319 3085,519 178,519" rendition="Line" xml:id="facs_173_l_1"/>
+            <zone points="174,445 3122,445 3122,641 174,641" rendition="Line" xml:id="facs_173_l_2"/>
+            <zone points="178,556 3111,556 3111,756 178,756" rendition="Line" xml:id="facs_173_l_3"/>
+            <zone points="189,701 3051,701 3051,890 189,890" rendition="Line" xml:id="facs_173_l_4"/>
+            <zone points="178,816 3103,816 3103,1060 178,1060" rendition="Line" xml:id="facs_173_l_5"/>
+         </zone>
+         <zone points="173,1246 3230,1246 3230,2207 173,2207" rendition="TextRegion" xml:id="facs_173_r_1">
+            <zone points="293,1331 3181,1331 3181,1602 293,1602" rendition="Line" xml:id="facs_173_l_6"/>
+            <zone points="211,1498 3125,1498 3125,1735 211,1735" rendition="Line" xml:id="facs_173_l_7"/>
+            <zone points="245,1646 3229,1646 3229,1865 245,1865" rendition="Line" xml:id="facs_173_l_8"/>
+            <zone points="256,1754 3166,1754 3166,1998 256,1998" rendition="Line" xml:id="facs_173_l_9"/>
+            <zone points="245,1880 3162,1880 3162,2143 245,2143" rendition="Line" xml:id="facs_173_l_10"/>
+            <zone points="260,1995 3200,1995 3200,2295 260,2295" rendition="Line" xml:id="facs_173_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_174">
+         <graphic height="2448px" url="75043355.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=FUKMFEVRHHTTFEHYIZXBZKNV" width="3264px"/>
+         <zone points="155,272 3188,272 3188,1263 155,1263" rendition="TextRegion" xml:id="facs_174_r">
+            <zone points="162,147 3138,147 3138,421 162,421" rendition="Line" xml:id="facs_174_l"/>
+            <zone points="177,361 3141,361 3141,545 177,545" rendition="Line" xml:id="facs_174_l_1"/>
+            <zone points="173,466 3141,466 3141,676 173,676" rendition="Line" xml:id="facs_174_l_2"/>
+            <zone points="184,609 3179,609 3179,808 184,808" rendition="Line" xml:id="facs_174_l_3"/>
+            <zone points="184,736 3153,736 3153,928 184,928" rendition="Line" xml:id="facs_174_l_4"/>
+            <zone points="173,868 3134,868 3134,1086 173,1086" rendition="Line" xml:id="facs_174_l_5"/>
+         </zone>
+         <zone points="155,1263 3188,1263 3188,2260 155,2260" rendition="TextRegion" xml:id="facs_174_r_1">
+            <zone points="139,1371 3081,1371 3081,1653 139,1653" rendition="Line" xml:id="facs_174_l_6"/>
+            <zone points="135,1499 3134,1499 3134,1792 135,1792" rendition="Line" xml:id="facs_174_l_7"/>
+            <zone points="169,1676 3126,1676 3126,1916 169,1916" rendition="Line" xml:id="facs_174_l_8"/>
+            <zone points="150,1792 3130,1792 3130,2048 150,2048" rendition="Line" xml:id="facs_174_l_9"/>
+            <zone points="154,1886 3145,1886 3145,2172 154,2172" rendition="Line" xml:id="facs_174_l_10"/>
+            <zone points="132,2029 3156,2029 3156,2333 132,2333" rendition="Line" xml:id="facs_174_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_175">
+         <graphic height="2448px" url="75043356.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=BDPFDOFDYGNCALAQRUNBILAM" width="3264px"/>
+         <zone points="158,200 3206,200 3206,1204 158,1204" rendition="TextRegion" xml:id="facs_175_r">
+            <zone points="139,124 3116,124 3116,367 139,367" rendition="Line" xml:id="facs_175_l"/>
+            <zone points="154,277 3123,277 3123,506 154,506" rendition="Line" xml:id="facs_175_l_1"/>
+            <zone points="154,404 3120,404 3120,637 154,637" rendition="Line" xml:id="facs_175_l_2"/>
+            <zone points="165,536 3142,536 3142,764 165,764" rendition="Line" xml:id="facs_175_l_3"/>
+            <zone points="146,659 3090,659 3090,895 146,895" rendition="Line" xml:id="facs_175_l_4"/>
+            <zone points="154,779 3123,779 3123,1056 154,1056" rendition="Line" xml:id="facs_175_l_5"/>
+         </zone>
+         <zone points="158,1204 3206,1204 3206,2120 158,2120" rendition="TextRegion" xml:id="facs_175_r_1">
+            <zone points="142,1296 3138,1296 3138,1524 142,1524" rendition="Line" xml:id="facs_175_l_6"/>
+            <zone points="139,1431 3138,1431 3138,1667 139,1667" rendition="Line" xml:id="facs_175_l_7"/>
+            <zone points="184,1595 3150,1595 3150,1790 184,1790" rendition="Line" xml:id="facs_175_l_8"/>
+            <zone points="154,1719 3116,1719 3116,1906 154,1906" rendition="Line" xml:id="facs_175_l_9"/>
+            <zone points="180,1850 3135,1850 3135,2030 180,2030" rendition="Line" xml:id="facs_175_l_10"/>
+            <zone points="191,1966 3202,1966 3202,2183 191,2183" rendition="Line" xml:id="facs_175_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_176">
+         <graphic height="2448px" url="75043336.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=HGVUTMEWJOUJHSARAOUAOSOO" width="3264px"/>
+         <zone points="170,268 3152,268 3152,1242 170,1242" rendition="TextRegion" xml:id="facs_176_r">
+            <zone points="170,170 3111,170 3111,414 170,414" rendition="Line" xml:id="facs_176_l"/>
+            <zone points="177,355 3130,355 3130,551 177,551" rendition="Line" xml:id="facs_176_l_1"/>
+            <zone points="181,473 3096,473 3096,680 181,680" rendition="Line" xml:id="facs_176_l_2"/>
+            <zone points="151,599 3096,599 3096,802 151,802" rendition="Line" xml:id="facs_176_l_3"/>
+            <zone points="177,721 3148,721 3148,916 177,916" rendition="Line" xml:id="facs_176_l_4"/>
+            <zone points="166,846 3126,846 3126,1083 166,1083" rendition="Line" xml:id="facs_176_l_5"/>
+         </zone>
+         <zone points="170,1242 3152,1242 3152,2183 170,2183" rendition="TextRegion" xml:id="facs_176_r_1">
+            <zone points="240,1356 3137,1356 3137,1604 240,1604" rendition="Line" xml:id="facs_176_l_6"/>
+            <zone points="159,1537 3133,1537 3133,1748 159,1748" rendition="Line" xml:id="facs_176_l_7"/>
+            <zone points="255,1629 3082,1629 3082,1859 255,1859" rendition="Line" xml:id="facs_176_l_8"/>
+            <zone points="244,1751 3104,1751 3104,1977 244,1977" rendition="Line" xml:id="facs_176_l_9"/>
+            <zone points="225,1870 3115,1870 3115,2091 225,2091" rendition="Line" xml:id="facs_176_l_10"/>
+            <zone points="222,1995 3144,1995 3144,2235 222,2235" rendition="Line" xml:id="facs_176_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_177">
+         <graphic height="2448px" url="75043337.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=YZSCJFISWRRFYMGMMXBMRTXP" width="3264px"/>
+         <zone points="167,225 3182,225 3182,1217 167,1217" rendition="TextRegion" xml:id="facs_177_r">
+            <zone points="146,131 3163,131 3163,386 146,386" rendition="Line" xml:id="facs_177_l"/>
+            <zone points="161,300 3170,300 3170,532 161,532" rendition="Line" xml:id="facs_177_l_1"/>
+            <zone points="157,431 3114,431 3114,633 157,633" rendition="Line" xml:id="facs_177_l_2"/>
+            <zone points="176,562 3144,562 3144,768 176,768" rendition="Line" xml:id="facs_177_l_3"/>
+            <zone points="184,686 3103,686 3103,884 184,884" rendition="Line" xml:id="facs_177_l_4"/>
+            <zone points="184,809 3167,809 3167,1016 184,1016" rendition="Line" xml:id="facs_177_l_5"/>
+         </zone>
+         <zone points="167,1217 3182,1217 3182,2159 167,2159" rendition="TextRegion" xml:id="facs_177_r_1">
+            <zone points="240,1323 3170,1323 3170,1574 240,1574" rendition="Line" xml:id="facs_177_l_6"/>
+            <zone points="172,1473 3178,1473 3178,1701 172,1701" rendition="Line" xml:id="facs_177_l_7"/>
+            <zone points="255,1589 3148,1589 3148,1829 255,1829" rendition="Line" xml:id="facs_177_l_8"/>
+            <zone points="184,1690 3148,1690 3148,1952 184,1952" rendition="Line" xml:id="facs_177_l_9"/>
+            <zone points="255,1851 3140,1851 3140,2065 255,2065" rendition="Line" xml:id="facs_177_l_10"/>
+            <zone points="236,1952 3170,1952 3170,2237 236,2237" rendition="Line" xml:id="facs_177_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_178">
+         <graphic height="2448px" url="75043307.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=HUZDJTBAASSUTGHXISQNANSM" width="3264px"/>
+         <zone points="128,171 3140,171 3140,1179 128,1179" rendition="TextRegion" xml:id="facs_178_r">
+            <zone points="109,79 3097,79 3097,335 109,335" rendition="Line" xml:id="facs_178_l"/>
+            <zone points="128,256 3060,256 3060,455 128,455" rendition="Line" xml:id="facs_178_l_1"/>
+            <zone points="124,361 3108,361 3108,579 124,579" rendition="Line" xml:id="facs_178_l_2"/>
+            <zone points="154,511 3063,511 3063,718 154,718" rendition="Line" xml:id="facs_178_l_3"/>
+            <zone points="135,639 3105,639 3105,838 135,838" rendition="Line" xml:id="facs_178_l_4"/>
+            <zone points="124,767 3090,767 3090,989 124,989" rendition="Line" xml:id="facs_178_l_5"/>
+         </zone>
+         <zone points="128,1179 3140,1179 3140,2089 128,2089" rendition="TextRegion" xml:id="facs_178_r_1">
+            <zone points="158,1289 3116,1289 3116,1504 158,1504" rendition="Line" xml:id="facs_178_l_6"/>
+            <zone points="109,1417 3127,1417 3127,1635 109,1635" rendition="Line" xml:id="facs_178_l_7"/>
+            <zone points="192,1541 3093,1541 3093,1755 192,1755" rendition="Line" xml:id="facs_178_l_8"/>
+            <zone points="199,1661 3135,1661 3135,1902 199,1902" rendition="Line" xml:id="facs_178_l_9"/>
+            <zone points="222,1800 3105,1800 3105,2011 222,2011" rendition="Line" xml:id="facs_178_l_10"/>
+            <zone points="222,1917 3082,1917 3082,2158 222,2158" rendition="Line" xml:id="facs_178_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_179">
+         <graphic height="2448px" url="75043308.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=ZJXFXASCAGXBTHPXHZMSCHKC" width="3264px"/>
+         <zone points="122,269 3155,269 3155,1242 122,1242" rendition="TextRegion" xml:id="facs_179_r">
+            <zone points="124,147 3088,147 3088,430 124,430" rendition="Line" xml:id="facs_179_l"/>
+            <zone points="109,313 3140,313 3140,550 109,550" rendition="Line" xml:id="facs_179_l_1"/>
+            <zone points="106,467 3110,467 3110,671 106,671" rendition="Line" xml:id="facs_179_l_2"/>
+            <zone points="136,603 3080,603 3080,807 136,807" rendition="Line" xml:id="facs_179_l_3"/>
+            <zone points="121,743 3144,743 3144,950 121,950" rendition="Line" xml:id="facs_179_l_4"/>
+            <zone points="106,860 3103,860 3103,1090 106,1090" rendition="Line" xml:id="facs_179_l_5"/>
+         </zone>
+         <zone points="122,1242 3155,1242 3155,2211 122,2211" rendition="TextRegion" xml:id="facs_179_r_1">
+            <zone points="109,1365 3084,1365 3084,1632 109,1632" rendition="Line" xml:id="facs_179_l_6"/>
+            <zone points="102,1538 3050,1538 3050,1746 102,1746" rendition="Line" xml:id="facs_179_l_7"/>
+            <zone points="121,1689 2993,1689 2993,1866 121,1866" rendition="Line" xml:id="facs_179_l_8"/>
+            <zone points="106,1798 3008,1798 3008,2002 106,2002" rendition="Line" xml:id="facs_179_l_9"/>
+            <zone points="143,1926 3054,1926 3054,2130 143,2130" rendition="Line" xml:id="facs_179_l_10"/>
+            <zone points="136,2024 3099,2024 3099,2273 136,2273" rendition="Line" xml:id="facs_179_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_180">
+         <graphic height="2448px" url="75043369.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=WPYRJVNTPEQFJQCKGUPJXACS" width="3264px"/>
+         <zone points="83,193 3188,193 3188,1196 83,1196" rendition="TextRegion" xml:id="facs_180_r">
+            <zone points="139,112 3157,112 3157,379 139,379" rendition="Line" xml:id="facs_180_l"/>
+            <zone points="128,282 3149,282 3149,506 128,506" rendition="Line" xml:id="facs_180_l_1"/>
+            <zone points="131,417 3145,417 3145,626 131,626" rendition="Line" xml:id="facs_180_l_2"/>
+            <zone points="162,545 3145,545 3145,757 162,757" rendition="Line" xml:id="facs_180_l_3"/>
+            <zone points="155,672 3145,672 3145,889 155,889" rendition="Line" xml:id="facs_180_l_4"/>
+            <zone points="147,796 3184,796 3184,1063 147,1063" rendition="Line" xml:id="facs_180_l_5"/>
+         </zone>
+         <zone points="83,1196 3188,1196 3188,2218 83,2218" rendition="TextRegion" xml:id="facs_180_r_1">
+            <zone points="70,1294 3141,1294 3141,1611 70,1611" rendition="Line" xml:id="facs_180_l_6"/>
+            <zone points="66,1526 3099,1526 3099,1750 66,1750" rendition="Line" xml:id="facs_180_l_7"/>
+            <zone points="93,1642 3134,1642 3134,1870 93,1870" rendition="Line" xml:id="facs_180_l_8"/>
+            <zone points="62,1770 3164,1770 3164,1994 62,1994" rendition="Line" xml:id="facs_180_l_9"/>
+            <zone points="108,1886 3149,1886 3149,2117 108,2117" rendition="Line" xml:id="facs_180_l_10"/>
+            <zone points="85,2021 3168,2021 3168,2283 85,2283" rendition="Line" xml:id="facs_180_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_181">
+         <graphic height="2448px" url="75043357.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=SIBRKOQCZETZNDDJYOXJJNEA" width="3264px"/>
+         <zone points="74,184 3206,184 3206,1175 74,1175" rendition="TextRegion" xml:id="facs_181_r">
+            <zone points="132,109 3156,109 3156,373 132,373" rendition="Line" xml:id="facs_181_l"/>
+            <zone points="140,268 3117,268 3117,482 140,482" rendition="Line" xml:id="facs_181_l_1"/>
+            <zone points="144,408 3140,408 3140,610 144,610" rendition="Line" xml:id="facs_181_l_2"/>
+            <zone points="128,529 3136,529 3136,731 128,731" rendition="Line" xml:id="facs_181_l_3"/>
+            <zone points="144,668 3121,668 3121,882 144,882" rendition="Line" xml:id="facs_181_l_4"/>
+            <zone points="101,789 3175,789 3175,1026 101,1026" rendition="Line" xml:id="facs_181_l_5"/>
+         </zone>
+         <zone points="74,1175 3206,1175 3206,2164 74,2164" rendition="TextRegion" xml:id="facs_181_r_1">
+            <zone points="124,1286 3125,1286 3125,1562 124,1562" rendition="Line" xml:id="facs_181_l_6"/>
+            <zone points="54,1465 3121,1465 3121,1687 54,1687" rendition="Line" xml:id="facs_181_l_7"/>
+            <zone points="163,1605 3121,1605 3121,1811 163,1811" rendition="Line" xml:id="facs_181_l_8"/>
+            <zone points="117,1737 3136,1737 3136,1955 117,1955" rendition="Line" xml:id="facs_181_l_9"/>
+            <zone points="132,1869 3160,1869 3160,2079 132,2079" rendition="Line" xml:id="facs_181_l_10"/>
+            <zone points="78,1990 3194,1990 3194,2242 78,2242" rendition="Line" xml:id="facs_181_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_182">
+         <graphic height="2448px" url="75043358.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=RBIBNLLNHSCEMMACEPTWHOCH" width="3264px"/>
+         <zone points="98,161 3248,161 3248,1141 98,1141" rendition="TextRegion" xml:id="facs_182_r">
+            <zone points="101,39 3198,39 3198,327 101,327" rendition="Line" xml:id="facs_182_l"/>
+            <zone points="105,237 3198,237 3198,440 105,440" rendition="Line" xml:id="facs_182_l_1"/>
+            <zone points="113,370 3143,370 3143,580 113,580" rendition="Line" xml:id="facs_182_l_2"/>
+            <zone points="105,494 3178,494 3178,704 105,704" rendition="Line" xml:id="facs_182_l_3"/>
+            <zone points="117,634 3236,634 3236,840 117,840" rendition="Line" xml:id="facs_182_l_4"/>
+            <zone points="117,778 3205,778 3205,992 117,992" rendition="Line" xml:id="facs_182_l_5"/>
+         </zone>
+         <zone points="98,1141 3248,1141 3248,2197 98,2197" rendition="TextRegion" xml:id="facs_182_r_1">
+            <zone points="89,1326 3186,1326 3186,1572 89,1572" rendition="Line" xml:id="facs_182_l_6"/>
+            <zone points="78,1486 3166,1486 3166,1708 78,1708" rendition="Line" xml:id="facs_182_l_7"/>
+            <zone points="124,1638 3178,1638 3178,1832 124,1832" rendition="Line" xml:id="facs_182_l_8"/>
+            <zone points="121,1762 3190,1762 3190,1972 121,1972" rendition="Line" xml:id="facs_182_l_9"/>
+            <zone points="140,1906 3155,1906 3155,2104 140,2104" rendition="Line" xml:id="facs_182_l_10"/>
+            <zone points="132,2031 3194,2031 3194,2264 132,2264" rendition="Line" xml:id="facs_182_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_183">
+         <graphic height="2448px" url="75043370.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=IBEKBEHPGZMJUYJIYNHUZASU" width="3264px"/>
+         <zone points="179,162 3185,162 3185,1141 179,1141" rendition="TextRegion" xml:id="facs_183_r">
+            <zone points="189,22 3123,22 3123,366 189,366" rendition="Line" xml:id="facs_183_l"/>
+            <zone points="196,240 3160,240 3160,492 196,492" rendition="Line" xml:id="facs_183_l_1"/>
+            <zone points="189,373 3116,373 3116,599 189,599" rendition="Line" xml:id="facs_183_l_2"/>
+            <zone points="200,484 3112,484 3112,754 200,754" rendition="Line" xml:id="facs_183_l_3"/>
+            <zone points="200,639 3109,639 3109,854 200,854" rendition="Line" xml:id="facs_183_l_4"/>
+            <zone points="185,750 3105,750 3105,1024 185,1024" rendition="Line" xml:id="facs_183_l_5"/>
+         </zone>
+         <zone points="143,1141 3228,1141 3228,2257 143,2257" rendition="TextRegion" xml:id="facs_183_r_1">
+            <zone points="237,1220 3160,1220 3160,1534 237,1534" rendition="Line" xml:id="facs_183_l_6"/>
+            <zone points="159,1438 3123,1438 3123,1649 159,1649" rendition="Line" xml:id="facs_183_l_7"/>
+            <zone points="259,1589 3138,1589 3138,1785 259,1785" rendition="Line" xml:id="facs_183_l_8"/>
+            <zone points="222,1678 3120,1678 3120,1922 222,1922" rendition="Line" xml:id="facs_183_l_9"/>
+            <zone points="255,1844 3153,1844 3153,2029 255,2029" rendition="Line" xml:id="facs_183_l_10"/>
+            <zone points="207,1952 3179,1952 3179,2177 207,2177" rendition="Line" xml:id="facs_183_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_184">
+         <graphic height="2448px" url="75043359.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=IFOIXQAQAPTDXOLAKTGIRIPS" width="3264px"/>
+         <zone points="89,213 3179,213 3179,1200 89,1200" rendition="TextRegion" xml:id="facs_184_r">
+            <zone points="73,107 3105,107 3105,376 73,376" rendition="Line" xml:id="facs_184_l"/>
+            <zone points="96,295 3078,295 3078,495 96,495" rendition="Line" xml:id="facs_184_l_1"/>
+            <zone points="96,430 3093,430 3093,641 96,641" rendition="Line" xml:id="facs_184_l_2"/>
+            <zone points="84,545 3120,545 3120,791 84,791" rendition="Line" xml:id="facs_184_l_3"/>
+            <zone points="92,683 3089,683 3089,894 92,894" rendition="Line" xml:id="facs_184_l_4"/>
+            <zone points="88,829 3170,829 3170,1074 88,1074" rendition="Line" xml:id="facs_184_l_5"/>
+         </zone>
+         <zone points="75,1200 3205,1200 3205,2402 75,2402" rendition="TextRegion" xml:id="facs_184_r_1">
+            <zone points="127,1385 3139,1385 3139,1616 127,1616" rendition="Line" xml:id="facs_184_l_6"/>
+            <zone points="65,1493 3151,1493 3151,1777 65,1777" rendition="Line" xml:id="facs_184_l_7"/>
+            <zone points="154,1650 3128,1650 3128,1900 154,1900" rendition="Line" xml:id="facs_184_l_8"/>
+            <zone points="107,1784 3128,1784 3128,2019 107,2019" rendition="Line" xml:id="facs_184_l_9"/>
+            <zone points="173,1892 3124,1892 3124,2172 173,2172" rendition="Line" xml:id="facs_184_l_10"/>
+            <zone points="203,2061 3147,2061 3147,2326 203,2326" rendition="Line" xml:id="facs_184_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_185">
+         <graphic height="2448px" url="75248134.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=XVWMYTVTZLFDOVBMFPNHELOQ" width="3264px"/>
+         <zone points="104,241 3203,241 3203,1246 104,1246" rendition="TextRegion" xml:id="facs_185_r">
+            <zone points="85,147 3169,147 3169,401 85,401" rendition="Line" xml:id="facs_185_l"/>
+            <zone points="77,313 3096,313 3096,540 77,540" rendition="Line" xml:id="facs_185_l_1"/>
+            <zone points="96,444 3076,444 3076,664 96,664" rendition="Line" xml:id="facs_185_l_2"/>
+            <zone points="93,583 3127,583 3127,791 93,791" rendition="Line" xml:id="facs_185_l_3"/>
+            <zone points="89,710 3100,710 3100,938 89,938" rendition="Line" xml:id="facs_185_l_4"/>
+            <zone points="96,857 3192,857 3192,1089 96,1089" rendition="Line" xml:id="facs_185_l_5"/>
+         </zone>
+         <zone points="95,1246 3224,1246 3224,2363 95,2363" rendition="TextRegion" xml:id="facs_185_r_1">
+            <zone points="151,1297 3154,1297 3154,1664 151,1664" rendition="Line" xml:id="facs_185_l_6"/>
+            <zone points="174,1509 3154,1509 3154,1806 174,1806" rendition="Line" xml:id="facs_185_l_7"/>
+            <zone points="166,1640 3177,1640 3177,1934 166,1934" rendition="Line" xml:id="facs_185_l_8"/>
+            <zone points="151,1772 3154,1772 3154,2050 151,2050" rendition="Line" xml:id="facs_185_l_9"/>
+            <zone points="185,1899 3157,1899 3157,2181 185,2181" rendition="Line" xml:id="facs_185_l_10"/>
+            <zone points="220,2034 3161,2034 3161,2320 220,2320" rendition="Line" xml:id="facs_185_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_186">
+         <graphic height="2448px" url="75248135.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=CJDWVRLSGVWWUPKMYYDCRAPH" width="3264px"/>
+         <zone points="149,232 3215,232 3215,1260 149,1260" rendition="TextRegion" xml:id="facs_186_r">
+            <zone points="141,148 3085,148 3085,396 141,396" rendition="Line" xml:id="facs_186_l"/>
+            <zone points="152,297 3123,297 3123,525 152,525" rendition="Line" xml:id="facs_186_l_1"/>
+            <zone points="164,460 3100,460 3100,650 164,650" rendition="Line" xml:id="facs_186_l_2"/>
+            <zone points="175,582 3111,582 3111,787 175,787" rendition="Line" xml:id="facs_186_l_3"/>
+            <zone points="148,704 3134,704 3134,917 148,917" rendition="Line" xml:id="facs_186_l_4"/>
+            <zone points="152,833 3108,833 3108,1061 152,1061" rendition="Line" xml:id="facs_186_l_5"/>
+         </zone>
+         <zone points="149,1260 3215,1260 3215,2269 149,2269" rendition="TextRegion" xml:id="facs_186_r_1">
+            <zone points="198,1381 3161,1381 3161,1670 198,1670" rendition="Line" xml:id="facs_186_l_6"/>
+            <zone points="129,1556 3180,1556 3180,1803 129,1803" rendition="Line" xml:id="facs_186_l_7"/>
+            <zone points="221,1712 3157,1712 3157,1921 221,1921" rendition="Line" xml:id="facs_186_l_8"/>
+            <zone points="209,1822 3119,1822 3119,2050 209,2050" rendition="Line" xml:id="facs_186_l_9"/>
+            <zone points="205,1948 3146,1948 3146,2180 205,2180" rendition="Line" xml:id="facs_186_l_10"/>
+            <zone points="221,2073 3210,2073 3210,2324 221,2324" rendition="Line" xml:id="facs_186_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_187">
+         <graphic height="2448px" url="75248136.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=OGCOGIAIBBSRLWMWDNMJBFGD" width="3264px"/>
+         <zone points="173,154 3200,154 3200,1241 173,1241" rendition="TextRegion" xml:id="facs_187_r">
+            <zone points="178,174 3168,174 3168,449 178,449" rendition="Line" xml:id="facs_187_l"/>
+            <zone points="200,319 3113,319 3113,560 200,560" rendition="Line" xml:id="facs_187_l_1"/>
+            <zone points="197,430 3139,430 3139,686 197,686" rendition="Line" xml:id="facs_187_l_2"/>
+            <zone points="204,571 3109,571 3109,787 204,787" rendition="Line" xml:id="facs_187_l_3"/>
+            <zone points="197,697 3142,697 3142,935 197,935" rendition="Line" xml:id="facs_187_l_4"/>
+            <zone points="197,816 3150,816 3150,1102 197,1102" rendition="Line" xml:id="facs_187_l_5"/>
+         </zone>
+         <zone points="161,1241 3170,1241 3170,2312 161,2312" rendition="TextRegion" xml:id="facs_187_r_1">
+            <zone points="189,1306 3139,1306 3139,1610 189,1610" rendition="Line" xml:id="facs_187_l_6"/>
+            <zone points="148,1491 3064,1491 3064,1751 148,1751" rendition="Line" xml:id="facs_187_l_7"/>
+            <zone points="241,1614 3113,1614 3113,1870 241,1870" rendition="Line" xml:id="facs_187_l_8"/>
+            <zone points="200,1747 3102,1747 3102,1985 200,1985" rendition="Line" xml:id="facs_187_l_9"/>
+            <zone points="249,1866 3116,1866 3116,2122 249,2122" rendition="Line" xml:id="facs_187_l_10"/>
+            <zone points="230,1992 3098,1992 3098,2267 230,2267" rendition="Line" xml:id="facs_187_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_188">
+         <graphic height="2448px" url="75248075.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=FMTXBSENLZGVFJTDRDDXXFGP" width="3264px"/>
+         <zone points="134,320 3185,320 3185,1289 134,1289" rendition="TextRegion" xml:id="facs_188_r">
+            <zone points="208,212 3077,212 3077,476 208,476" rendition="Line" xml:id="facs_188_l"/>
+            <zone points="216,409 3085,409 3085,610 216,610" rendition="Line" xml:id="facs_188_l_1"/>
+            <zone points="216,532 3174,532 3174,729 216,729" rendition="Line" xml:id="facs_188_l_2"/>
+            <zone points="220,636 3148,636 3148,845 220,845" rendition="Line" xml:id="facs_188_l_3"/>
+            <zone points="216,778 3133,778 3133,982 216,982" rendition="Line" xml:id="facs_188_l_4"/>
+            <zone points="216,912 3167,912 3167,1154 216,1154" rendition="Line" xml:id="facs_188_l_5"/>
+         </zone>
+         <zone points="134,1289 3185,1289 3185,2213 134,2213" rendition="TextRegion" xml:id="facs_188_r_1">
+            <zone points="138,1392 3100,1392 3100,1626 138,1626" rendition="Line" xml:id="facs_188_l_6"/>
+            <zone points="115,1541 3100,1541 3100,1768 115,1768" rendition="Line" xml:id="facs_188_l_7"/>
+            <zone points="182,1641 3104,1641 3104,1879 182,1879" rendition="Line" xml:id="facs_188_l_8"/>
+            <zone points="179,1764 3130,1764 3130,2002 179,2002" rendition="Line" xml:id="facs_188_l_9"/>
+            <zone points="186,1916 3100,1916 3100,2140 186,2140" rendition="Line" xml:id="facs_188_l_10"/>
+            <zone points="164,2024 3104,2024 3104,2285 164,2285" rendition="Line" xml:id="facs_188_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_189">
+         <graphic height="2448px" url="75248077.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=FPNGKKECMMLBUJWVVRNAXKVT" width="3264px"/>
+         <zone points="143,306 3152,306 3152,1234 143,1234" rendition="TextRegion" xml:id="facs_189_r">
+            <zone points="162,210 3127,210 3127,457 162,457" rendition="Line" xml:id="facs_189_l"/>
+            <zone points="192,380 3142,380 3142,583 192,583" rendition="Line" xml:id="facs_189_l_1"/>
+            <zone points="195,509 3086,509 3086,704 195,704" rendition="Line" xml:id="facs_189_l_2"/>
+            <zone points="192,645 3127,645 3127,833 192,833" rendition="Line" xml:id="facs_189_l_3"/>
+            <zone points="177,756 3075,756 3075,966 177,966" rendition="Line" xml:id="facs_189_l_4"/>
+            <zone points="173,900 3123,900 3123,1117 173,1117" rendition="Line" xml:id="facs_189_l_5"/>
+         </zone>
+         <zone points="143,1234 3152,1234 3152,2183 143,2183" rendition="TextRegion" xml:id="facs_189_r_1">
+            <zone points="170,1328 3079,1328 3079,1600 170,1600" rendition="Line" xml:id="facs_189_l_6"/>
+            <zone points="118,1464 3072,1464 3072,1744 118,1744" rendition="Line" xml:id="facs_189_l_7"/>
+            <zone points="195,1604 3083,1604 3083,1877 195,1877" rendition="Line" xml:id="facs_189_l_8"/>
+            <zone points="221,1722 3079,1722 3079,1988 221,1988" rendition="Line" xml:id="facs_189_l_9"/>
+            <zone points="203,1836 3075,1836 3075,2098 203,2098" rendition="Line" xml:id="facs_189_l_10"/>
+            <zone points="151,1962 3112,1962 3112,2253 151,2253" rendition="Line" xml:id="facs_189_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_190">
+         <graphic height="2448px" url="75248137.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=XRJXYNXMSEWZBCXENEFWURYS" width="3264px"/>
+         <zone points="128,267 3137,267 3137,1230 128,1230" rendition="TextRegion" xml:id="facs_190_r">
+            <zone points="145,197 3131,197 3131,430 145,430" rendition="Line" xml:id="facs_190_l"/>
+            <zone points="148,341 3116,341 3116,549 148,549" rendition="Line" xml:id="facs_190_l_1"/>
+            <zone points="167,471 3076,471 3076,672 167,672" rendition="Line" xml:id="facs_190_l_2"/>
+            <zone points="145,605 3057,605 3057,798 145,798" rendition="Line" xml:id="facs_190_l_3"/>
+            <zone points="152,735 3090,735 3090,928 152,928" rendition="Line" xml:id="facs_190_l_4"/>
+            <zone points="152,864 3090,864 3090,1068 152,1068" rendition="Line" xml:id="facs_190_l_5"/>
+         </zone>
+         <zone points="128,1230 3137,1230 3137,2208 128,2208" rendition="TextRegion" xml:id="facs_190_r_1">
+            <zone points="156,1373 3113,1373 3113,1621 156,1621" rendition="Line" xml:id="facs_190_l_6"/>
+            <zone points="108,1532 3076,1532 3076,1759 108,1759" rendition="Line" xml:id="facs_190_l_7"/>
+            <zone points="193,1655 3068,1655 3068,1877 193,1877" rendition="Line" xml:id="facs_190_l_8"/>
+            <zone points="193,1792 3105,1792 3105,2011 193,2011" rendition="Line" xml:id="facs_190_l_9"/>
+            <zone points="182,1929 3113,1929 3113,2130 182,2130" rendition="Line" xml:id="facs_190_l_10"/>
+            <zone points="189,2037 3131,2037 3131,2274 189,2274" rendition="Line" xml:id="facs_190_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_191">
+         <graphic height="2448px" url="75248078.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=UQSWGVEWOJJYCYNOCOIVRJOU" width="3264px"/>
+         <zone points="101,229 3146,229 3146,1225 101,1225" rendition="TextRegion" xml:id="facs_191_r">
+            <zone points="134,141 3098,141 3098,412 134,412" rendition="Line" xml:id="facs_191_l"/>
+            <zone points="163,304 3135,304 3135,560 163,560" rendition="Line" xml:id="facs_191_l_1"/>
+            <zone points="174,427 3135,427 3135,697 174,697" rendition="Line" xml:id="facs_191_l_2"/>
+            <zone points="200,556 3061,556 3061,809 200,809" rendition="Line" xml:id="facs_191_l_3"/>
+            <zone points="163,697 3135,697 3135,950 163,950" rendition="Line" xml:id="facs_191_l_4"/>
+            <zone points="160,809 3079,809 3079,1083 160,1083" rendition="Line" xml:id="facs_191_l_5"/>
+         </zone>
+         <zone points="101,1225 3146,1225 3146,2218 101,2218" rendition="TextRegion" xml:id="facs_191_r_1">
+            <zone points="85,1380 3068,1380 3068,1625 85,1625" rendition="Line" xml:id="facs_191_l_6"/>
+            <zone points="82,1543 3020,1543 3020,1766 82,1766" rendition="Line" xml:id="facs_191_l_7"/>
+            <zone points="163,1673 3024,1673 3024,1874 163,1874" rendition="Line" xml:id="facs_191_l_8"/>
+            <zone points="156,1796 3046,1796 3046,2007 156,2007" rendition="Line" xml:id="facs_191_l_9"/>
+            <zone points="156,1933 2961,1933 2961,2130 156,2130" rendition="Line" xml:id="facs_191_l_10"/>
+            <zone points="152,2055 3038,2055 3038,2289 152,2289" rendition="Line" xml:id="facs_191_l_11"/>
+         </zone>
+      </surface>
+      <surface lrx="3264" lry="2448" ulx="0" uly="0" xml:id="facs_192">
+         <graphic height="2448px" url="75248079.jpg" width="3264px"/>
+         <graphic height="2448px" url="https://files.transkribus.eu/Get?fileType=view&amp;id=JLLUFXOMYNXBMEKPCZAASXRG" width="3264px"/>
+         <zone points="164,195 3263,195 3263,1238 164,1238" rendition="TextRegion" xml:id="facs_192_r">
+            <zone points="266,123 3258,123 3258,404 266,404" rendition="Line" xml:id="facs_192_l"/>
+            <zone points="288,284 3179,284 3179,542 288,542" rendition="Line" xml:id="facs_192_l_1"/>
+            <zone points="314,411 3183,411 3183,632 314,632" rendition="Line" xml:id="facs_192_l_2"/>
+            <zone points="303,520 3198,520 3198,782 303,782" rendition="Line" xml:id="facs_192_l_3"/>
+            <zone points="307,658 3209,658 3209,905 307,905" rendition="Line" xml:id="facs_192_l_4"/>
+            <zone points="314,812 3254,812 3254,1070 314,1070" rendition="Line" xml:id="facs_192_l_5"/>
+         </zone>
+         <zone points="164,1238 3263,1238 3263,2206 164,2206" rendition="TextRegion" xml:id="facs_192_r_1">
+            <zone points="232,1328 3224,1328 3224,1601 232,1601" rendition="Line" xml:id="facs_192_l_6"/>
+            <zone points="138,1462 3153,1462 3153,1735 138,1735" rendition="Line" xml:id="facs_192_l_7"/>
+            <zone points="243,1608 3086,1608 3086,1870 243,1870" rendition="Line" xml:id="facs_192_l_8"/>
+            <zone points="217,1769 3183,1769 3183,1993 217,1993" rendition="Line" xml:id="facs_192_l_9"/>
+            <zone points="243,1889 3172,1889 3172,2109 243,2109" rendition="Line" xml:id="facs_192_l_10"/>
+            <zone points="243,1993 3138,1993 3138,2263 243,2263" rendition="Line" xml:id="facs_192_l_11"/>
+         </zone>
+      </surface>
+   </facsimile>
+   <text>
+      <body>
+         <div>
+            <pb facs="#facs_166" n="166" xml:id="img_0166"/>
+            <ab facs="#facs_166_tr_1" type="Title">
+               <lb facs="#facs_166_l_1" n="N001"/>།།བྱ་རྡང་གཞུངས་ཆེན་དབུ་བཞུགས་སྷོ།།
+            </ab>
+            <pb facs="#facs_167" n="167" xml:id="img_0167"/>
+            <ab facs="#facs_167_r" type="">
+               <lb facs="#facs_167_l" n="N001"/>༄༅༅།།<decoration>྾྾྾྾྾</decoration>།།བཀའ་རི༹ནི་འདི་ནི།། སྲིད་པའི་བྱ་རྡང་གཞོང་ལ་འདི་སྐད་དོ་།། ཀུ་བསྭོ་ཆེའོ།།
+               <lb facs="#facs_167_l_1" n="N002"/>བསྭོའི་ཡོད་ཁཾས་ལྷ་རྣཾས་བསྭོ་ལ་དཀྱེལ།། སྲིུཾད་ལྷ་བློན་ཀུ་ལ་རྒ།། སྣྲིངད་
+               <lb facs="#facs_167_l_2" n="N003"/>དྱོལ་ཆ་ལ་དཀྱེལ།། སྣང་བ་འོད་ལྡན་བསྭོ་ལ་རྒ།། ཡེ་སྲིད་དྱོལ་ཀུ་ལ་དཀྱེལ
+               <lb facs="#facs_167_l_3" n="N004"/>བསྭོ་ནཾཁའི་ལྷ་རྣཾས་འདུས།། ཀུའི་པརང་ཉྱན་དམག་སྦྲན།། དགྲའོ་རླ་སྐོངས་
+               <lb facs="#facs_167_l_4" n="N005"/>ཆ་སྒྲས་བཙཾ།། བསྭོའི་ལྷ་དམག་མཐུའ་ཡང་བསྐྱེད།། ཀུའི་ཝེཾརའི་དབལ་ངར་
+            </ab>
+            <ab facs="#facs_167_r_1" type="">
+               <lb facs="#facs_167_l_5" n="N001"/>༄༅།། ༸ །།བཏགས།། དགྲ་འདུལ་སྒྲ་བླ་ཆ་ལ་དཀྱེལ། ཀུ་དང་བསྭོ་ལ་ལྷ་
+               <lb facs="#facs_167_l_6" n="N002"/>དམག་འདུས། བསྭོ་སྒྲ་ཆ་སྒྲས་དགྲ་མཁར་བཤིག། ཀུ་ཀུ་བསྭོ་བསྭོ་བྱ་རྡང་བཞེངས།
+               <lb facs="#facs_167_l_7" n="N003"/>ཀུ་དང་བསྭོ་ལ་ཝེཾར་དཀྱེལ། བསྭོའི་སྒྲླའི་དབལ་ཆས་སྱོལ། ཀུའི་དབལ་དམག་ངར་ཡང་
+               <lb facs="#facs_167_l_8" n="N004"/>བསྐྱེད། ཆའི་ས་བདག་གནས་ལས་བཞེངས། བསྭོའི་ཀླུ་དམག་མྱུར་འདུས། ཀུའི་མཚན
+               <lb facs="#facs_167_l_9" n="N005"/>ཆ་རྣོ་ངར་བརྡུངས། ཆ་སྒྲས་ལས་པ་མཐུ་དབང་བསྐྱེད། ཀུ་ལ་ཕྱག་བརྙན་ཕྙོ་འདུས།
+               <lb facs="#facs_167_l_10" n="N006"/>བསྭོ་སྒྲས་དགྲ་ཡུལ་ཕྱག་མས་བཏབ། ཆ་སྒྲའི་བཏབའི་དགྲ་ཡུལ་ཕུང་། ཀུའི་ལྷ་མི་
+            </ab>
+            <pb facs="#facs_168" n="168" xml:id="img_0168"/>
+            <ab facs="#facs_168_r" type="">
+               <lb facs="#facs_168_l" n="N001"/>བརྟེན་ཡང་སྤྲོད། བསྭོ་སྒྲས་བྱ་རྡང་མཐུའ་ཡང་བསྐྱེད། ཆ་སྒྲས་ལྷ་དམག་དགྲ་ལ་དྲོང་། ཀུ་
+               <lb facs="#facs_168_l_1" n="N002"/>སྒྲས་དགྲའོ་དབང་པོ་ཕྲོག། བསྭོའི་བཏབ་པའི་དགྲ་སྲོགཅད། སྲིུཾད་འདུས་པའི་ཡབླ་ན། སྤྱི་
+               <lb facs="#facs_168_l_2" n="N003"/>རྗེ་བྱ་ཁྱུང་བསྭོ་ལ་དཀྱེས། རིབས་ལྷུན་པོར་ཡར་རྩེ་ལ། ལྷའི་དབང་པོ་ཀུ་ལ་རྒ། སྲིུཾད་
+               <lb facs="#facs_168_l_3" n="N004"/>ལྷ་དམག་བསྭོ་ལ་འདུས། གསེར་གྱིས་རི་སྦལ་གདན་སྟེང་ན། ས༹ག་དྱོལ་བསྭོ་ལ་དཀྱེས།
+               <lb facs="#facs_168_l_4" n="N005"/>གཡུའ་ལོ་འཐིང་གི་མཁར་ནང་ན། ཀླུའི་དྱོལ་ཆ་ལ་དཀྱེས། གསེར་འོད་འཁྲིས་པའི་མཁར་
+               <lb facs="#facs_168_l_5" n="N006"/>ནང་ན། གཉན་རྗེ་སྟོོངང་ཀུ་ལ་དགྱེས། སེའོ་སྟེར་ཆེན་གདན་སྟེང་ན། གཏོད་ཀྱི་དྱོལ་བསྭོའི་༤ེངས།
+            </ab>
+            <ab facs="#facs_168_r_1" type="">
+               <lb facs="#facs_168_l_6" n="N001"/>༄༅། །དུང་གིས་ཀྱི་ལིང་གདན་སྟེང་ན། ཕྷོའི་དྱོལ་ཀུ་ལ་དཀྱེས། གསེར་ཀྱིས་
+               <lb facs="#facs_168_l_7" n="N002"/>དྱོལས་མཁརང་ན། དགྲ་འདུལ་སྒྲླ་ཆ་ལ་རྒ། རྣོ་མཚོན་གཤིབས་པའི་ཡར་རྩེ་ལེས།
+               <lb facs="#facs_168_l_8" n="N003"/>གསིངས་དྱོལ་ཀུ༴ གཡྲུག་འབུཾ་གིས་གདན་སྟེང་ན། ཝེཾར་ལྕྲཾལ་བསྭོ་ལ་རྒ། སྤྲིནར་འཐིབས
+               <lb facs="#facs_168_l_9" n="N004"/>མཁརང་ན། དགྲ་འདུལ་དྱོལ་ཀུ༴ རྩངསོ་འབུཾ་གི་མཁར༴ དབལྱི་དྱོལ་ཀུ་དང་བསྭོའི་༤ེངས།
+               <lb facs="#facs_168_l_10" n="N005"/>ཤེལ་འོད་འབར་བའི་མཁར༴ གཡྲུག་དྱོལ་ཀུ་དང་བསྭོའི་བཞེངས། དབལ་སོ་འབྱངསི་མཁར༴
+               <lb facs="#facs_168_l_11" n="N006"/>དྲན་ཆེ་སྟགེན་ཆའི་བཞེངས། རིེན་འོད་ཀྱི་མཁརང་ན། པང་འགྱོཊ་དྱོལ་བསྭོ༴ དུང་གི་འཁོོརའི་
+            </ab>
+            <pb facs="#facs_169" n="169" xml:id="img_0169"/>
+            <ab facs="#facs_169_r" type="">
+               <lb facs="#facs_169_l" n="N001"/>གདན༴ དམགོན་དྱོལ་ཀུའི༴ ཡིདིན་དྲང་ཤིང་རྩོེཾ་ན། གཤོགས་ཐོག་དྱོལ་བསྭོའི༴ ཙྡན་
+               <lb facs="#facs_169_l_1" n="N002"/>སྨུགོས་མཚལ་གླིང་ལས། སྡེར་ཆགས་དྱོལ་ཀུའི་བཞིངས། རིབས་པང་རིཾ་ཕྱོཊ་
+               <lb facs="#facs_169_l_2" n="N003"/>༤་ལས། ཉྱེན་སྡེ་༤་བསྭོའི༴ ཀུ་དང་བསྭོའི་བཏབ་ཙཾ་ན། སྲིུཾད་རྩེ་ལས་ལྷ་དམག་འདུས།
+               <lb facs="#facs_169_l_3" n="N004"/>པརང་གླིང་ལས་གཉན་དམག་འདུས། ས་༤འི་དབྱིངས་ལས་ས༹ག་འདུས། དྱོ༹ཾའ་བཏིང་ལས་ཀླུ་
+               <lb facs="#facs_169_l_4" n="N005"/>དམག་འདུས། རིབས་རྩེ་ལས་གཏོད་དམག་འདུས། སྲིད་པའི་རྩོེཾ་མནད་དང་། སྱེར་གྱི་རི་སྦལ་
+               <lb facs="#facs_169_l_5" n="N006"/>ཡནད་ཀྱིས། མཐེུན་ལྷ་དམག་བསྭོ་ལ་འདུས། ཀུའི་བྱ་རྡང་ལོ་དྷབ་དྱས། བསྭོའི་ལྷ་དམག་
+            </ab>
+            <ab facs="#facs_169_r_1" type="">
+               <lb facs="#facs_169_l_6" n="N001"/>༄༅། །ཡུལ་སོ་དྱལ། ཆའི་དབལ་སོ་དགྲ་ལ་བསྟན། ཀུའི་དགྲ་ཁཾས་གླད་པ་
+               <lb facs="#facs_169_l_7" n="N002"/>འགཾ། དེ་ལྟར་ཀུ་དང་བསྭོའི་བཏབ།། ཀུ་ཀུ་ཀུ།། བསྭོ་བསྭོ་བསྭོ།། ཆ་ཆ་ཆ།།
+               <lb facs="#facs_169_l_8" n="N003"/>སྲིད་པའི་བྱ་རྡང་དྱལ་ལོ། གི་བསྭོ་དྱོལ། གི་བསྭོ་ཡགསོ། གི་བསྭོ་དགྲ་ལ་ཆའོ།།
+               <lb facs="#facs_169_l_9" n="N004"/>གནའ་སྔ་གཏོད་ཀྱིས་དང་པོ་ལ། དགྲ་འདུལ་བྱ་རྡང་ཅྟིར་སྲིད། དང་པོ་ཡེ་མེད་སྟོང་པ་ལས།
+               <lb facs="#facs_169_l_10" n="N005"/>དེ་ལས་ཡེ་ཡོད་ཅུང་ཙཾ་སྲིད། དེ་ལས་སྨྲག་དང་སྨིགསུ་སྲིད། དེ་ལས་སྫི་དང་ངད་དུ་སྲིད། དེ་
+               <lb facs="#facs_169_l_11" n="N006"/>ལས་ལྷྲེ་མི་༣་སྲིད། དུས་དང་སྐལ་པ༴ སྲིད་པ་སངས་པོ་འབུཾ་ཁྲི་ནི། སྲིདའི་ཀུན་ཤེས་ཤྱེསུལོ།།
+            </ab>
+            <pb facs="#facs_170" n="170" xml:id="img_0170"/>
+            <ab facs="#facs_170_r" type="">
+               <lb facs="#facs_170_l" n="N001"/>དུང་གི་གཞི་མ་ཀོར་བཏིངས། གཡུའི་སྨན་མ་སྔོོན་བླུག། རོིནེའི་གསས་རྡོ་བཙུག།
+               <lb facs="#facs_170_l_1" n="N002"/>མདུང་དར་ཀོར་མཚལ་ལྟར་བཀྲཾས། གསེར་དང་གཡུའི་སྒྲོན་མ་བཀྱག། སྲིད་པའི་བྱ་
+               <lb facs="#facs_170_l_2" n="N003"/>རྡང་གོང་དུ་བཞིངས། དུང་གཡགཡུའ་རུ་ཆསུ་ཟལ། སྨན་རྟ་ཡིད་འགྱོགསེར་གིས་
+               <lb facs="#facs_170_l_3" n="N004"/>བདྱན། སྨོན་ལུག་དཀོར་གཡསུ་བཏག། དར་དཀར་གསང་བྲང་ཡོལ་བ་བྲིས། མཚལ་
+               <lb facs="#facs_170_l_4" n="N005"/>དང་སྤོསྱི་བཀང་ནས་བསྟཾས། བྱ་འང་དཀོར་དར་གིས་བདྱན། དོན་སྙིང་མོང་རི་ལྟར་སྤུངས།
+               <lb facs="#facs_170_l_5" n="N006"/>གཡང་༤་མོང་རྡང་ལ་བཟར། མདའ་དར་སྟོང་གིས་ལྷ་རྟེན་བཙུག། གསེར་གཡུའ་
+            </ab>
+            <ab facs="#facs_170_r_1" type="">
+               <lb facs="#facs_170_l_6" n="N001"/>༄༅། ༸ །དུང་མཆོང་གཅལ་དུ་བཀྲཾས། སྟགཟིགསྟོང་གིས་དཔའ་ཆས་སྱོལ།
+               <lb facs="#facs_170_l_7" n="N002"/>མཚོན་ཆ་མོང་བྱ་རྡང་བདྱན། རྩེ་འཛིན་སྤྲུལ་པའི་ཁྱུང་ལ་བཅོལ། བྱ་རྡང་སྲིད་པའི་
+               <lb facs="#facs_170_l_8" n="N003"/>རྩེ་ལ་བདྱན། ལྷ་གསས་དགྱེས་པའི་ཡོ་བྱེད་བསཊ། རྔ་གཤང་དུང་གླིང་སྒྲ་སྐད་འདོན།
+               <lb facs="#facs_170_l_9" n="N004"/>དར་ཀར་གཤག་ཤུལ་གཡསུ་དྲང་། མཐེུན་ཝེཾར་གཡགིས་བསྭོ། སྒྲླ་དར་མ་ལུགི་
+               <lb facs="#facs_170_l_10" n="N005"/>མཆོད། ཡེ་སྲིད་ཕྷོ་<add place="རྟ"><hi style="text-decoration: line-through;"><unclear>྾</unclear></hi></add>འི་བརྔན། སྤྲུལ་བ་ཉྱན་དམག་དཕུང་དུ་བསྡུས། དགྲ་
+               <lb facs="#facs_170_l_11" n="N006"/>འདུལ་རེ་འབྱཾས་སྱེར་གིསོལ། དབྡངན་མཐེུན་སྨནྱི་བརྔན། བདུདང་སྲོིན་སྐྲུངས་ལེས་ཕུད།
+            </ab>
+            <pb facs="#facs_171" n="171" xml:id="img_0171"/>
+            <ab facs="#facs_171_r" type="">
+               <lb facs="#facs_171_l" n="N001"/>ས་ཡྱོས་དྱོལ་ཕགིས་བརྔན། དུར་བདུད་ནོག་གླང་གིས་བརྔན། སྲིད་པའི་བོོན་གཟུའོ་བྱས།
+               <lb facs="#facs_171_l_1" n="N002"/>བྱ་རྡང་དེའི་ཡྟོནྱིས། དགྲའོ་ཕཾ་ལ་སྨན་པ་དྱལ། བྱ་རྡང་མཐུ་དབང་གཤེན་ལ་གྲུབས། ཡོནྚ་
+               <lb facs="#facs_171_l_2" n="N003"/>འཁོར་རྣཾས་ལོ་འདབ་དྱས། དེ་ཡང་བྱ་རྡང་བཞེངས་པའི་ཡྟོན་ལག། ཡང་མ་དེའི་འོག་རོལ༴
+               <lb facs="#facs_171_l_3" n="N004"/>ཡུལ་ནི་གནཾ་གྱིས་ཡབླ་ན། ལྷ་རབ་ཡབླ་བདལ་དྲུགིས། ལྷ་བོན་ཐོདཀར་གཤྱེསོུལ།
+               <lb facs="#facs_171_l_4" n="N005"/>ཟ་འོག་འཕྲུལ་གིས་གཞི་མ་བཏིང་། འཁྲང་ལ་སྨྲིན་པའི་སྨྲན་མ་བླུག། ཁྲོུ་དབལྱིས་
+               <lb facs="#facs_171_l_5" n="N006"/>གསས་རྡོ་བཙུག། མེ་ལོང་འབུཾ་གྱི་སྒྲོཾན་བཀྱཊ། ཡྱག་ལུགར་པོ་ཡྱསུ་བཏག། བྱ་ར་དམོར་
+            </ab>
+            <ab facs="#facs_171_r_1" type="">
+               <lb facs="#facs_171_l_6" n="N001"/>༄༅། ༸ །ཡྱོན་དུ་བཏག། སྲིད་པའི་བྱ་རྡང་གོང་དུ་བཞེངས། གཅྯན་སྟོང་གིས་
+               <lb facs="#facs_171_l_7" n="N002"/>དཔའ་ཆས་སྱོལ། མདུང་དང་སྟོང་གིས་རོུ༹ཾན་ཕྱར། པ་ཏན་དམར་པོ་སྤྲིན་ལྟར་གཏིབ། རྣོ་
+               <lb facs="#facs_171_l_8" n="N003"/>མཚོན་མོང་མཚལ་ལྟར་བཀྲཾས། རིནོེའི་ལག་པ་སྤྲུལ། འགོ་བརྙེན་འབུཾ་གིས་རི་བོ་
+               <lb facs="#facs_171_l_9" n="N004"/>བསྭོགས། ཤ་དོན་མོང་བཅལ་དུ་བཀྲཾ། ཤིང་ནི་བདིུ༹ད་ཅན་གྱིས་སྣང་མ་བུས། རྟ་ཀར་
+               <lb facs="#facs_171_l_10" n="N005"/>ཕྲུག་༡་ཉྱན་ལ་འབུལ། སྷིངེ་ཀོརའི་གཡང་༤་དང་། མན་སྟག་ཁྲའོ་གཡང་༤་དང་།
+               <lb facs="#facs_171_l_11" n="N006"/>འབྲོང་གཡཊ་ཁཾས་པའི་ཡྱང་༤་དང་། པན་གླང་དྱོལའི་ཡྱང༴ དུང་གིས་བྱ་རྒོད༴ ཚེ་དེ་རའི༴
+            </ab>
+            <pb facs="#facs_172" n="172" xml:id="img_0172"/>
+            <ab facs="#facs_172_r" type="">
+               <lb facs="#facs_172_l" n="N001"/>རི་སྤྱང་སྔོོནའི༴ ཆུ་རྟ་སྔོོནའི༴ བདུད་ལུག་ནོགའི༴ འཕར་བ་དམོརའི༴ ཅང་ཤེས་རྟའི་ཡྱང༴
+               <lb facs="#facs_172_l_1" n="N002"/>བཙན་ཤ་དམོར་ཡྱང་༤་དང་། སྲིད་པའི་བྱ་རྡང་ཆསུ་ཟལ། དགྲ་གསད་དོན་དུ་ལྷཾག་བརྔན།
+               <lb facs="#facs_172_l_2" n="N003"/>ལྷ་རབས་ཡབླདལ་དྲུག་དེས། བྱ་རྡང་དྲུང་དུ་བསྐོར་བ་བྱས། ལྷོོནདར་ཞལ་ན་རེ། ཁྱོད་ཀྱི་
+               <lb facs="#facs_172_l_3" n="N004"/>དགྲ་གསད་འདོད་པ་ན། ཏ་རུང་སྒྲླ་གཡགིས་བརྔན་མཚལ་སྐད། དེ་ནི་ཡབླདལ་དྲུགིས།
+               <lb facs="#facs_172_l_4" n="N005"/>དུང་གཡག་དཀར་པོ་ལ་མཚལ་གིས་གཡྲུང་བྲིས། སྤུ་ལ་དར་དང་ཟབ་གིས་བདྱན། རྭ་
+               <lb facs="#facs_172_l_5" n="N006"/>ལ་དབལྱི་མདུང་རྩེ་བདྱུས། དཔྲལ་བར་སྟེགིས་དཔའ་མཚན་བཏག། སྲིད་པའི་བྱ་རྡང་
+            </ab>
+            <ab facs="#facs_172_r_1" type="">
+               <lb facs="#facs_172_l_6" n="N001"/>༄༅། །རྟེན་དུ་བརྒྱུས། ལྷ་དམག་རྣཾས་ལ་མངའ་ཐང་གསོལ། གཡག་ནི་
+               <lb facs="#facs_172_l_7" n="N002"/>ཁཾས་པའི་འགུལ་དུ་དགྲ་བྱང་བཏག། སྐུ་ལ་ཁྲག་དང་དུགིས་བསྐུས། རྔ་མ་ལ་སྡུད་ཤེང་
+               <lb facs="#facs_172_l_8" n="N003"/>ནོག་བཏགས། དཕྲལ་བར་དགྲའི་རླ་བྱང་བྲིས། ལྷ་བོན་ཐོདཀར་ཕྱག་དུ་ཕུལ། ལྷ་པོན་
+               <lb facs="#facs_172_l_9" n="N004"/>སྐུའི་སྤྲུལ་བ་ལས། བསོད་པའི་ལས་པ་མཚོན་ཆ་ཐོགས། བྱ་རྡང་དྲུང་དུ་འུབ་གིས་བསྡུས།
+               <lb facs="#facs_172_l_10" n="N005"/>ཡྱག་སྙིང་ཕྱུང་སྲིད་པའི་བྱ་རྡང་ལྷ་དམག་བརྔན། མགོ་བོ་བྱ་རྡང་དཔའི་རྟགས། རུས་པ་
+               <lb facs="#facs_172_l_11" n="N006"/>བདུདང་བཙན་ལ་ཕུལ། ཤའི་ལས་པ་སྲོིན་བརྔན། ཁྲགི་ཕྷོ་བླ་འགུག་བརྔན། བྱ་རྡང་
+            </ab>
+            <pb facs="#facs_173" n="173" xml:id="img_0173"/>
+            <ab facs="#facs_173_r" type="">
+               <lb facs="#facs_173_l" n="N001"/>དེའི་ཡྟོནྱིས། དགྲའོ་ཕཾ་ལ་ཟོན་ནི་དྱལ། ཕྱག་རབས་དྱོལའི་དངོསྲུབས་ཐོབ། ལྷ་གཤེན་རྣཾསྱི་
+               <lb facs="#facs_173_l_1" n="N002"/>མཐུའ་དབང་དྱས། ཡང་མ་དེའི༴ ཡུལ་ནི་སྲིན་ཡུལ་གོང་ཐང་ན། སྲིད་པ་གཡྲུང་དྱོལ་དེས།
+               <lb facs="#facs_173_l_2" n="N003"/>ཡེ་གཤེན་འཕྲུལ་བོན་གཤེགསོུལ། སྲིད་པ་ཆགས་པའི་༤་མ་བདེང་། རོིནེའི་སྒྲོཾན་བཀྱཊ།
+               <lb facs="#facs_173_l_3" n="N004"/>གཙང་རྩོག་ཤེན་འབྱེད་སྱས་རྡོ་བཙུག། སྲིད་པའི་བྱ་རྡང་ཉྱན་པོ་བཞིངས། བྱ་རྡང་དེའི་ཡྟོནྱིས།
+               <lb facs="#facs_173_l_4" n="N005"/>དགྲའོ་ཕཾ་ལ་ཟོནི་དྱལ། ཡྱག་དང་ལུགིས་བྱ་རྡང་སྱོལ། གསེར་དང་གཡུའི་ལྷཾག་བརྔན།
+               <lb facs="#facs_173_l_5" n="N006"/>མཁན་དང་སྤྲུལ་བའི་བསང་ཡར་བྱས། ཀར་༣་ཕུད་ཀྱིས་ཞི་བ་གསོལ། དམར་༣་དོན་སྙིང་
+            </ab>
+            <ab facs="#facs_173_r_1" type="">
+               <lb facs="#facs_173_l_6" n="N001"/>༄༅། ༸ །ཕུད་གིས་ཝེཾར་བརྔན། ནས་དང་འབྲས་གིས་ཉྱན་དམག་བཅོས། ཉྱན་བྱ་
+               <lb facs="#facs_173_l_7" n="N002"/>དམོར་གནཾ་ལ་སྤོར། མཚོན་དབལ་དྲོག་དགྲ་ལ་བཟོར། ལྷ་དམག་མཐུའི་དགྲའོ་བརླག།
+               <lb facs="#facs_173_l_8" n="N003"/>དེ་ཙེ་སྲིད་པའི་བྱ་རྡང་ཡགས། ཡང་མ་དེའི༴ ཡུལ་ནི་པའི་ཉིན་རོལ་ན། སྲིད་པ་ས་བླ་མགོན་
+               <lb facs="#facs_173_l_9" n="N004"/>བུཾ་དེ། མཐེུན་སྭ་གཤེན་དྱལ་བ་གཉེར། རིེན་གསེར་གིས་༤་མ་བཏིང་། རྣོ་དབལ་འཛཾ་པའི་
+               <lb facs="#facs_173_l_10" n="N005"/>སྱས་རྡོ་བཞག། རིེན་དུང་གིསས་མདའ་བཙུགས། གཡུའ་བྲན་མེ༹ས་པའི་སྨན་མ་བླུགས།
+               <lb facs="#facs_173_l_11" n="N006"/>སྲིད་པའི་བྱ་རྡང་གོང་དུ་བཞེངས། དངོསྲུབ་གཡག་ལུགཡསུ་བཏགས། ཟངས་ར་དམོར་ཡྱོནུ་རྟཊ།
+            </ab>
+            <pb facs="#facs_174" n="174" xml:id="img_0174"/>
+            <ab facs="#facs_174_r" type="">
+               <lb facs="#facs_174_l" n="N001"/>མུ་ཏིག་ཤེལ་རུ་ད༹ཾས་བསྭོགས། འབྲོང་བུ་<hi style="text-decoration: line-through;"><unclear>྾</unclear></hi>དར་མ་ཤསུ་བཤས། མགོའི་སྒྲླའི་དམོ༹གས་བརྔན།
+               <lb facs="#facs_174_l_1" n="N002"/>སྙིང་གིས་དཔའོ་དགྲ་འདུལ་བརྔན། ཤ་ཁྲག་རུས་པས་ལྷ་དམག་བརྔན། ཉྱན་བྱ་མཚལ་བུ་
+               <lb facs="#facs_174_l_2" n="N003"/>གནཾ་ལ་སྤོར། གནཾ་ཉྱན་རྣཾས་ལ་ར་མདའ་སྦྲན། གཡུའ་ཕྱེ་སྔོོན་མཚོ་ལ་གཏོར། སྤྲུལ་
+               <lb facs="#facs_174_l_3" n="N004"/>པའི་ཀླུ་དམག་མོང་བརྔན། ར་སྐྱེས་དམོརའི་སྲིན་དམག་བརྔན། ཕག་ཚན་དམོརའི་སྲོིན་བརྔན།
+               <lb facs="#facs_174_l_4" n="N005"/>དུང་གི་ལྕོ་ཀ་ཀོཾར་དེ། ལྷ་མི་ཉིན་གྱིས་འཕྲིན་པར་བཏང་། <hi style="text-decoration: line-through;"><unclear>྾</unclear></hi>བྱ་རྡང་ཡག་པའི་ལྷ་མི་དྱལ།
+               <lb facs="#facs_174_l_5" n="N006"/>དེ་ཚེ་སྲིད་པའི་དྱལ་ཀ་ཐོབ། དེ་རིང་ཡོནྚ་ཡགས་པའི་བྱ་རྡང་བ༤ེངས། ཀརག་ཤན་འབྱེད་བྱ་
+            </ab>
+            <ab facs="#facs_174_r_1" type="">
+               <lb facs="#facs_174_l_6" n="N001"/>༄༅། ༸ །རྡང་བ༤ེངས། དགྲའོ་བརླཊ་པའི་བྱ་རྡང་བཞེངས། རྩི་དུག་ཤན་འབྱེད་བྱ༴
+               <lb facs="#facs_174_l_7" n="N002"/>ཡང་བྱ་རྡང་སྒྲླ་ཅྟིར་སྲིད། སྲིད་པ་སངས་པོ་འབུཾ་ཁྲི་དེ། སྒྲླའི་བྱ་རྡང་བཀྱག་པའི་ཚེ། སྲིད་པ་ཤྱེན་
+               <lb facs="#facs_174_l_8" n="N003"/>༣་ཞལ་ན་རེ། དེ་བྱ་རྡང་སྒྲླ་བཤད་འཚལ་སྐད། སྔོན་ལྷ་བྲག་ལྷ་མཚོའི་རྩ་བ་རུ། རིེན་སྒོང་ང་
+               <lb facs="#facs_174_l_9" n="N004"/>༣་དུ་བསྲིད། སྱེར་སྒོང་སོེརའི་རྡོལ་ནང་ལེས། རིེན་སྱེར་གྱིས་བྱ་ཁྲ་ལ། དྲོག་དབལྱི་མཆུ་སྡེར་
+               <lb facs="#facs_174_l_10" n="N005"/>ཅན། སྤྱན་མིགསེར་མཚོའཁྱིལ་བ་འདྲ། སྐལ་པ་རླུང་གིཤོགས་པ་ཅན། གཡྲུང་དབང་གི་
+               <lb facs="#facs_174_l_11" n="N006"/>བཀའ་རྟགས་ཅན། གཡུའ་སྒོང་སྔོོན་བརྡོལ་ནང་ལེས། སྫྲུལ་གཡུའི་བྱ་ཁྲ་ལ། རྣོོ༹ཾན་
+            </ab>
+            <pb facs="#facs_175" n="175" xml:id="img_0175"/>
+            <ab facs="#facs_175_r" type="">
+               <lb facs="#facs_175_l" n="N001"/>གཡུའི་མཆུ་སྡེར་ཅན། ཚ་དབལ་འོད་ཀྱིས་གཤོགས་པ་ཅན། སྤྱན་མིག་མེ་དཔུང་འབར་བ་
+               <lb facs="#facs_175_l_1" n="N002"/>འདྲ། མཐོུབས་ཆེ་བའི་སྲིུདཾ་འདུལ། ཡང་ལྕགསྒོང་སྔོོནའི་བརྡོལ་ནང་ལས། ཡ༹ཾན་ལྕགྱི་བྱ་ཁྲ་
+               <lb facs="#facs_175_l_2" n="N003"/>བསྲིད། རལྲི་སྟོང་གིཤོགས་པ་ཅན། སྤྱན་མིགསེར་མཚོའཁྱིལ་བ་འདྲ། མཐུ་དབང་སྟོད་གི་
+               <lb facs="#facs_175_l_3" n="N004"/>ཀུན་ཀ་འདུལ། དེ་ལ་མིང་དང་མཚན་སྱོལ་བ། སྲིད་པའི་བྱ་རྡང་སྒྲླ་དེ། དགྲ་འདུལ་དབང་ཆེན་
+               <lb facs="#facs_175_l_4" n="N005"/>མཆེད་༣་ལག། ཡང་རིེན་སྒོང་༣་བརྡོལ་ནང་ལས། སྲིད་པའི་གསས་རྡོ་༣་དུ་སྲིད། དེ་རིང་
+               <lb facs="#facs_175_l_5" n="N006"/>སྲིད་པའི་གནཾ༴ ལྷ་ཤྱེན་འདུས་ཀུན་འཚོཊ་པ་འདི། བྱ་རྡང་སྒྲླ་ཤྱེགསོུལ། ཕཾ་དྱལ་བྱེད་པའི་
+            </ab>
+            <ab facs="#facs_175_r_1" type="">
+               <lb facs="#facs_175_l_6" n="N001"/>༄༅། །གཟུའ་བོར་ཤྱེགསོུལ། ཡོནྚ་དྱལ་བའི་ཁི༹ན་འཛོད། དགྲ་སྡང་ཕཾ་པའི་
+               <lb facs="#facs_175_l_7" n="N002"/>གཟུའ་དཕང་མོ༹ད། མཐེུན་སྒྲླ་གསེར་གིས་བརྔན། དགྲ་སྲོག་ཆོད་ལ་དགྲ་སྙིང་ཕྱུང་། འུ་མོ་
+               <lb facs="#facs_175_l_8" n="N003"/>འེཾར་དགྲ་ལ་ཆས། སྟག་སླག་སྡེར་མང་དཔའ་ཆས་སྱོལ། སྲིད་པའི་བྱ་རྡང་དེ་ཚེ་དཔལ། ཡང་
+               <lb facs="#facs_175_l_9" n="N004"/>ཡུལ་ནི་ལྷ་ཡུལ་གོང་ཐང་ན། ཡབ་ནི་ལྷ་རྗེ་ཕྱོུག་དེ། སྲིད་པའི་ལྕམོ་ཁབ་དུ་བཞེས།
+               <lb facs="#facs_175_l_10" n="N005"/>ལྷ་སྲས་ལྕྲཾལ་༣་དུ་བསྲིད། ཀོར་ནོར་མོང་བསམྱིབ། དུས་དང་སྐལ་པ་དེ་ཙཾ་ན། ལྷ་བདུད་
+               <lb facs="#facs_175_l_11" n="N006"/>ནོག་གྷོ་དགུ་དེ། བདུདང་སྲོིན་དམག་དུ་བསྡུས། བདུད་གླང་ནོག་རྟ་རུ་ཞོན། གདུག་པའི་མཚོན་
+            </ab>
+            <pb facs="#facs_176" n="176" xml:id="img_0176"/>
+            <ab facs="#facs_176_r" type="">
+               <lb facs="#facs_176_l" n="N001"/>ཆ་བསཾ་མྱིབ། བདུད་རླུང་ནོག་རང་འཁོར་བྱེད། སྲོིན་གདུག་པའི་དྱོལ་ཡིས། ཁྲག་དང་དུགིས་དྱོ༹ཾའ་
+               <lb facs="#facs_176_l_1" n="N002"/>བསྐྱིལ། གོིནདན་དྱོལ་གནཾཾ་པ་བསྡུས། ལྷ་ཡུལ་དང་མ་འོད་ཆེན་ན། ལྷ་རྗེ་དྱོལ་འདར་ཡིང་སྔང་།
+               <lb facs="#facs_176_l_2" n="N003"/>རིབས་རྩོེཾ་སྙིལ་མ་ཁད། དྱོ༹ཾའ་མཐའ་ལས་པག་ལ་ཐུག། ས་རི་རྡོ་བྲག་མྟེར་བྷར། མདའ་
+               <lb facs="#facs_176_l_3" n="N004"/>དང་མདུང་གི་ཆར་བ་འབབ། ནདང་ཡཾ་གྱི་རླུང་དམར་འཚུབ། གདུག་པའི་ཆྲོུལ་རྒྱུན་མི་འཆད།
+               <lb facs="#facs_176_l_4" n="N005"/>དུས་དང་སྐལ་པ་དེ་ཙཾ་ན། ལྷ་རྗེ་དྱོལ་ཐྱསུ་བསྡུས། ཡེེས་འཕྲུལ་བོན་ཤྱེགསོུལ། དུང་གིཞི་མ་
+               <lb facs="#facs_176_l_5" n="N006"/>ཀོར་བཏིངས། གཡུའ་དང་མཆོང་གིས་སྨྲན་མ་བླུག། རལྲི་ངར་ཆེན་སྱས་རྡོ་བཙུག། རིེན་སྱེར་གྱི་
+            </ab>
+            <ab facs="#facs_176_r_1" type="">
+               <lb facs="#facs_176_l_6" n="N001"/>༄༅། ༸ །གསས་མདའ་བཙུག། ཤེལ་འོད་འབར་བའི་སྒྲོཾན་བཀྱག། སྲིད་པའི་བྱ་རྡང་
+               <lb facs="#facs_176_l_7" n="N002"/>བླ་རུ་བ༤ེངས། གསེར་འོད་འབར་བའི་བྱ་རྡང་ལ། བདུད་འདུལ་ཁྱུང་གིས་བཀའ་རྟཊ་ཅན། བསླབ་
+               <lb facs="#facs_176_l_8" n="N003"/>ན་སྲིད་པའི་རྩོེཾ་བསླེབ། བཙུག་ན་པརང་འོད་ཀྱིས་བཀང་། བསྐྱོད་ན་པརང་རླུང་བའི་མགྱོག །
+               <lb facs="#facs_176_l_9" n="N004"/>དཾསཾ་བདུད་བཙན་རྡུལ་དུ་བརློཊ། བསྟན་ན་མགོན་དང་སྐྱབསུ་ཆེ། བརྔན་ན<hi style="text-decoration: line-through;">་</hi>་དགྲ་སྡང་ཆེམ་ལ་
+               <lb facs="#facs_176_l_10" n="N005"/>འབེབ། དགྲ་ལ་ཐོག་སེར་འཕྲོ་བ་འདྲ། ཟོན་ལ་ཉིཾ་ཤར་བ་འདྲ། བདུདང་སྲོིན་འདུལ་བའི་ཕྱིར།
+               <lb facs="#facs_176_l_11" n="N006"/>དྱོལ་ལྷ་རྗེ་བཙན་པོ་དེས། མཐེུན་འཕྲུལ་པོན་རྒོཾ་པོ་དེ། བདུད་འདུལ་སྲིད་པའི་བྱ་རྡང་བཞེངས།
+            </ab>
+            <pb facs="#facs_177" n="177" xml:id="img_0177"/>
+            <ab facs="#facs_177_r" type="">
+               <lb facs="#facs_177_l" n="N001"/>ཡྱག་དང་ལུག་དང་ར་བསྐྱེས་༣། ཆབ་དང་སྨནྱིས་ཁྲུས་བྱས་ན། མུག་དང་མཚལ་གྱི་སྤུ་ལ་བྱུག།
+               <lb facs="#facs_177_l_1" n="N002"/>ཟབ་དང་དར་གྱི་ཆསུ་ཟལ། དར་དཀར་བཟང་བའི་ཐག་པའི་བཏག། ལྷ་དམག་འདུས་པའི་སྐུ་རྟེན་བྱས།
+               <lb facs="#facs_177_l_2" n="N003"/>དངུལྱི་ཚོཾ་ཚོཾ་དམིགས་མང་དེ། སྒྲླ་མཐེུན་བྱིན་པའི་རྟེན། དུང་མདུང་ཀོར་འདམ་༣་དེ། གནྕཾགས་
+               <lb facs="#facs_177_l_3" n="N004"/>དབལྱི་རྣོ་སོ་ཕྱར། བདུད་འདུལ་རོུ༹ཾན་བཏགས་པ་དེ། སྲིད་པའི་བྱ་རྡང་རྩེ་ལ་བཙུག། དེ་ལྷཾགས་
+               <lb facs="#facs_177_l_4" n="N005"/>བྱིན་པའི་བཀའ་རྟགསྟེ། མཐེུན་འེཾརའི་ཕྱག་ཆ་ལགས། འབྲོང་བུ་དར་མའི་སྲོག་སྙིང་དང་། །
+               <lb facs="#facs_177_l_5" n="N006"/>སྟག་རྒོད་གསད་པའི་སྙིང་ཁྲག་དང་། བྱ་རྒོད་སྟོང་ལཾ་སྙིང་ཁྲགསུཾ། མདའ་དང་མདུང་གི་རྩེ་ལ་སྐུས།།
+            </ab>
+            <ab facs="#facs_177_r_1" type="">
+               <lb facs="#facs_177_l_6" n="N001"/>༄༅། ༸ །སྲིད་པའི་བྱ་རྡང་རྩེ་ལ་བཙུག། དམག་དཔོན་དྱོལ་བྱོན་པའི་རྟེན། དུང་ཡྱག་
+               <lb facs="#facs_177_l_7" n="N002"/>ཀོར་འགོ་ནག་ལ། ཤ་འབྲོང་འདམ་དགུ་བཏགས་པ་དེ། དཔྲལ་བར་ཁྲགིས་ཐིགེ་བྲིས། ཟིལ་འགོ་
+               <lb facs="#facs_177_l_8" n="N003"/>གཡསུ་རལྲི་བདྱན། ཟིལ་འགོཡོན་དུ་སྤྲིུ་བཏགས། སྲིད་རྩར་ཁན་དམར་༣་བདྱ་དྱབ་དུ་བཀལ།
+               <lb facs="#facs_177_l_9" n="N004"/>དྲང་ཤིང་འབོལ་བུ་ཐུར་དུ་བཙུག་པའི་ཕུར་ལ་བཏགས། མཚན་དུ་དགྲ་བྱང་མང་པོ་བྲིས། སྲིད་པའི་
+               <lb facs="#facs_177_l_10" n="N005"/>བྱ་རྡང་དྲུང་ཤེས་དུ། ལྟས་ངན་དྱོལ་དམ་ལ་བཏགས། གཡགིས་བརྔན་པ་དགྲ་ལ་འགྲོ་བར་བྱས། །
+               <lb facs="#facs_177_l_11" n="N006"/>བུང་བུ་གསེར་མིགས་ལ། དུག་པོཾ་ནོག་བཅྲུཾ་དང་། ར་ཐོད་སྱེར་བ་བཅྲུཾ་བཀལ། འཁྲུལ་བྱེད་དྱོལ་
+            </ab>
+            <pb facs="#facs_178" n="178" xml:id="img_0178"/>
+            <ab facs="#facs_178_r" type="">
+               <lb facs="#facs_178_l" n="N001"/>བུང་འུ་བརྔན། ལུགར་པོང་མིག་དང་ནོག་འགོ་ཀར་གིས། སྤུ་ལ་དར་གསེར་གི་བདྱན། བསྭེའ་དང་དུང་
+               <lb facs="#facs_178_l_1" n="N002"/>གིས་བཀའ་རྟགས་བཏགས། སྤྱི་རྗེ་དྱོལ་བྱིན་པའི་སྟོན། སྲིད་པའི་བྱ་རྡང་ཟུར་༤་ལ། དངུལ་
+               <lb facs="#facs_178_l_2" n="N003"/>གིས་འཁོོར་རེ་རེ་བཏགས། དེ་སྣངདི་པོན་གྱིས་བསྐོར་བའི་དོན། སྲིད་པའི་བྱ་རྡང་ཡར་རྩེ་ལས། དུང་གི་
+               <lb facs="#facs_178_l_3" n="N004"/>ཟླ་བ་ལྔ་བསྐོར་པ། སྡིག་པའི་མུན་གྲིབ་བསལ་བའི་དོན། དགྲ་འདུལ་སྲིད་པའི་བྱ་རྡང་ལ། སྱེར་
+               <lb facs="#facs_178_l_4" n="N005"/>གྱིས་ཉྨི་ལྔ་བཀོད་པ། ལྔ་རྗེ་ཡེ་སངས་བཀའ་རྟགསྟེ། ཡོནག་ཕྲོུཾན༹གས་པའི་དོན། ཡྱག་ནག་
+               <lb facs="#facs_178_l_5" n="N006"/>འགོ་ཀར་ལ། དུང་དང་ཤེལ་གིས་རྩིབ་བྱས་བཏག། རྟ་ནག་འགོ་ཀར་ལ་སྱེར་གི་བྱ་སྤུ་བཙུག།།
+            </ab>
+            <ab facs="#facs_178_r_1" type="">
+               <lb facs="#facs_178_l_6" n="N001"/>༄༅། །གཡུའ་ཁྲབ་སྔོོན་དྱབ་དུ་བཀལ། ཟ་འོག་འཕྲུལ་གིས་སྲབ་མདའ་བཏགས།
+               <lb facs="#facs_178_l_7" n="N002"/>བྱ་ནག་འགོ་ཀར་ལ་དོཾརོན་སྣྚས་བདྱན། སྲིད་པའི་བྱ་རྡང་གཡསུ་བཏགས། རྔ་མོང་དམོར་ལ་མདའ་
+               <lb facs="#facs_178_l_8" n="N003"/>མདུང་བསྣོལ་བར་བཀར། སྤྲིལ་དམོར་ལ་མདའ་གཞུའ་ཐོགསུ་བཅུག། བླ་ནོག་ལ་ཟངསྱི་
+               <lb facs="#facs_178_l_9" n="N004"/>གཏོར་བ་བཤལ་དུ་གཟུགས། སྡིག་པའི་ལྟས་ངན་གྲངས་ཡར་ཚངས། ཡེེས་འཕྲུལ་བོན་མཐེུན་
+               <lb facs="#facs_178_l_10" n="N005"/>གིས། བྱ་རྡང་དྲུང་ལས་དགྲ་ལ་རྦད། རྟ་ཁྲའོ་ཐོདམར་ལ་བསེའི་ཁྲབ་ཁྲའོ་བཀལ། ཡྱག་ཁྲའོ་
+               <lb facs="#facs_178_l_11" n="N006"/>དམིག་དམར་ལ་རོུ༹ཾན་རྭ་ལ་བཏགས། གསེར་གིས་རལྲི་ལ་གནྕཾག་སྭོ་སྐོར་ཅན། གསེར་མདའ་
+            </ab>
+            <pb facs="#facs_179" n="179" xml:id="img_0179"/>
+            <ab facs="#facs_179_r" type="">
+               <lb facs="#facs_179_l" n="N001"/>ཐོགིས་རྣོ་སྭོ་ཅན། པལ་ཏོན་བཤས་པའི་ཤྲག་རྣཾས། སྲིད་པའི་བྱ་རྡང་དྲུང་དུ་བཀྲཾ། ཡེེས་
+               <lb facs="#facs_179_l_1" n="N002"/>འཕྲུལ་པོན་མཐེུན་དེ། དགྲའོ་གསོད་པའི་བྱ་རྡང་གསོལ། ཡེ་སྲིད་ཝེཾརའི་དྱོལ་ལ། དགྲ་སྲོགས་
+               <lb facs="#facs_179_l_2" n="N003"/>གཅོད་པའི་ཡོན་དུ་འབུལ། སྲིད་པའི་བྱ་རྡང་གཡས་ཕྱོགསུ། ལྷ་དམག་གཟའྐར་ལྷཊ་པ་འདྲ།
+               <lb facs="#facs_179_l_3" n="N004"/>སྲིད་པའི་བྱ་རྡང་གཡོ<add place="ན">ས</add>་ཕྱོགས་ན། ཝེཾར་ཐོག་རྒོད་འཕྲོ་བ་འདྲ། སྲིད་པའི་བྱ་རྡང་ཟུར་༤་ལ།
+               <lb facs="#facs_179_l_4" n="N005"/>ཉྱན་དམག་སྤྲིན་དཔུང་འཐིབ་པ་འདྲ། སྲིད་པའི་བྱ་རྡང་ལོག་༤་ལ། ས་བདག་བྲག་རི་སྙིལ་བ་
+               <lb facs="#facs_179_l_5" n="N006"/>འདྲ། སྲིད་པའི་བྱ་རྡང་ཁྲི་འཕང་ལ། སྒྲླ་ཉླི་ལྷག་པ་འདྲ། སྲིད་པའི་བྱ་རྡང་གཡས་སྟོད་ན།
+            </ab>
+            <ab facs="#facs_179_r_1" type="">
+               <lb facs="#facs_179_l_6" n="N001"/>༄༅། །དབལ་དམག་མེུང་འབར་བ་འདྲ། སྲིད་པའི་བྱ་རྡང་སྔོན་དྱབ་ན། ཀླུ་དམག་
+               <lb facs="#facs_179_l_7" n="N002"/>ཆུ་ལྟར་བྲུག་པ་འདྲ། སྲིད་པའི་བྱ་རྡང་པད་མ་ལ། གཏོད་དམག་གངས་རི་བརྩིཊ་པ་འདྲ། སྲིད་
+               <lb facs="#facs_179_l_8" n="N003"/>པའི་བྱ་རྡང་རྩེ་༤་ལ། གདུག་པའི་ཚ་ཚ་སྐར་ལྟར་འཁྲུག། སྲིད་པའི་བྱ་རྡང་དྲང་ཤེང་ལ།
+               <lb facs="#facs_179_l_9" n="N004"/>ལྷ་དམག་སྤྲུལ་བ་བསཾ་མྱིབ། བྱ་རྡང་དེའི་མཐོུབསྱི། སྡང་བའི་དགྲའོ་ཆེམ་ལ་ཕོབ།
+               <lb facs="#facs_179_l_10" n="N005"/>གནོེད་གདུག་པའི་ཡུལ་སོ་ཟློག། དེ་ཚེ་སྲིད་པའི་བྱ་རྡང་ཡགས། དེ་རིང་སྲིད་པའི་ནཾ་གོང་ལ
+               <lb facs="#facs_179_l_11" n="N006"/>ལྷ་དམག་འདུས་པའི་མཐོུབས་དང་། བྱ་རྡང་དབལ་སོ་དགྲ་ལ་བསྟན། སྡང་བའི་དགྲའོ་ཕུང་རླཊསྱི།
+            </ab>
+            <pb facs="#facs_180" n="180" xml:id="img_0180"/>
+            <ab facs="#facs_180_r" type="">
+               <lb facs="#facs_180_l" n="N001"/>དགྲའོ་སྲོག་ལ་བདུད་དུ་ཕོབ། དགྲའོ་ནོར་ལ་ཕྱག་མས་ཐོབ། ཆྲོུལ་ཐན་དང་ལྟས་ངན་དགྲ་ལ་
+               <lb facs="#facs_180_l_1" n="N002"/>དྱུག། ཀུ་བསྭོ། ༴ །ཡང་ཡུལ་ནི་སྲིན་ཡུལ་གོང་ཐང་ན། མཁར་དང་རྩེ་རེ་མཐོོནའི་ནང་ཤེད་ན།
+               <lb facs="#facs_180_l_2" n="N003"/>དྱོལ་སྲིན་རྗེ་འབྲང་ཀར་བཞུགས་པ་ལ། སྲོག་བདུད་ཟངས་དེ་མཚེར་བ་ལ། སྲིན་གཡག་ཁཾ་པ་
+               <lb facs="#facs_180_l_3" n="N004"/>༡་དུ་སྲིད། ལྕགྱིས་རྭ་དར་ཡུགི་ཡུག། མིག་ལས་གདུག་པའི་ཟེར་ནག་འཕྲོས། དྱོལ་སྲིན་རྗེ་
+               <lb facs="#facs_180_l_4" n="N005"/>འབྲང་དཀར་ལ། བླ་ལེས་སྐོར་ཡིན་འགོ་ལས་འཇབ། དྱོལ་མི་འདུག་ཡུལ་མ་མཆིས། །
+               <lb facs="#facs_180_l_5" n="N006"/>དུས་དང་སྐལ་པ་དེ༴ སྤྲེིད་ལྷའི་གཤེན་༣་གཉེར། ལི་ཕྱིང་ཀར་པོ་༤་མ་བཏིང་། རོིནེའི་སྨྲན་མ་བླུཊ།།
+            </ab>
+            <ab facs="#facs_180_r_1" type="">
+               <lb facs="#facs_180_l_6" n="N001"/>༄༅། ༸ །རལྲི་ཆྲིུའི་གསས་རྡོ་བཙུག། རིནེ་སྱེར་གྱིས་སྒྲོཾན་བཀྱགས། དགྲ་འདུལ་སྲིད་
+               <lb facs="#facs_180_l_7" n="N002"/>པའི་བྱ་རྡང་བཞེངས། དོན་སྙིང་འབུཾ་གིས་ལྷ་དམག་བརྔན། མདའ་དར་མདུང་དར་ལྷ་རྟེན་བཙུགས།
+               <lb facs="#facs_180_l_8" n="N003"/>གཡག་དང་ལུགིས་སྒྲ་བླ་གསོལ། རྟ་དང་སྟགིས་སྒྲླ་སྱོལ། སྦ་དང་སྙུགིས་ཡུལ་ས་བརྟེན། བྱ་
+               <lb facs="#facs_180_l_9" n="N004"/>འང་ཀོརའི་ཉྱན་དམག་བརྔན། རྩི་དང་སྨན་གྱིས་ཀླུ་དམག་བསྒྲུབས། ནས་དང་འབྲས་གི་གཏོདམག་
+               <lb facs="#facs_180_l_10" n="N005"/>བཅོས། བྱ་རྡང་དྲུང་དུ་ལྷ་དམག་འདུས། དེ་ནས་ལྷ་དམག་དགྲ་ལ་ཆོས། སྤྲེིད་ལྷའི་གཤེན་༣་དེ།
+               <lb facs="#facs_180_l_11" n="N006"/>གནོདིན་མོང་ལས་པ་བསྐོར། སྲིད་པའི་བྱ་རྡང་གཡོན་བདུན་ན། ཡྱག་དམར་བཤས་པའི་ཤྲཊ་དང་།
+            </ab>
+            <pb facs="#facs_181" n="181" xml:id="img_0181"/>
+            <ab facs="#facs_181_r" type="">
+               <lb facs="#facs_181_l" n="N001"/>རྔ་མོང་དམོར་ཤྲག་དང་། པོང་འུ་ནོགའི་ཤ༴ དྲིལ་དང་ནག་བེལ་ཤྲཊ༴ ཁྱི་ར་ཕག་༣་ཤྲག་རྣཾས།
+               <lb facs="#facs_181_l_1" n="N002"/>གནོདིན་བསྐུལ་བའི་རྗེསུ་བྱས། བྱ་རྡང་དེའི་མཐོུབསྱི། སྲོག་བདུད་ནོག་རྡུལ་དུ་ལྷོཊ། བྱ་རྡང་
+               <lb facs="#facs_181_l_2" n="N003"/>ཡགས་པའི་དངོསྲུབ་དེ། ཡེ་སྲིད་ལྷ་དང་གཤེན་ལ་འབབ། དེར་སྲིད་རྗེ་འབྲང་དཀར་ཐྱས་དགྱེས་པའི།
+               <lb facs="#facs_181_l_3" n="N004"/>སྲིད་པའི་བྱ་རྡང་གཡས་ཕྱོགསུ། དུང་གིཡག་པོ་ཀོར་བཏག། མགོས་ཡྲེདི་སྲིད་པའི་བྱ་རྡང་སྱོལ།
+               <lb facs="#facs_181_l_4" n="N005"/>སྙིང་གིས་ལྷ་དམག་ངོ་སོ་བསྟོད། གཡང་༤འི་སྒྲླ་དཔའ་ཆས་གསོལ། གཟུགས་༤་ཉྱེན་སྡེ་༤་
+               <lb facs="#facs_181_l_5" n="N006"/>བརྔན། ཤའི་སྤྲུལ་པོ་ས་ཉྱན་བརྔན། རུས་པའི་ཁ་དྲག་དཔའོ་བརྔན། ཁྲགིས་ཆུ་ཉྱན་མོང་བརྔན།
+            </ab>
+            <ab facs="#facs_181_r_1" type="">
+               <lb facs="#facs_181_l_6" n="N001"/>༄༅། །སྤུའི་སྲིད་པའི་ཉྱོན་བཅོས། མཁྲིས་པས་ལས་པས་ཀླུ་དམགསོལ། མིགིས་
+               <lb facs="#facs_181_l_7" n="N002"/>ཉི་ཉྱན་ཟླ་ཉྱན་བརྔན། པོའི་གཟའྐར་མོང་བརྔན། རྣ་བའི་སྒྲླའི་སྙིང་ལྟང་བསྲང་། མཁལ་མས་
+               <lb facs="#facs_181_l_8" n="N003"/>སྒོ་སྲུངས་སྟགཡག་བརྔན། མཚེར་པའི་ཀླུའི་ལས་བརྔན། རྒ་མས་ལཾ་ཉྱན་མོང་བརྔན། ལྕེའི་
+               <lb facs="#facs_181_l_9" n="N004"/>ལྷ་མི་ཕྲིན་པ་སྱོལ། གློ་བའི་གངས་ཉྱན་ཐཾད་བརྔན། མཆིན་པས་བྲགཉན་མོང་བརྔན། སྲོག་
+               <lb facs="#facs_181_l_10" n="N005"/>རྩས་མཐེུན་ཝེཾར་བརྔན། ཤན་ཤ་སྨན་བུས་ཉྱན་གི་ཕྙོ་བརྔན། མཆིན་དྲིལ་སྒྲླའི་དར་འཛིན་བརྔན།
+               <lb facs="#facs_181_l_11" n="N006"/>ཡྱགིས་བྱ་རྡང་གསོལ་བའི་ཡྟོནྱིས། ཡ་བླའི་བདུད་ལ་བཀའ་ཡང་ཉྱན། མ་བླའི་ཆུད་ལ་ནན་ཡང་<add place="ཆེ་">།</add>
+            </ab>
+            <pb facs="#facs_182" n="182" xml:id="img_0182"/>
+            <ab facs="#facs_182_r" type="">
+               <lb facs="#facs_182_l" n="N001"/>དུང་གི་ལུའུ་ཀར་པོ་ལ། གསེར་གིས་མློེང་དཕྲལ་དུ་བཏགས། གཡུའབྲང་བདིུ༹ད་སྨན་གི་བླུག།
+               <lb facs="#facs_182_l_1" n="N002"/>ལྷའི་དྱོལའི་དཔའ་ཆོས་སྱོལ། ཡ༹ཾན་སྤྲུལ་བའི་ཞལ་བུ་རུ། དྲི་ལྔ་སྨན་གིས་འབྲུས་ཟལ།
+               <lb facs="#facs_182_l_2" n="N003"/>སྤྲུལ་པའི་ཁྱུང་ལ་བདིུ༹ད་གསོལ། བདིུ༹ད་ཅནྱི་ཤིང་རྣཾས་བཏགས། ལྷ་རབས་སྲིད་པས་བྱ་རྡང་
+               <lb facs="#facs_182_l_3" n="N004"/>བསང་། མཐེུན་ལྷ་དམག་ངོ་སོ་བསྟོད། ཉྱན་རི་རྩེ་ལ་ཉྱན་ཤེང་བཙུཊ། ཉྱན་བྱ་མཚལ་བུ་
+               <lb facs="#facs_182_l_4" n="N005"/>དར་གིས་བདྱན། འགུལ་དུ་འབྱེད་པའི་ལྡེ་མིག་བཏགས། ཉྱན་གཡག་རུ་བཟང་སྱེར་གི་བདྱན།
+               <lb facs="#facs_182_l_5" n="N006"/>ཉྱན་ལུག་རུ་བཟང་མཚལ་གིས་བྱུགས། སྲིད་པའི་བྱ་རྡང་ལྷ་དམག་རྣཾས་ལ་འབུལ། །
+            </ab>
+            <ab facs="#facs_182_r_1" type="">
+               <lb facs="#facs_182_l_6" n="N001"/>༄༅། ༸ །ལྷའི་དཔལ་བྱ་ངོ་སོ་བསྟོད། སྲིད་རྗེ་འབྲང་ཀར་བྱ་ཚིམ་གྲུབས། ཡང་
+               <lb facs="#facs_182_l_7" n="N002"/>ཡུལ་ནི་ཕྱ་ཡུལ་གང་ཐབ་ན། ཕྱ་རབ་སྟག་ཆ་དབལ་འོལ་བཞུགས། བཙུན་མོ་ལྷ་ལྕཾ་
+               <lb facs="#facs_182_l_8" n="N003"/>ཡིད་འཛཾ་མ། ཁབ་དང་དབྱལ་དུ་བཞེངས་པ་ལ། ཕྱ་སྲས་ལྕྲཾལ་༢སུ་བསྲིད། གསེར་ཡྱག་དུང་
+               <lb facs="#facs_182_l_9" n="N004"/>འབྲི་གོང་དུ་གསོལ། ཕྱ་རྗེ་སྟག་ཆ་འལ་འོལ་དེ། ཉིན་ནི་སྱསཾར་རྩེ་ལ་བཞུགས། མཚནི་
+               <lb facs="#facs_182_l_10" n="N005"/>གསེར་ཁྲིའི་གདན་ལ་གཟིཊ། ཀོར་ནོར་སྱེར་ཡྱག་དུང་འབྲི་༢། ཕྱ་རི་ངོས་ལ་ཡ༹ཾན་འདུག།
+               <lb facs="#facs_182_l_11" n="N006"/>དེ་སྲོིན་སྐྱ་རིང་འཕྲག་མིག་དེའི་མཐོང་། ཕྱའི་གསེར་ཡྱག་དུང་འབྲི་བརྐུས། ཕྱ་རྗེ་དྱོལའི་
+            </ab>
+            <pb facs="#facs_183" n="183" xml:id="img_0183"/>
+            <ab facs="#facs_183_r" type="">
+               <lb facs="#facs_183_l" n="N001"/>ཐྱས་འཁྲོས་པའི། སྲོིན་སྐྱ་རིངས་འཕྲག་པ་ཅན། སྲིན་གིས་ར་སྐྱེས་མགྱོཊ་པ་གསད། དེར་
+               <lb facs="#facs_183_l_1" n="N002"/>སྲོིན་སྐྱ་རེངས་འཕྲག་མིག་དེ། མི་རོ་རྟ་རོ་མཁར་དུ་བརྩིག། སྲིན་ཤིང་ནོགའི་བསཾ་དུ་བཏགས།
+               <lb facs="#facs_183_l_2" n="N003"/>མདའ་མདུང་མང་པོ་མཚལ་ལྟར་སྤུངས། དུག་དང་རྨེ་ཁྲག་མཚོའ་མོ་བསྐྱིལ། ཕྱི་ཐོད་
+               <lb facs="#facs_183_l_3" n="N004"/>ཚྱོས་རྡོ་སྤྲུངས། ས་སྲིན་བསཾ་པོ་དབང་དུ་བསྡུས། ས་གླང་དམོར་རྟ་རུ་ཞོན། བྲག་སྲིན་མོང་
+               <lb facs="#facs_183_l_4" n="N005"/>བྲག་ལས་བསྡུས། བྲག་བྱ་འུག་པ་རྟ་རུ་ཞོན། སྲིན་ཤིང་མོང་དམག་དུ་བསྡུས། སྲིན་ནཾ་བུ་
+               <lb facs="#facs_183_l_5" n="N006"/>གོང་རེ་རྟ་རུ་ཞོན། སྲོིན་ཚེ་ར་མིག་དགུ་དེས། སྲིན་ཕག་ལྟོར་ར་ལྟོར་པོ་ཞོན། སྲོིན་ཤ་ཕྱེད་
+            </ab>
+            <ab facs="#facs_183_r_1" type="">
+               <lb facs="#facs_183_l_6" n="N001"/>༄༅། །སྤྱན་བཟུར་དེས། ཕུང་སྲིན་རྔ་མོང་རྣ་༡་ཞོན། སྲོིན་ཚེ་ཚེ་ངེ་ངེ་དེས། སྲིན་བྱ་
+               <lb facs="#facs_183_l_7" n="N002"/>འུག་ཅུང་རྟ་རུ་ཞོན། ལྟས་ངན་སྲིན་དམག་མུན་ལྟར་གཡས། གདུག་པའི་མཚོན་ཆ་རླུང་
+               <lb facs="#facs_183_l_8" n="N003"/>ལྟར་འཚུབ། ནདང་ཡཾ་གྱིས་ལྷོ་འུར་འཁྲིལ། མཛེ་དང་ཡོལ་གིས་ཆར་བ་ཕབ། ས་གཞི་
+               <lb facs="#facs_183_l_9" n="N004"/>བསྐུལ་ནས་རིབས་གཡོས། ང་རོ་ངན་པའི་གཅས་རོས་འདེབས། སྲོིན་རླ་བསཾ་བཞིན་དུ་ཁཾས།
+               <lb facs="#facs_183_l_10" n="N005"/>ལྟས་ངན་སྲིན་མོས་ཤ་དུས་བྱེད། ལས་ལ་ཁོལ་པོ་སྦ་ལྟར་བདྱལ། སྲིན་གླང་དམོརའི་འབུ་སྒྲས་
+               <lb facs="#facs_183_l_11" n="N006"/>འདེབས། དེར་ཕྱ་རབས་དྱོལ་འདར་ཡིན་བསཾ། སྲིན་པོན་གོང་རྔུལ་ཤྱེགསོུལ། ཏྱོའ་དང་དཔྱད་དུ་བྱས་པ<add place="ལ་">།</add>
+            </ab>
+            <pb facs="#facs_184" n="184" xml:id="img_0184"/>
+            <ab facs="#facs_184_r" type="">
+               <lb facs="#facs_184_l" n="N001"/>སྲིད་པོན་དེའི་ཞལ་ན་རེ། སྲོིན་སྐྱ་རེངས་འདུལ་བ་དང་། ལྟས་ངན་ཆྲོུལ་ཟློགས་པའི་ཕྱིར། །
+               <lb facs="#facs_184_l_1" n="N002"/>སྲིད་པའི་བྱ་རྡང་བཞེངས་འཚལ་སྐད། ཕྱ་རབས་སྲིད་པའི་དྱོལ་ཡིན། སྲིད་སྐོས་ཕྱའི་པོོན་
+               <lb facs="#facs_184_l_2" n="N003"/>ཉྱེར། དར་དཀར་ཡྱས་པའི་༤་མ་བཏིངས། གནཾ་ནས་ཤ་བའི་སྨྲན་མ་བླུགས། གསེར་མདུང་སོེར་
+               <lb facs="#facs_184_l_3" n="N004"/>སྱས་རྡོ་བཙུག། ཟ་འོག་རིནེ་ཡོལ་བ་བྲིས། གཡུའ་མཚོའ་འོད་འབར་སྒྲོཾན་བཀྱགས།
+               <lb facs="#facs_184_l_4" n="N005"/>སྲིད་པའི་བྱ་རྡང་ཉྱོན་བཞེངས། གསེར་དངུལ་མིུག་བཅལ་དུ་བཀྲཾས། ཉྱན་ཤིང་སྟག་པ་ལོ་
+               <lb facs="#facs_184_l_5" n="N006"/>དྱས་བཙུག། ཡྱག་ལུག་ཀར་པོ་ཀོང་དུ་བཏགས། བྱ་ར་དམོར་ཆསུ་ཟལ། མཚེ་ཡོངས་མོང་
+            </ab>
+            <ab facs="#facs_184_r_1" type="">
+               <lb facs="#facs_184_l_6" n="N001"/>༄༅། །རི་ལྟར་སྤུངས། གསེར་དངུལ་ཟངས་ལྕཊ་ཀྲཾས་ལྟར་བླུགས། མཐེུན་ཁྱུང་
+               <lb facs="#facs_184_l_7" n="N002"/>གིས་དྱོལ་ལ། མངོན་ཤེང་ནོར་བུ་རིེན་ཅན། སྲིན་གིས་བྱ་ནག་བརྙེན་དུ་སྒོས། ཡ༹ཾན་དབལྱི་
+               <lb facs="#facs_184_l_8" n="N003"/>བྱ་ཁྲ་ལ། དྲོག་ཐོགིས་མཐུའ་དབང་དྱས། པང་མགྱོཊ་རླུང་གིས་ཤྱོགས་པ་ཅན། སྲིད་པའི་
+               <lb facs="#facs_184_l_9" n="N004"/>བྱ་རྡང་རྩེ་ལ་བྱོན། སྒྲླ་དུང་སེང་ཀར་པོ་ལ། མེའི་ཤྱོགས་པ་དམོར་ཅན། ལྕཀྱུ་འབར་བའི་
+               <lb facs="#facs_184_l_10" n="N005"/>ཕྱིར་ལྡེར་ཅན། སྲིནྱིས་མོ་འདྲེ་འདུལ་བའི་ཕྱིར། སྲིད་པའི་བྱ་རྡང་རྩེ་ལ་བྱོན། སྤྲུལ་བའི་
+               <lb facs="#facs_184_l_11" n="N006"/>དུང་ཡྱགཡུའ་རུ་ཅན། སྲིན་གླང་དམོར་འདུལ་པའི་ཕྱིར། སྲིད་པའི་བྱ་རྡང་དྲུང་ང་སྤྱོན། སྒྲླ་
+            </ab>
+            <pb facs="#facs_185" n="185" xml:id="img_0185"/>
+            <ab facs="#facs_185_r" type="">
+               <lb facs="#facs_185_l" n="N001"/>དཔའོ་མཆེད་༣་དེ། སྲོིན་སྐྱ་རེངས་འཕྲག་མིག་འདུལ་བའི་ཕྱིར། སྲིད་པའི་བྱ་རྡང་རྩེ་ལ་བྱོན།
+               <lb facs="#facs_185_l_1" n="N002"/>མཐེུན་ཝེཾརའི་སྤྲུལ་པ་ཅན། བརྩན་པའི་གོ་ཁྲབ་ལུས་ལ་ཀྱོན། རྣོ་དབལ་མཚོན་ཆ་
+               <lb facs="#facs_185_l_2" n="N003"/>ཕྱག་ན་བསྣཾས། སྲོིན་ཐེལང་མིག་དགུ་འདུལ་བའི་ཕྱིར། སྲིད་པའི་བྱ་རྡང་རྩེ་ལ་སྤྱོན།
+               <lb facs="#facs_185_l_3" n="N004"/>མཐེུན་ལྷའི་དྱོལ་ཡང་། སྲིན་གིས་བློན་པོ་འདུལ་བའི་ཕྱིར། བྱ་རྡང་འཁོོརའི་ལྷྱོོགས་ན།
+               <lb facs="#facs_185_l_4" n="N005"/>ས་བདག་སྟོང་འདུལ་དྱོལ་ཡང་། སྲིན་གིས་འཁོར་འབང་འདུལ་བའི་ཕྱིར། བྱ་རྡང་འཁོོརའི་
+               <lb facs="#facs_185_l_5" n="N006"/>ནུབ་གླེང་ལ། དྲག་བྱེད་ཀླུའི་དྱོལ་ཡང་། སྲིན་གིས་ཕྱག་བརྙེན༴ བྱ་རྡང་འཁོོརའི་བྱང་གླེང་<add place="ལ">།</add>
+            </ab>
+            <ab facs="#facs_185_r_1" type="">
+               <lb facs="#facs_185_l_6" n="N001"/>༄༅། སྲིད་པའི་བྱ་རྡང་ཟུར་༤་ལ། བདུད་འདུལ་དམགོན་དྱོལ་བྱོན། སྲིད་པའི་
+               <lb facs="#facs_185_l_7" n="N002"/>བྱ་རྡང་མཐུ་དབང་དྱས། ལྷ་དམག་དྲག་ཚན་མཐུའ་དབང་ཆས།་ ཕྙོ་ལས་པ་འབུཾ་དང་བཅས།
+               <lb facs="#facs_185_l_8" n="N003"/>དབལྱི་ཙང་ཀུན་དྱོལ་ཡང་། སྲིན་ཡུལ་ཡང་དུ་ཟྱིས་པ་ལ། སྲིན་མཁར་དང་པའི་ནང་ཤེད་ན།
+               <lb facs="#facs_185_l_9" n="N004"/>གསེར་སྒྲོཾ་གཡུ་ཞལ་སྣང་བ་མཐོང་། དབལྱིས་སེང་སྟག་ངར་དང་ཆས། གོ་ཁྲབ་བཙན་པའི་
+               <lb facs="#facs_185_l_10" n="N005"/>སྟོབས་དང་ཆས། རྣོ་མཚོན་འབར་བའི་ངར་དང་ཆས། འོང་མཆོག་རླུང་གི་དྱོལ་དང་། སྲིན་
+               <lb facs="#facs_185_l_11" n="N006"/>རླུང་དམོར་འདུལ་པའི་ཕྱིར། སྲིད་པའི་བྱ་རྡང་རྩེ་ལ་སྤྱོན། སྲིད་པའི་བྱ་རྡང་དྲུང་ཤེད་ན། ལྷཾག་
+            </ab>
+            <pb facs="#facs_186" n="186" xml:id="img_0186"/>
+            <ab facs="#facs_186_r" type="">
+               <lb facs="#facs_186_l" n="N001"/>བསྭོ་སྒྲ་ཏི་རི་རི། སྒྲླའི་ཆ་སྒྲ་ཤ་ར་ར་། སྒྲླའི་འོད་སྒྲ་ཆ་སི་ལི་ལི། མཚོན་ཆ་རྣོ་དབལ་
+               <lb facs="#facs_186_l_1" n="N002"/>ལཾ་སེ་ལཾ། པ་དན་རོུ༹ཾན་བུ་རུ་རུ་། རྔ་གཤང་དུང་གླིང་འུ་རུ་རུ་། ལྷ་དམག་འདུས་པའི་མཐུ་
+               <lb facs="#facs_186_l_2" n="N003"/>སྟོབསྱི། སྲིན་དམག་མང་པོ་ཆེམ་ལ་ཕེབ། ལྟས་ངན་སྲོིནའི་ཆྲོུལ་ཟློཊ། དྲོག་དབལྱི་
+               <lb facs="#facs_186_l_3" n="N004"/>ཟོར་འཕང་ལ། མི་རོ་རྟ་རོའི་མཁར་ཡང་བཤིག། སྐལ་བའི་རླུང་ཐོག་སྤྲུལ་བ་ཡིན།
+               <lb facs="#facs_186_l_4" n="N005"/>ཡོང་ཤེང་ནོག་དཔའ་བསཾ་བཤིག། སྒྲླ་དཔའ་མེ་སྤྲུལ་པ་ཡིན། ཁྲག་དང་དུགིས་མཚོའ་
+               <lb facs="#facs_186_l_5" n="N006"/>མོ་བསྐཾ། སྟོབེན་ཐོགིས་དྱོལ་ཡིས། སྲིན་གིས་བྱ་བྲག་ནོག་བཤིག། གནྕཾགས་ཐོག་
+            </ab>
+            <ab facs="#facs_186_r_1" type="">
+               <lb facs="#facs_186_l_6" n="N001"/>༄༅། ༸ །དང་དབལྱི་ཟེར་འཕྲོས་པས། མ་དང་སྲིན་གིས་འབྲོས་ལཾ་བཅད། སྒྲླའི་
+               <lb facs="#facs_186_l_7" n="N002"/>དུང་སེང་ཀོར་ཡིས། སྐུ་ལས་ལྷའི་སྤྲུལ་བ་བྱུང་། མཆི་བ་གདུག་པའི་རྩང་སྭོ་འདར། སྤྱན་
+               <lb facs="#facs_186_l_8" n="N003"/>ལས་སྐཾརའི་ཚ་ཚ་འཕྲོ། ཤངས་ལས་སྤྲུལ་བའི་གཡུའ་བུན་འཐིབས། ལྗགས་ལས་ཐོག་
+               <lb facs="#facs_186_l_9" n="N004"/>དང་སེར་བ་འབེབ། བཙན་དྲག་བདུད་འདུལ་སྤྲུལ་པ་ཅན། སྒྲླ་དེའི་སྤྲུལ་པ་ལེས། ལྟས་ངན་
+               <lb facs="#facs_186_l_10" n="N005"/>སྲིན་གིས་ལས་པ་འདུལ། མཐེུན་ཝེཾརའི་དྱོལ་ཡིས། གསོད་པའི་མཚོན་ཆ་སྲིན་ལ་འཕང་།
+               <lb facs="#facs_186_l_11" n="N006"/>སྲིན་གིས་དྱོལས་འགོ་ལུས་ཕྱེ། མཐེུན་ཉྱན་གི་དྱོལ་དེ། ཐྱས་ལས་ཉྱན་གི་སྤྲུལ་པ་བྱུང་།
+            </ab>
+            <pb facs="#facs_187" n="187" xml:id="img_0187"/>
+            <ab facs="#facs_187_r" type="">
+               <lb facs="#facs_187_l" n="N001"/>སྲིན་གྱི་ཤ་ཤེང་རྩེད་ནས་གཅད། སྲིད་པའི་བྱ་རྡང་སྤྲུལ་པ་ལས། སྲིན་མཁར་ནོག་མེའི་
+               <lb facs="#facs_187_l_1" n="N002"/>བསྲེགས། དབང་བློན་ཀླུའི་དྱོལ་དེས། ཕྱག་བརྙན་ལས་པ་སྲིན་ལ་སྦད། ལྕགྱི་གང་
+               <lb facs="#facs_187_l_2" n="N003"/>པོ་སྔོོན་ཡིན། སྲིན་རི་དམོར་བཤིག་ཡིན་གཏོར། ཡ༹ཾན་སྤྲུལ་བའི་བྱ་ཁྲ་ལ། བང་འགྱོགས་
+               <lb facs="#facs_187_l_3" n="N004"/>གློགིས་གཤོགས་པ་ཅན། ལྟས་ངན་སྡིག་པའི་བྱ་ནག་འདུལ། ས་བདག་ཙང་ཀུན་དྱོལ་ཡིན།
+               <lb facs="#facs_187_l_4" n="N005"/>གསེར་གྱིས་གོ་ཆ་སྐུ་ལ་མནབས། གསེར་གིས་གླང་པོ་ཆིབསུ་བཅིབས། ཕྱག་བརྙན་མ༹ལ་
+               <lb facs="#facs_187_l_5" n="N006"/>སྟག་དམོར་དེས། སྲོིན་སྐྱ་རེང་འདུལ་པའི་དམག་ལ་སྦད། མཚལ་སྟག་དམོར་ཐོག་ལྟར་འདྲིལཾ།།
+            </ab>
+            <ab facs="#facs_187_r_1" type="">
+               <lb facs="#facs_187_l_6" n="N001"/>༄༅། ༸ །སྲིན་རྗེ་སྐྱ་རེངས་གཡསུ་བསྐྱིལ། བློོན་ཐོང་ལོང་གཡོན་དུ་བསྐྱེབས། སྲིན་
+               <lb facs="#facs_187_l_7" n="N002"/>དམག་མང་པོ་ལུས་དེ་གསད། སྲིན་དར་དམོར་མན་སུ་ཐོབ། སྲིན་གི་ར་སྐྱེས་གསད་པའི་དོན།
+               <lb facs="#facs_187_l_8" n="N003"/>བྱ་རྡང་དྲུང་དུ་ར་སྐྱེས་བཤས། མགོ་སྙིང་བྱ་རྡང་ཡྱསུ་རྟེན་དུ་བཞགས། སྲིན་གིས་ར་སྐྱེས་གཡང་
+               <lb facs="#facs_187_l_9" n="N004"/>གཞི་དེས། སྲིད་པའི་བྱ་རྡང་འགོ་ལ་གཟེར། སྲིན་དར་དམོར་འཕྲོཊ་པ་དེ། སྲིད་པའི་བྱ་རྡང་ཡྱསུ་
+               <lb facs="#facs_187_l_10" n="N005"/>བཙུགས། མདུང་དང་དར་ལ་ལྷ་དམག་འགྱེད། དགྲ་ནོར་གནཾ་ལ་སྒྲླ་རྒ། གོ་མཚོན་འོད་ལ་
+               <lb facs="#facs_187_l_11" n="N006"/>གསེར་ལ་དགྱེད། ཡྱེིད་ལྷའི་དྱོལ་དང་། མཐེུན་སྱེར་གྱིས་སྷིངེ་དེ། མ་ཐང་སྲིན་ལ་སྦད་དེ་བཏངས།
+            </ab>
+            <pb facs="#facs_188" n="188" xml:id="img_0188"/>
+            <ab facs="#facs_188_r" type="">
+               <lb facs="#facs_188_l" n="N001"/>སྲིན་གྱིས་དྱོལ་མཆེདགུ་བཟུངས། བྱ་རྡང་དྲུང་དུ་སྲིན་རྗེ་གསད། བྱ་རྡང་དགྲ་གསད་དེ་ནས་སྲིད།
+               <lb facs="#facs_188_l_1" n="N002"/>མགོ་གཅད་བྱ་རྡང་རྩེ་ལ་བཞག། སྙིང་གིས་མཐེུན་ཝེཾར་བརྔན། ཁྱུང་གི་སྒྲླའི་སྨན་དུ་ཆེ།
+               <lb facs="#facs_188_l_2" n="N003"/>མཁྲིས་པས་བྱ་རྡང་བདིུ༹ད་གསོལ། མཐེུན་སྟོབས་དྲག་དྱོལ་ཡིན། བྱ་རྡང་དྲུང་ནས་མེ་ཟོར་འཕང་།
+               <lb facs="#facs_188_l_3" n="N004"/>སྲིན་ཡུལ་ནོག་མེའི་སྲེགས། བྱ་རྡང་དྲུང་དུ་སྲིན་གླང་གསད། མགོ་སྙིང་བྱ་རྡང་རྩེ་ལ་བཞགས།
+               <lb facs="#facs_188_l_4" n="N005"/>ཁ་དྲག་ལྕགྱིས་བྱ་ཁྲ་དེ། སྲོིནའི་ཡུལ་དུ་བརྔངས་དེ་སོང་། སྲིན་གྱིས་རླ་ཡུལ་ཁྱེར་ནས་འོངས།
+               <lb facs="#facs_188_l_5" n="N006"/>བྱ་རྡང་ཤིང་གི་རྩེ་ལ་བཏགས། གདུག་བྱེད་སྲིན་གི་དམོ༹གས་རྣཾས། བྱ་རྡང་དྲུང་དུ་ནུབ་ཁྱེར་འདུག།
+            </ab>
+            <ab facs="#facs_188_r_1" type="">
+               <lb facs="#facs_188_l_6" n="N001"/>༄༅། ༸ །སྲིན་མཁར་ལྷའི་ལས་པ་རྣཾསྱི་བསྐོར། བྱ་རྡང་ཕྱག་བརྙན་སྲོིནའི་མཛོད།།
+               <lb facs="#facs_188_l_7" n="N002"/>སྲིད་པའི་བྱ་རྡང་རྩེ་ལ་སྤྱོན། ཕྱ་རབས་སྲིད་པའི་གདན་དུ་དྱལ། སྲིན་པོ་སྐྱ་རེང་གཡོན་དུ་ཕམ།
+               <lb facs="#facs_188_l_8" n="N003"/>ལྷ་མི་༢སྱི་དྱལ་ཁ་ཐོབ། ༴ །ཡང་ཡུལ་ནི་གནམཐོང་གཡས་རོལ་ན། ཡུལ་མཁར་སྔོོནའི་
+               <lb facs="#facs_188_l_9" n="N004"/>ནང་ཤེད་ན། ཐྱར་གཡྲུང་དྱོལ་བཞུགས། ཉྱན་ལྷཾ་ཡིད་འཛཾ་ཁབ་དེ་བ༤ེངས། སྲས་ནི་འོད་རུམ་
+               <lb facs="#facs_188_l_10" n="N005"/>ཐང་པོར་ལྟཾས། གོང་དུ་ཀྱི་ལིང་ཡིད་མགྱོཊ་ཚངས། ཕྱ་སྲས་འོད་རུཾ་ཐང་པོ་དེར། འཕྲུལ་སྣང་
+               <lb facs="#facs_188_l_11" n="N006"/>རལྲི་གྷོ་ལ་ཐོག། ཀྱི་ལིང་ཡིད་མགྱོཊ་ཆིབསུ་བཅིབས། དོན་གཉན་ས་བདག་ཤུལ་དུ་འཕང་།
+            </ab>
+            <pb facs="#facs_189" n="189" xml:id="img_0189"/>
+            <ab facs="#facs_189_r" type="">
+               <lb facs="#facs_189_l" n="N001"/>གནཾ་བཙན་འཐིང་ཡུག་དེ་དང་འཕྲད་དེ་འཇལ། མི་དང་བཙན་དུ་འཐབ་པ་ལ། པར་ན་བཙན་རྗེ་
+               <lb facs="#facs_189_l_1" n="N002"/>སྨྲིག་ལ་འདས། ཆུ་ལ་འོད་རུཾ་ཐང་པོ་གསད། ཀྱི་ལིང་ཡིད་འགྱོཊ་བཙན་གིས་འཕྲོཊ། དེ་གཡྲུང་
+               <lb facs="#facs_189_l_2" n="N003"/>དྱོལའི་ཐྱསུ་སྡུས། ཐྱར་སྲིད་པའི་པོོན་དེས། སྲིད་པོན་དབང་གྲུབ་རྒམ་པོ་གཉེར། དུང་གཞི་མ་
+               <lb facs="#facs_189_l_3" n="N004"/>དཀོར་བཏིང་། གཡུའི་སྨན་མ་བཅལ་དུ་བཀྲཾས། གསེར་མདའ་གཡུའི་སྱས་རྡོ་བཙུཊ། ཤེལ་འོད་
+               <lb facs="#facs_189_l_4" n="N005"/>འབར་བའི་སྒྲོཾན་འགྱོཊ། སྲིད་པའི་བྱ་རྡང་ཉྱོན་བཞེངས། མཐེུན་སྒྲླའི་དམོ༹གས་བསྡུས། མདུང་
+               <lb facs="#facs_189_l_5" n="N006"/>དར་བཅྲུཾ་ཡྱསུ་བཙུག། ཐྱར་སྲིད་པའི་ལྷ་དམག་བསྡུས། ཐྱར་དུང་ཡྱག་གཡུ་རུ་དང་། དུང་གླང་
+            </ab>
+            <ab facs="#facs_189_r_1" type="">
+               <lb facs="#facs_189_l_6" n="N001"/>༄༅། ༸ །མཆོང་གིས་སྙིང་ཆ་ཅན། སྲིད་པའི་བྱ་རྡང་དྲུང་དུ་བཏཊ། འབྲས་ཡྱང་༣་དྱ་
+               <lb facs="#facs_189_l_7" n="N002"/>དྲུག་༡༠་ལ། རིནེ་མཚལ་གིཡྲུང་བྲིས། གསེར་གཡུའ་དག་གིས་བཀའ་རྟཊ་བཏགྶ། ར་སྐྱེས་
+               <lb facs="#facs_189_l_8" n="N003"/>གནྕཾག་རུང་རུ་ཅན། སྲིད་པའི་བྱ་རྡང་དྲུང་དུ་བཏག། གསེར་དང་གཡུའིཁོོར་ཅན། སྲིད་པའི་བྱ་རྡང་
+               <lb facs="#facs_189_l_9" n="N004"/>ཁྲི་ལ་བཟེར། ཐོགིས་རལྲི་མེ་འབར་དང་། ཤེས་རབ་མདའ་གཞུའ་རང་འཕེན་དང་། གནྕཾག་སྟ་
+               <lb facs="#facs_189_l_10" n="N005"/>རེ་བྲག་འགེས་༣། མཐེུན་ཝེཾརའི་ཕྱག་བརྙན་སྟེ། སྲིད་པའི་བྱ་རྡང་དྲུང་དུ་བཙུག། ཐོ་བ་ཐུ་
+               <lb facs="#facs_189_l_11" n="N006"/>ལུཾ་ཐིལ་དང་༣། བཙན་བྲག་བཤིཊ་པའི་མཚོན་ཆ་སྟེ། ལྷ་དམག་འདུས་པའི་དྲུང་དུ་བཞག། སྱེར་
+            </ab>
+            <pb facs="#facs_190" n="190" xml:id="img_0190"/>
+            <ab facs="#facs_190_r" type="">
+               <lb facs="#facs_190_l" n="N001"/>རྟ་ཉི་མའི་བཟང་རིལ་ཅན། སྲིད་པའི་ལྷཾག་བཅིབ་པ་དེ། སྲིད་པའི་བྱ་རྡང་དྲུང་དུ་བཏགས། ཉྱན་
+               <lb facs="#facs_190_l_1" n="N002"/>བྱ་ཁྲུངང་ཀར་མོ་དེ། གནཾ་ཉྱན་དམག་སྦྲིན་འཕྲིན་པ་སྟེ། སྲིད་པའི་བྱ་རྡང་དྲུང་དུ་སྦར། དུང་གིས་
+               <lb facs="#facs_190_l_2" n="N003"/>བྱ་རྒོད་ཀར་པོ་ལ། གཡུའ་མཆོང་རིནེ་བཀའ་རྟག་ཅན། དགྲ་འདུལ་སྲིད་པའི་བྱ་རྡང་བརྔན།
+               <lb facs="#facs_190_l_3" n="N004"/>སྲིད་པའི་བྱ་རྡང་དྲུང་ཤེད་ན། མཐའ་དམག་སྫོགས་པའི་ལྷཾགས་འདུས། བདུད་འདུལ་དབལྱིས་
+               <lb facs="#facs_190_l_4" n="N005"/>དྱོལ་བྱོན། མཐེུན་ལྷཾགས་བསཾ་མྱིབ། པ་ཏན་རོུ༹ཾན་སྤྲིན་དཔུང་འདྲ། མཚོན་ཆ་ཐོག་རྒོད་
+               <lb facs="#facs_190_l_5" n="N006"/>འཕྲོ་བ་འདྲ། བྱ་རྡང་དྲུང་དུ་ལྷཾག་འདུས། གདུག་པའི་བཙན་རྗེ་ཀར་གིས་སྐོར། མཁར་དང་གོང་
+            </ab>
+            <ab facs="#facs_190_r_1" type="">
+               <lb facs="#facs_190_l_6" n="N001"/>༄༅། ༸ །བཅུད་དེ་འོ་འཕང་། གནཾ་བཙན་ཐེང་ཡུག་བཙན་དུ་བཟུངས། བཙན་དར་
+               <lb facs="#facs_190_l_7" n="N002"/>ཡུན་༤་མན་སུ་ཐོག། བཙན་དམག་མང་པོ་ལུས་ལྟར་བསྡུས། དམགོན་སྒྲླའི་དྱོལ་དེས།
+               <lb facs="#facs_190_l_8" n="N003"/>བཙན་རྗེ་ཁ་༤་གདོང་བདྱད་གསད། འགོ་སེ་ཐྱར་ཡུལ་དུ་ལུས། ཐྱར་སྲིད་པའི་དྱོལ་ཡིས།
+               <lb facs="#facs_190_l_9" n="N004"/>ཁ་༤་གདོང་བདྱད་འགོ་སྙིང་དེ། སྲིད་པའི་བྱ་རྡང་རྩེ་ལ་ཁྱེར། སྦ་དང་སྙུགིས་ཁྲི་ལ་བཞུགས།
+               <lb facs="#facs_190_l_10" n="N005"/>བཙན་རྗེའི་གྷོ་དང་སྙིང་གིས་ཕྷོ་གསོལ། ཕྷོའི་བྱ་རྡང་དེ་ལ་བསྲིད། བཙན་དར་ཡུག་༤་ཡར་
+               <lb facs="#facs_190_l_11" n="N006"/>ལ་ཁྱེར། སྲིད་པའི་བྱ་རྡང་རྩེ་ལ་བཙུག། བཙན་ལུག་བཙན་ར་བཙན་བྱ་༣། སྔོནས་བ༹ན་
+            </ab>
+            <pb facs="#facs_191" n="191" xml:id="img_0191"/>
+            <ab facs="#facs_191_r" type="">
+               <lb facs="#facs_191_l" n="N001"/>གི་གོར་ནོར་དེ། ཐྱར་དྱོལའི་མོན་སུ་ཐོབ། བཙན་ལུག་བྱ་རྡང་གཡོན་དུ་བཏང་། བཙན་
+               <lb facs="#facs_191_l_1" n="N002"/>བྱས་སྲིད་པའི་བྱ་རྡང་ཉྱན་དམག་བརྔན། བཙན་རྗེ་གསད་པའི་སྱེར་ཁྲབ་དེ། སྲིད་པའི་བྱ་རྡང་
+               <lb facs="#facs_191_l_2" n="N003"/>ཟུར་ལ་བསྐོར། བཙན་རལ་ངར་ཆེན་ཡར་ལ་འོངས། སྲིད་པའི་བྱ་རྡང་རྩེ་ལ་བཙུག། བཙན་
+               <lb facs="#facs_191_l_3" n="N004"/>རྟ་རེང་མོང་མགྱོཊ་པ་དེས། མཐེུན་ཕྷོའི་དྱོལ་དེས། དགྲ་གསདཔའོ་བརྩིགས་ཡར་ཕུར།
+               <lb facs="#facs_191_l_4" n="N005"/>བཙན་རྗེ་བསང་བའི་ཀར་འཕྲུ་དེ། སྒྲླ་དར་མ་མཆེད་༣་ལ། དགྲ་གསདབང་གི་རྟགསུ་བཞཊ།
+               <lb facs="#facs_191_l_5" n="N006"/>སྟོབས་ཆེན་ཝེཾརའི་དྱོལ་ཡིན། གནཾ་བཙན་འཐིང་ཡུག་སྙིང་ཕྱུང་པའི། སྒྲླའི་དཔའ་མདུང་
+            </ab>
+            <ab facs="#facs_191_r_1" type="">
+               <lb facs="#facs_191_l_6" n="N001"/>༄༅། །རྩེ་ལ་བརྒྱུས། བྱ་རྡང་རྩེ་ལ་དཔའ་མདུང་བཙུག། བཙན་རྗེ་གསད་པའི་
+               <lb facs="#facs_191_l_7" n="N002"/>གྷོ་གཅད་པའི། སྲིད་པའི་བྱ་རྡང་སྟེང་དུ་བཞགས། བཙན་རྗེ་གསད་པའི་སྙིང་ཁྲག་དེ། ལྷ་
+               <lb facs="#facs_191_l_8" n="N003"/>དམག་རྣཾས་ལ་བདིུ༹ད་གསོལ། བཙན་རྗེ་གསད་པའི་སྲོག་རྩ་དེ། བྱ་རྡང་དྲང་ཤིང་རྩེ་ལ་
+               <lb facs="#facs_191_l_9" n="N004"/>ཁྱེར། བཙན་གྱི་བླ་ཤིང་གཅད་པ་དེ། སྲིད་པའི་བྱ་རྡང་རྩ་བར་བཙུག། གདུག་པའི་གཙན་
+               <lb facs="#facs_191_l_10" n="N005"/>དམག་མང་པོ་ཡང་། སྲིད་པའི་བྱ་རྡང་དྲུང་དུ་འདུས། བཙན་དམག་མོང་དཾ་ལ་འདུས། །
+               <lb facs="#facs_191_l_11" n="N006"/>བཙན་རྗེ་བྱ་རྡང་ལས་པར་བསྐོས། སྲིད་པའི་བྱ་རྡང་མཐོུབསྱི། བཙན་གྱི་གདུག་པ་དེ་ལྟར་
+            </ab>
+            <pb facs="#facs_192" n="192" xml:id="img_0192"/>
+            <ab facs="#facs_192_r" type="">
+               <lb facs="#facs_192_l" n="N001"/>འདུལ། ཐྱར་སྲིད་པའི་ཐག་ཚིམ་བཀྲུ། བྱ་རྡང་དགྲ་གསད་དེ་ལ་ཟེར། ཐྱར་དབང་གྲུབ་དྱོལ་
+               <lb facs="#facs_192_l_1" n="N002"/>ལེས། རིེན་སྱེར་ཕྱེ་དམོར་དེ།<hi style="text-decoration: line-through;">།</hi> བྱ་རྡང་དགྲ་གསད་དེ་ལ་ཟེར། ཐྱར་དབང་གྲུབ་དྱལ་པོ་དེ།
+               <lb facs="#facs_192_l_2" n="N003"/>དངུལ་དཀར་མེ་ལོང་སྟེང་དུ་བླུགས། དབང་གྲུབ་དྱོལ་ཕྱག་དུ་ཕུལ། སྲིད་པའི་དབང་གྲུབ་
+               <lb facs="#facs_192_l_3" n="N004"/>དྱོལ་ཡིས། མཐེུན་འདུལ་བའི་ལྷཾག་ལ། བཙན་ཁཾས་འདུལ་བའི་ཡྟོནྱིས། སྱེར་ཕྱེ་སྐྱེཾས་
+               <lb facs="#facs_192_l_4" n="N005"/>དང་བསྲེས་པ་ཕུལ། མཐེུན་ཝེཾརའི་དྱོལ་ལ། བཙན་རྗེ་གསད་པའི་སོ་སྤྱིལ་དུ། འབྲོང་
+               <lb facs="#facs_192_l_5" n="N006"/>ཡྱག་ཁཾས་པའི་སྲོཊ་སྙིང་ཕུལ། དོན་སོ་བཤས་པའི་སྙིང་ཁྲག་ལ། ཕྙོའི་དྱོལ་མངའ་ཐང་སྱོལ
+            </ab>
+            <ab facs="#facs_192_r_1" type="">
+               <lb facs="#facs_192_l_6" n="N001"/>༄༅། །དུང་གི་བྱ་བོང་ཉྱན་ལ་བཏཊ། ལྡན་པའི་བཀའི་ལྷཾཊ་བརྗོད། བྱ་རྡང་ཡཊའི་ཀར་མ་
+               <lb facs="#facs_192_l_7" n="N002"/>དྱལ། ལྷཾཊ་མཐུའི་སྲོིན་འདུལ། ཡྲེིད་དྱོལ་མཐུ་དབང་རྒྱས། བྱ་རྡང་དེ་ལ་མ༹ན་སྱོལ་པའི། དགྲ་
+               <lb facs="#facs_192_l_8" n="N003"/>གསད་དོནྲུབ་ཕྙོའི་མཁར། ཡྟོན་སྫོཊ་པའི་མཁར་ལ་ཕྱཊ༹ལོ། ཐྱར་སྲིདའི་དམག་མ་ཡིན།
+               <lb facs="#facs_192_l_9" n="N004"/>དགྲསད་དོནྲུབ་བྱ་རྡང་ཡཊ། སྟག་དང་ཡྱགིས་དཔའ་ཆསྱོལ། སྟཊ་སྙིང་ཡྱཊ་སྙིང་ཏྱོཾར་ཕུད། བསང་ཁྲཊ་
+               <lb facs="#facs_192_l_10" n="N005"/>མཚོ་བགྲེདཔའ་ཆསྱོལ། པ་དན་རུ༹ཾན་ཕྱོཊ་༤ིར་ཕྱར། རྔང་དུང་གླེང་སྒྲ་སྐད་འདོན། མཚལ་དང་སྤོསྱི་
+               <lb facs="#facs_192_l_11" n="N006"/>སྣང་མ་བསྟཾ། ཕྱོཊ་༤་ལྷཾཊ་་མོངའི། ས་ཕྱོཊ་དེ་རུ་བཀྲིས་ནས། ཀི་བསྭོ་ཆའོ་ལྷ་དྱོལ།། དགེའོ་།
+            </ab>
+         </div>
+      </body>
+   </text>
+</TEI>

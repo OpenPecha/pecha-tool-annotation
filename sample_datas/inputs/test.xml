@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>A Sample TEI Encoding of a Buddhist Narrative</title>
+        <author>Anonymous</author>
+        <editor>
+          <persName>Open Pecha Editorial Team</persName>
+        </editor>
+        <respStmt>
+          <resp>Transcription</resp>
+          <name>Tenzin Dorje</name>
+        </respStmt>
+        <respStmt>
+          <resp>TEI encoding</resp>
+          <name>Kunsang Tashi</name>
+        </respStmt>
+      </titleStmt>
+
+      <publicationStmt>
+        <publisher>Example Digital Dharma Archive</publisher>
+        <pubPlace>Dharamshala</pubPlace>
+        <date when="2026">2026</date>
+        <availability>
+          <licence target="https://creativecommons.org/licenses/by/4.0/">
+            CC BY 4.0
+          </licence>
+        </availability>
+      </publicationStmt>
+
+      <sourceDesc>
+        <msDesc>
+          <msIdentifier>
+            <country>India</country>
+            <settlement>Dharamshala</settlement>
+            <repository>Example Monastic Library</repository>
+            <idno>MS-BO-00124</idno>
+          </msIdentifier>
+
+          <msContents>
+            <msItem n="1">
+              <title xml:lang="en">The Story of the Elder Monk</title>
+              <title xml:lang="bo">རྒན་པོའི་དགེ་སློང་གི་སྒྲུང་།</title>
+              <author>Anonymous</author>
+              <note>This is a sample manuscript description for demonstration only.</note>
+            </msItem>
+          </msContents>
+
+          <physDesc>
+            <objectDesc>
+              <supportDesc>
+                <support>Paper manuscript with black ink and rubricated headings.</support>
+                <extent>54 folios</extent>
+              </supportDesc>
+            </objectDesc>
+            <handDesc>
+              <handNote medium="ink">Careful dbu-can script.</handNote>
+            </handDesc>
+          </physDesc>
+
+          <history>
+            <origin>
+              <origPlace>Tibet</origPlace>
+              <origDate notBefore="1800" notAfter="1899">19th century</origDate>
+            </origin>
+            <provenance>Later preserved in a monastery collection in northern India.</provenance>
+          </history>
+        </msDesc>
+      </sourceDesc>
+    </fileDesc>
+
+    <encodingDesc>
+      <projectDesc>
+        <p>
+          This file demonstrates a TEI XML representation of a narrative text with
+          structural, semantic, and editorial annotation.
+        </p>
+      </projectDesc>
+
+      <editorialDecl>
+        <p>
+          Original orthography is preserved where possible. Obvious scribal errors are
+          marked with <gi>sic</gi> and editorial corrections with <gi>corr</gi>.
+          Illegible passages are marked with <gi>gap</gi> or <gi>unclear</gi>.
+        </p>
+      </editorialDecl>
+
+      <tagsDecl>
+        <namespace name="http://www.tei-c.org/ns/1.0">
+          <tagUsage gi="pb" occurs="6"/>
+          <tagUsage gi="persName" occurs="18"/>
+          <tagUsage gi="placeName" occurs="7"/>
+          <tagUsage gi="note" occurs="9"/>
+        </namespace>
+      </tagsDecl>
+    </encodingDesc>
+
+    <profileDesc>
+      <langUsage>
+        <language ident="en">English</language>
+        <language ident="bo">Tibetan</language>
+        <language ident="sa">Sanskrit</language>
+      </langUsage>
+
+      <textClass>
+        <keywords scheme="local">
+          <term>Buddhism</term>
+          <term>Narrative</term>
+          <term>Monastic literature</term>
+          <term>Sample TEI</term>
+        </keywords>
+      </textClass>
+
+      <particDesc>
+        <listPerson>
+          <person xml:id="elder">
+            <persName>The Elder Monk</persName>
+            <sex value="M"/>
+            <state>teacher</state>
+          </person>
+          <person xml:id="novice">
+            <persName>Jampa</persName>
+            <sex value="M"/>
+            <state>novice monk</state>
+          </person>
+          <person xml:id="abbot">
+            <persName>The Abbot</persName>
+            <sex value="M"/>
+            <state>abbot</state>
+          </person>
+        </listPerson>
+
+        <listPlace>
+          <place xml:id="monastery">
+            <placeName>Serene Peak Monastery</placeName>
+          </place>
+          <place xml:id="village">
+            <placeName>Cloud Valley</placeName>
+          </place>
+          <place xml:id="forest">
+            <placeName>Pine Forest Hermitage</placeName>
+          </place>
+        </listPlace>
+      </particDesc>
+    </profileDesc>
+
+    <revisionDesc>
+      <change when="2026-02-25" who="#elder">
+        Initial sample transcription created.
+      </change>
+      <change when="2026-02-26" who="#novice">
+        Added semantic tags for names, places, and verse.
+      </change>
+      <change when="2026-02-28" who="#abbot">
+        Revised metadata and added editorial notes.
+      </change>
+    </revisionDesc>
+  </teiHeader>
+
+  <text>
+    <front>
+      <titlePage>
+        <docTitle>
+          <titlePart type="main">The Story of the Elder Monk</titlePart>
+          <titlePart type="sub">A Didactic Narrative on Discipline and Wisdom</titlePart>
+        </docTitle>
+        <docAuthor>Anonymous</docAuthor>
+      </titlePage>
+
+      <div type="preface">
+        <head>Preface</head>
+        <p>
+          This digital edition is intended as an example of how a traditional text may
+          be represented in TEI XML. It is not a historical edition, but a teaching sample.
+        </p>
+      </div>
+    </front>
+
+    <body>
+      <div type="chapter" n="1" xml:id="ch1">
+        <head>Chapter One: Arrival at the Monastery</head>
+
+        <p>
+          <pb n="1r"/>
+          In the valley below the snow mountains stood
+          <placeName ref="#monastery">Serene Peak Monastery</placeName>,
+          where <persName ref="#elder">the Elder Monk</persName>
+          taught the discipline of conduct and contemplation.
+        </p>
+
+        <p>
+          One autumn morning, a young novice named
+          <persName ref="#novice">Jampa</persName>
+          arrived from <placeName ref="#village">Cloud Valley</placeName>.
+          He bowed before <persName ref="#abbot">the Abbot</persName> and said,
+          <q>Venerable sir, I wish to study the teachings and train my mind.</q>
+        </p>
+
+        <p>
+          The abbot replied,
+          <q>
+            Study begins not with many words, but with careful attention.
+            Stay near <persName ref="#elder">the Elder Monk</persName>,
+            and observe how he walks, speaks, and keeps silence.
+          </q>
+        </p>
+
+        <p>
+          That evening, <persName ref="#novice">Jampa</persName> followed the elder
+          to the assembly hall. On the wall hung an old inscription reading
+          <foreign xml:lang="sa">धर्म</foreign>,
+          explained in the margin by a later hand as
+          <gloss xml:lang="en">teaching, law, reality</gloss>.
+        </p>
+
+        <note place="margin">
+          The Sanskrit word here is intentionally brief to show how foreign-language
+          elements may be marked.
+        </note>
+      </div>
+
+      <div type="chapter" n="2" xml:id="ch2">
+        <head>Chapter Two: The Lesson of the Lamp</head>
+
+        <p>
+          <pb n="2r"/>
+          At dawn, <persName ref="#elder">the Elder Monk</persName>
+          lit a butter lamp and placed it before an image of the Buddha.
+          Seeing the novice watching, he asked,
+          <q>What do you see?</q>
+        </p>
+
+        <p>
+          <persName ref="#novice">Jampa</persName> answered,
+          <q>I see the flame, bright and steady.</q>
+          The elder said,
+          <q>
+            Look again. The flame is steady only because it is constantly changing.
+            In the same way, the mind seems continuous, yet every thought arises and passes.
+          </q>
+        </p>
+
+        <p>
+          The novice wrote these words in his notebook, but later the line was copied
+          wrongly as
+          <choice>
+            <sic>every thought arises and remains</sic>
+            <corr>every thought arises and passes</corr>
+          </choice>.
+          An editor has corrected it here.
+        </p>
+
+        <p>
+          Outside, the wind moved through the pine trees of
+          <placeName ref="#forest">Pine Forest Hermitage</placeName>.
+          The elder recited the following verse:
+        </p>
+
+        <lg type="verse">
+          <l>The lamp burns clear when guarded from the wind.</l>
+          <l>The mind grows clear when guarded from distraction.</l>
+          <l>One who watches rising and falling carefully</l>
+          <l>Finds peace not made by circumstances.</l>
+        </lg>
+
+        <note type="commentary">
+          This verse is not from a canonical source; it is included here only as an
+          example of verse encoding in TEI.
+        </note>
+      </div>
+
+      <div type="chapter" n="3" xml:id="ch3">
+        <head>Chapter Three: The Journey to the Village</head>
+
+        <p>
+          <pb n="3r"/>
+          Some weeks later, the elder and the novice traveled to
+          <placeName ref="#village">Cloud Valley</placeName>
+          to collect medicine for a sick monk.
+          The path was steep, and the novice complained of hunger.
+        </p>
+
+        <p>
+          <persName ref="#elder">The Elder Monk</persName> said,
+          <q>
+            Hunger is known by the body, complaint is added by the mind.
+            Learn to distinguish sensation from reaction.
+          </q>
+        </p>
+
+        <p>
+          Near the river they met a householder woman who offered them soup.
+          Her name is lost in the manuscript;
+          <gap reason="illegible" quantity="2" unit="words"/>.
+          She requested a blessing for her son.
+        </p>
+
+        <p>
+          The elder placed his hand above the child’s head and spoke gently.
+          A later annotator added:
+          <note resp="#abbot">
+            This passage is often cited in village preaching to illustrate compassion
+            expressed through ordinary encounters.
+          </note>
+        </p>
+
+        <p>
+          In one witness of the text, the place name appears as
+          <choice>
+            <orig>Cloud Valley</orig>
+            <reg>Cloudvale</reg>
+          </choice>,
+          but this edition keeps the more common form.
+        </p>
+      </div>
+
+      <div type="chapter" n="4" xml:id="ch4">
+        <head>Chapter Four: Unclear Words in the Night Teaching</head>
+
+        <p>
+          <pb n="4r"/>
+          On their return, the monks stopped at a small rest house.
+          After sunset, <persName ref="#novice">Jampa</persName> asked,
+          <q>How can I know whether my practice is genuine?</q>
+        </p>
+
+        <p>
+          The elder answered,
+          <q>
+            If pride increases, practice is weak.
+            If greed increases, practice is crooked.
+            If kindness increases, practice is maturing.
+          </q>
+        </p>
+
+        <p>
+          The manuscript becomes difficult to read here:
+          <unclear>one should test the heart in ordinary moments</unclear>.
+          The final phrase is partially damaged.
+        </p>
+
+        <p>
+          Another copy preserves the sentence more fully:
+          <quote>
+            One should test the heart in ordinary moments, not only in meditation.
+          </quote>
+        </p>
+
+        <p>
+          The novice then remained silent for a long time.
+          In the morning he confessed that he had secretly wished to be praised
+          for his discipline.
+        </p>
+
+        <p>
+          <persName ref="#elder">The Elder Monk</persName> smiled and replied,
+          <q>To see vanity is already to loosen its grip.</q>
+        </p>
+      </div>
+
+      <div type="chapter" n="5" xml:id="ch5">
+        <head>Chapter Five: The Abbot’s Instruction</head>
+
+        <p>
+          <pb n="5r"/>
+          Upon returning to
+          <placeName ref="#monastery">Serene Peak Monastery</placeName>,
+          the novice reported what he had learned.
+          <persName ref="#abbot">The Abbot</persName> listened carefully and said:
+        </p>
+
+        <list type="bulleted">
+          <item>Discipline protects practice.</item>
+          <item>Reflection clarifies intention.</item>
+          <item>Compassion gives practice its direction.</item>
+        </list>
+
+        <p>
+          He then commanded the novice to sweep the courtyard each morning for one year,
+          adding that no instruction is complete until it enters the body through repetition.
+        </p>
+
+        <p>
+          A rubricated subheading in the manuscript reads:
+          <hi rend="red">On the union of humility and diligence</hi>.
+        </p>
+
+        <p>
+          Some readers have taken this chapter as evidence that the novice later became
+          a famous teacher, but the text itself does not say so.
+          That conclusion belongs to later tradition.
+        </p>
+      </div>
+
+      <div type="chapter" n="6" xml:id="ch6">
+        <head>Chapter Six: Colophon</head>
+
+        <p>
+          <pb n="6r"/>
+          Thus ends <title>The Story of the Elder Monk</title>,
+          a narrative on the training of intention, patience, and insight.
+        </p>
+
+        <closer>
+          <salute>May virtue increase.</salute>
+          <signed>Copied by a devoted student for the benefit of all beings.</signed>
+        </closer>
+
+        <p>
+          <note type="colophon">
+            The colophon in the exemplar manuscript includes a damaged date and an unclear
+            personal name, both omitted from this sample.
+          </note>
+        </p>
+      </div>
+    </body>
+
+    <back>
+      <div type="appendix" xml:id="app1">
+        <head>Appendix: Editorial Notes</head>
+
+        <list>
+          <item>
+            <ref target="#ch2">Chapter Two</ref> contains an example of
+            <term>choice markup</term> using <gi>sic</gi> and <gi>corr</gi>.
+          </item>
+          <item>
+            <ref target="#ch3">Chapter Three</ref> demonstrates a lacuna with <gi>gap</gi>.
+          </item>
+          <item>
+            <ref target="#ch4">Chapter Four</ref> demonstrates uncertainty with <gi>unclear</gi>.
+          </item>
+        </list>
+      </div>
+
+      <div type="glossary" xml:id="glossary">
+        <head>Glossary</head>
+        <list type="gloss">
+          <label>Dharma</label>
+          <item>A term that may refer to teaching, truth, or phenomena, depending on context.</item>
+
+          <label>Novice</label>
+          <item>A beginner in monastic training, not yet fully ordained.</item>
+
+          <label>Colophon</label>
+          <item>A closing statement giving information about the copying or production of a text.</item>
+        </list>
+      </div>
+    </back>
+  </text>
+</TEI>

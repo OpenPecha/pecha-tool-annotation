@@ -32,6 +32,7 @@ class Text(Base):
     uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     annotations = relationship("Annotation", back_populates="text", cascade="all, delete-orphan")

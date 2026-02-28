@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import {
   IoClose,
+  IoAdd,
   IoChatbubbleEllipses,
   IoCheckmarkCircle,
   IoCloseCircle,
@@ -16,12 +17,15 @@ import {
 import type { Annotation } from "@/pages/Task";
 import { truncateText } from "@/lib/utils";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
+import { useCustomAnnotationsStore } from "@/store/customAnnotations";
 import { useAnnotationListHierarchical } from "@/hooks/";
 
 interface EditPopupProps {
   visible: boolean;
   position: { x: number; y: number };
   annotation: Annotation | null;
+  /** Full document content - used to derive selected text so display matches document (fixes XML encoding issues) */
+  content?: string;
   isUpdatingAnnotation?: boolean;
   onUpdate: (
     annotationId: string,
@@ -37,6 +41,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   visible,
   position,
   annotation,
+  content,
   isUpdatingAnnotation = false,
   onUpdate,
   onDelete,
@@ -47,7 +52,9 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   const [selectedType, setSelectedType] = useState<string>("");
   const [annotationText, setAnnotationText] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
+  const [customInput, setCustomInput] = useState("");
   const { selectedAnnotationListType } = useAnnotationFiltersStore();
+  const { getCustomOptions, addCustomAnnotation } = useCustomAnnotationsStore();
 
   const {
     data: annotationList,
@@ -79,6 +86,30 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   }, [annotation]);
 
   if (!visible || !annotation || !annotationConfig) return null;
+
+  const customOptions = getCustomOptions(selectedAnnotationListType);
+  const currentValueOption =
+    annotation.type &&
+    !annotationConfig.options.some(
+      (o) => o.id === annotation.type || o.label === annotation.type
+    ) &&
+    !customOptions.some(
+      (o) => o.id === annotation.type || o.label === annotation.type
+    )
+      ? {
+          id: annotation.type,
+          label: annotation.type,
+          color: "#ffffff",
+          backgroundColor: "rgba(249, 115, 22, 0.2)",
+          borderColor: "#f97316",
+          icon: "⚠️",
+        }
+      : null;
+  const allOptions = [
+    ...annotationConfig.options,
+    ...customOptions,
+    ...(currentValueOption ? [currentValueOption] : []),
+  ];
 
   // Additional safeguard: Don't allow editing of agreed annotations
   if (annotation.is_agreed) {
@@ -232,14 +263,24 @@ export const EditPopup: React.FC<EditPopupProps> = ({
           Edit Annotation
         </h3>
 
-        {/* Current annotation text */}
+        {/* Current annotation text - derive from content to match document (fixes XML/TEI encoding issues) */}
         <div className="mb-3 p-2 bg-gray-50 rounded border">
           <p className="text-xs text-gray-500 mb-1">Selected text:</p>
           <p className="text-sm text-gray-700">
             "
-            {annotation.text.length > 100
-              ? annotation.text.substring(0, 100) + "..."
-              : annotation.text}
+            {(() => {
+              const displayText =
+                content &&
+                annotation.start >= 0 &&
+                annotation.end <= content.length
+                  ? content.slice(annotation.start, annotation.end)
+                  : annotation.text;
+              const toShow =
+                (displayText?.length ?? 0) > 100
+                  ? (displayText ?? "").substring(0, 100) + "..."
+                  : displayText ?? "";
+              return toShow;
+            })()}
             "
           </p>
         </div>
@@ -302,10 +343,10 @@ export const EditPopup: React.FC<EditPopupProps> = ({
         )}
         {/* Annotation Type Selection */}
         <div className="mb-3">
-          <p className="text-xs text-gray-500 mb-2">Error type:</p>
+          <p className="text-xs text-gray-500 mb-2">type:</p>
           <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-md bg-gray-50">
-            {annotationConfig.options.length > 0 ? (
-              annotationConfig.options.map((option: AnnotationOption) => (
+            {allOptions.length > 0 ? (
+              allOptions.map((option: AnnotationOption) => (
                 <div
                   key={option.id}
                   onClick={() => setSelectedType(option.label)}
@@ -349,9 +390,52 @@ export const EditPopup: React.FC<EditPopupProps> = ({
               </div>
             )}
           </div>
+          {/* Add your own annotation */}
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              placeholder="Can't find it? Add your own..."
+              value={customInput}
+              onChange={(e) => setCustomInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  const trimmed = customInput.trim()
+                  if (trimmed && selectedAnnotationListType) {
+                    addCustomAnnotation(selectedAnnotationListType, trimmed)
+                    setSelectedType(trimmed)
+                    setCustomInput("")
+                  }
+                }
+              }}
+              disabled={isUpdatingAnnotation}
+              className="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent disabled:opacity-50 disabled:bg-gray-100"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={
+                !customInput.trim() ||
+                !selectedAnnotationListType ||
+                isUpdatingAnnotation
+              }
+              onClick={() => {
+                const trimmed = customInput.trim()
+                if (trimmed && selectedAnnotationListType) {
+                  addCustomAnnotation(selectedAnnotationListType, trimmed)
+                  setSelectedType(trimmed)
+                  setCustomInput("")
+                }
+              }}
+              className="shrink-0 px-2 py-2 text-xs"
+            >
+              <IoAdd className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
-        {/* Level Selection */}
+        {/* Level Selection
         <div className="mb-3">
           <p className="text-xs text-gray-500 mb-2">
             Importance level (optional):
@@ -367,7 +451,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
             <option value="major">🟡 Major</option>
             <option value="critical">🔴 Critical</option>
           </select>
-        </div>
+        </div> */}
 
         {/* Annotation Text/Name */}
         <div className="mb-4">
