@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   IoClose,
   IoAdd,
+  IoSearch,
   IoChatbubbleEllipses,
   IoCheckmarkCircle,
   IoCloseCircle,
@@ -54,6 +55,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   const [annotationText, setAnnotationText] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [customInput, setCustomInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const { selectedAnnotationListType } = useAnnotationFiltersStore();
   const { getCustomOptions, addCustomAnnotation } = useCustomAnnotationsStore();
 
@@ -83,6 +85,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
       setSelectedType(getAnnotationDisplayLabel(annotation));
       setAnnotationText(annotation.name || "");
       setSelectedLevel(annotation.level || "");
+      setSearchQuery("");
     }
   }, [annotation]);
 
@@ -120,6 +123,19 @@ export const EditPopup: React.FC<EditPopupProps> = ({
     ...customOptions,
     ...(currentValueOption ? [currentValueOption] : []),
   ];
+
+  const q = searchQuery.trim().toLowerCase();
+  const filteredOptions = q
+    ? allOptions.filter((o) => {
+        if (o.label?.toLowerCase().includes(q) || o.id?.toLowerCase().includes(q))
+          return true;
+        if ("mnemonic" in o && typeof o.mnemonic === "string" && o.mnemonic.toLowerCase().includes(q))
+          return true;
+        if ("description" in o && typeof o.description === "string" && o.description.toLowerCase().includes(q))
+          return true;
+        return false;
+      })
+    : allOptions;
 
   // Additional safeguard: Don't allow editing of agreed annotations
   if (annotation.is_agreed) {
@@ -354,9 +370,36 @@ export const EditPopup: React.FC<EditPopupProps> = ({
         {/* Annotation Type Selection */}
         <div className="mb-3">
           <p className="text-xs text-gray-500 mb-2">type:</p>
+          <div className="relative mb-2">
+            <IoSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 flex-shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search types..."
+              autoComplete="off"
+              disabled={isUpdatingAnnotation}
+              className="w-full pl-7 pr-8 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent min-w-0 disabled:opacity-50 disabled:bg-gray-100"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label="Clear search"
+              >
+                <IoClose className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+          {searchQuery.trim() && (
+            <p className="text-xs text-gray-500 mb-1">
+              {filteredOptions.length} found
+            </p>
+          )}
           <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-md bg-gray-50">
-            {allOptions.length > 0 ? (
-              allOptions.map((option: AnnotationOption) => (
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option: AnnotationOption) => (
                 <div
                   key={option.id}
                   onClick={() => setSelectedType(option.label)}
@@ -396,7 +439,9 @@ export const EditPopup: React.FC<EditPopupProps> = ({
               ))
             ) : (
               <div className="p-3 text-center text-gray-500 text-sm">
-                Loading types...
+                {searchQuery.trim()
+                  ? "No types match your search."
+                  : "Loading types..."}
               </div>
             )}
           </div>
