@@ -68,13 +68,13 @@ def create_text(
 
 @router.post("/upload-file", response_model=TextResponse, status_code=201)
 def upload_text_file(
-    annotation_type_id: str = Form(...),
     language: str = Form(...),
     file: UploadFile = File(...),
+    annotation_type_id: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """Upload a text file and create a new text record."""
+    """Upload a text file and create a new text record. For TEI XML, annotation type is derived from the file."""
     return texts_controller.upload_text_file(
         db, current_user, annotation_type_id, language, file
     )
@@ -249,6 +249,16 @@ def read_text_with_annotations(
 ):
     """Get text with its annotations."""
     return texts_controller.read_text_with_annotations(db, current_user, text_id)
+
+
+@router.get("/{text_id}/diplomatic")
+def get_diplomatic_text(
+    text_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Get diplomatic transcription text for this document (from TEI upload)."""
+    return texts_controller.get_diplomatic_text(db, current_user, text_id)
 
 
 @router.put("/{text_id}", response_model=TextResponse)

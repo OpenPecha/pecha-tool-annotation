@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Set
 from sqlalchemy.orm import Session
 import uuid
 from models.annotation_list import AnnotationList
@@ -81,7 +81,37 @@ class AnnotationListCRUD:
             current = db.query(AnnotationList).filter(AnnotationList.id == current.parent_id).first()
         
         return False
-    
+
+    def ensure_annotation_list_values(
+        self,
+        db: Session,
+        type_name: str,
+        values: Set[str],
+        created_by: Optional[str] = None,
+    ) -> str:
+        """
+        Get or create an annotation type and ensure its list contains all given values.
+        Adds only missing titles (add-only merge). Returns the type's id.
+        """
+        if not values:
+            annotation_type = annotation_type_crud.get_or_create(
+                db=db, name=type_name, uploader_id=created_by
+            )
+            return annotation_type.id
+        annotation_type = annotation_type_crud.get_or_create(
+            db=db, name=type_name, uploader_id=created_by
+        )
+        type_id = annotation_type.id
+        existing = self.get_by_type_id(db=db, type_id=type_id)
+        existing_titles = {item.title for item in existing}
+        for value in values:
+            if value in existing_titles:
+                continue
+            obj_in = AnnotationListCreate(title=value, type_id=type_id)
+            self.create(db=db, obj_in=obj_in, created_by=created_by or "")
+            existing_titles.add(value)
+        return type_id
+
     def get_multi(
         self, 
         db: Session, 

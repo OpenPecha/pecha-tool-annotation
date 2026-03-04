@@ -386,7 +386,7 @@ body {
   color: #0f766e; /* teal-700 */
 }
 
-/* Base annotation label styles */
+/* Base annotation label styles - no margin so text flows without gaps when labels are removed */
 .annotation-label {
   display: inline-block;
   position: relative;
@@ -394,7 +394,7 @@ body {
   font-size: 10px;
   font-weight: 500;
   padding: 2px 6px;
-  margin-left: 2px;
+  margin: 0;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;

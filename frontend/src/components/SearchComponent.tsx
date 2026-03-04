@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, startTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { IoSearch, IoChevronUp, IoChevronDown } from "react-icons/io5";
 import { AnnotationTypesFilter } from "./AnnotationTypesFilter";
@@ -51,15 +51,17 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
     !!textId && !Number.isNaN(textId)
   );
 
-  // Toggle annotation type selection
-  const toggleAnnotationTypeSelection = (annotationType: string) => {
-    const newSet = new Set(selectedAnnotationTypes);
-    if (newSet.has(annotationType)) {
-      newSet.delete(annotationType);
-    } else {
-      newSet.add(annotationType);
-    }
-    setSelectedAnnotationTypes(newSet);
+  // Toggle annotation type selection (startTransition avoids UI hang with many annotations)
+  const toggleAnnotationTypeSelection = (displayLabel: string) => {
+    startTransition(() => {
+      const newSet = new Set(selectedAnnotationTypes);
+      if (newSet.has(displayLabel)) {
+        newSet.delete(displayLabel);
+      } else {
+        newSet.add(displayLabel);
+      }
+      setSelectedAnnotationTypes(newSet);
+    });
   };
 
   // Focus search input when component becomes visible
@@ -183,22 +185,7 @@ export const SearchComponent: React.FC<SearchComponentProps> = ({
 
   return (
     <div className="w-full bg-white border-b border-gray-200 shadow-sm p-3 z-50">
-      {/* Annotation Types Filter */}
-      {textId && (
-        <div className="mb-2">
-          <AnnotationTypesFilter
-            isOpen={isLeafFilterOpen}
-            onToggle={() => setIsLeafFilterOpen(!isLeafFilterOpen)}
-            annotationsByText={annotationsByText}
-            loadingLeaves={loadingLeaves}
-            selectedAnnotationTypes={selectedAnnotationTypes}
-            onToggleAnnotationType={toggleAnnotationTypeSelection}
-            onSelectAllAnnotationTypes={(types) => setSelectedAnnotationTypes(new Set(types))}
-            onDeselectAllAnnotationTypes={() => setSelectedAnnotationTypes(new Set<string>())}
-          />
-        </div>
-      )}
-
+   
       {/* Main Search Row */}
       <div className="flex items-center gap-3 mb-2">
         {/* Search Icon and Input */}

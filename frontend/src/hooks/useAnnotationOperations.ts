@@ -14,6 +14,8 @@ import { TOAST_MESSAGES } from "@/constants/taskConstants";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/constants/queryKeys";
 
+const POS_LABEL_PREFIX = '["pos"]-';
+
 /**
  * Custom hook that encapsulates all annotation CRUD operations
  * Handles optimistic updates, validation, and error handling
@@ -245,6 +247,14 @@ export const useAnnotationOperations = (
       return;
     }
 
+    const isPosAnnotation = annotation.annotation_type === "pos";
+    const payloadType = isPosAnnotation ? "pos" : newType;
+    const payloadLabel = isPosAnnotation
+      ? newType.startsWith(POS_LABEL_PREFIX)
+        ? newType
+        : `${POS_LABEL_PREFIX}${newType}`
+      : undefined;
+
     // Optimistic update in cache
     const previous = current ? { ...current } : undefined;
     if (current) {
@@ -254,7 +264,8 @@ export const useAnnotationOperations = (
           ann.id === annotationIdNumber
             ? {
                 ...ann,
-                annotation_type: newType,
+                annotation_type: payloadType,
+                label: payloadLabel ?? ann.label,
                 name: newText,
                 level: newLevel as any,
               }
@@ -263,15 +274,23 @@ export const useAnnotationOperations = (
       });
     }
 
-    // Update in database
+    // Update in database (for pos, keep type "pos" and set label to ["pos"]-value)
+    const updateData: {
+      annotation_type: string;
+      name?: string;
+      level?: "minor" | "major" | "critical";
+      label?: string;
+    } = {
+      annotation_type: payloadType,
+      name: newText,
+      level: newLevel as "minor" | "major" | "critical" | undefined,
+    };
+    if (payloadLabel !== undefined) updateData.label = payloadLabel;
+
     updateAnnotationMutation.mutate(
       {
         id: annotationIdNumber,
-        data: {
-          annotation_type: newType,
-          name: newText,
-          level: newLevel as "minor" | "major" | "critical" | undefined,
-        },
+        data: updateData,
       },
       {
         onSuccess: (data) => {

@@ -10,6 +10,7 @@ from sqlalchemy import func
 from crud.text import text_crud
 from crud.annotation import annotation_crud
 from crud.annotation_type import annotation_type_crud
+from crud.annotation_list import annotation_list_crud
 from crud.user_rejected_text import user_rejected_text_crud
 from models.user import User
 from models.text import VALID_STATUSES, INITIALIZED, ANNOTATED, REVIEWED, SKIPPED, PROGRESS
@@ -98,7 +99,7 @@ def _is_tei_xml(filename: str, content: str) -> bool:
 
 
 def upload_text_file(
-    db: Session, current_user: User, annotation_type_id: str, language: str, file: UploadFile
+    db: Session, current_user: User, annotation_type_id: Optional[str], language: str, file: UploadFile
 ):
     """Upload a text file and create a new text record. Supports .txt and TEI XML (.xml)."""
     if current_user.role.value not in ("user", "admin"):
@@ -118,6 +119,12 @@ def upload_text_file(
             detail="Only text files (.txt, .md) or TEI XML (.xml) are allowed",
         )
 
+    if not is_xml and not annotation_type_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Annotation type is required for non-XML uploads",
+        )
+
     try:
         raw_content = file.file.read().decode("utf-8")
     except UnicodeDecodeError:
@@ -129,6 +136,9 @@ def upload_text_file(
     filename = file.filename or ""
     tei_annotations: list[TEIAnnotation] = []
     tei_editorial_annotations: list[TEIAnnotation] = []
+    diplomatic_text: Optional[str] = None
+    primary_annotation_type_id: Optional[str] = None
+    selected_type_name: Optional[str] = None
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -140,24 +150,46 @@ def upload_text_file(
             tei_annotations = parsed.annotations  # POS from annotated layer
             tei_editorial_annotations = parsed.editorial_annotations  # add, unclear, hi, decoration
             source = parsed.source
+            diplomatic_text = getattr(parsed, "diplomatic_text", None)
+            pos_values = getattr(parsed, "pos_values", None) or set()
+            editorial_labels = getattr(parsed, "editorial_labels", None) or set()
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid TEI XML: {e}",
             ) from e
+        else:
+            uploader_id = getattr(current_user, "auth0_user_id", None)
+            pos_type_id: Optional[str] = None
+            editorial_type_id: Optional[str] = None
+            if pos_values:
+                pos_type_id = annotation_list_crud.ensure_annotation_list_values(
+                    db=db, type_name="pos", values=pos_values, created_by=uploader_id
+                )
+            if editorial_labels:
+                editorial_type_id = annotation_list_crud.ensure_annotation_list_values(
+                    db=db, type_name="tei_editorial", values=editorial_labels, created_by=uploader_id
+                )
+                selected_type_name = "tei_editorial"
+            primary_annotation_type_id = pos_type_id or editorial_type_id
     else:
         base_title = filename.rsplit(".", 1)[0] if filename else "Uploaded Text"
         title = f"{base_title}_{current_time}"
         content = raw_content
         source = filename
+        primary_annotation_type_id = annotation_type_id
+        at = annotation_type_crud.get(db=db, type_id=annotation_type_id) if annotation_type_id else None
+        if at:
+            selected_type_name = at.name
 
     text_create = TextCreate(
         title=title,
         content=content,
         source=source,
         language=language,
-        annotation_type_id=annotation_type_id,
+        annotation_type_id=primary_annotation_type_id,
         uploaded_by=current_user.id,
+        diplomatic_text=diplomatic_text,
     )
 
     try:
@@ -166,20 +198,24 @@ def upload_text_file(
             created_text = text_crud.assign_text_to_user(
                 db=db, text_id=created_text.id, user_id=current_user.id
             )
-        # Resolve selected annotation type name for editorial annotations
-        selected_type_name: Optional[str] = None
-        at = annotation_type_crud.get(db=db, type_id=annotation_type_id)
-        if at:
-            selected_type_name = at.name
-        # Create POS annotations from TEI annotated layer (output_combined style)
+        # Resolve selected annotation type name for editorial annotations (non-XML path already set above)
+        if _is_tei_xml(filename, raw_content) and not selected_type_name and tei_editorial_annotations:
+            selected_type_name = "tei_editorial"
+        if not selected_type_name and primary_annotation_type_id:
+            at = annotation_type_crud.get(db=db, type_id=primary_annotation_type_id)
+            if at:
+                selected_type_name = at.name
+        # Create POS annotations from TEI annotated layer (output_combined style).
+        # Store label as ["pos"]-value so UI can regex-extract value while keeping attribute name.
         for ann in tei_annotations:
+            pos_label = f'["pos"]-{ann.label}' if ann.label else None
             ann_create = AnnotationCreate(
                 text_id=created_text.id,
                 annotation_type="pos",
                 start_position=ann.start_position,
                 end_position=ann.end_position,
                 selected_text=ann.selected_text,
-                label=ann.label,
+                label=pos_label,
                 meta=ann.meta,
             )
             annotation_crud.create_bulk(
@@ -465,6 +501,17 @@ def read_text(db: Session, current_user: User, text_id: int):
             detail="Text not found",
         )
     return text
+
+
+def get_diplomatic_text(db: Session, current_user: User, text_id: int) -> dict:
+    """Get diplomatic text for a text (from TEI div subtype=diplomatic)."""
+    text = text_crud.get(db=db, text_id=text_id)
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Text not found",
+        )
+    return {"diplomatic_text": getattr(text, "diplomatic_text", None)}
 
 
 def read_text_with_annotations(

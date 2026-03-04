@@ -1,50 +1,53 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { IoChevronDown, IoChevronForward } from "react-icons/io5";
-import type { AnnotationResponse } from "@/api/types";
+import { getDisplayLabelForFilter } from "@/utils/annotationConverter";
+
+/** Annotation shape from API (annotation_type) or UI (type) */
+type AnnotationForFilter = {
+  type?: string;
+  annotation_type?: string;
+  label?: string | null;
+  name?: string | null;
+};
 
 interface AnnotationTypesFilterProps {
   isOpen: boolean;
   onToggle: () => void;
-  annotationsByText: AnnotationResponse[];
-  loadingLeaves: boolean;
+  /** Annotations from API or UI; filter options are derived from display labels (e.g. v.past, n, header) */
+  annotations: AnnotationForFilter[];
+  loading?: boolean;
   selectedAnnotationTypes: Set<string>;
-  onToggleAnnotationType: (type: string) => void;
-  onSelectAllAnnotationTypes: (types: string[]) => void;
+  onToggleAnnotationType: (displayLabel: string) => void;
+  onSelectAllAnnotationTypes: (displayLabels: string[]) => void;
   onDeselectAllAnnotationTypes: () => void;
 }
 
 export const AnnotationTypesFilter = ({
   isOpen,
   onToggle,
-  annotationsByText,
-  loadingLeaves,
+  annotations,
+  loading = false,
   selectedAnnotationTypes,
   onToggleAnnotationType,
   onSelectAllAnnotationTypes,
   onDeselectAllAnnotationTypes,
 }: AnnotationTypesFilterProps) => {
-  // Get distinct annotation types with counts
+  // Get distinct annotation display labels (values) with counts
   const annotationTypesWithCounts = useMemo(() => {
     const counts = new Map<string, number>();
-    annotationsByText.forEach((annotation) => {
-      if (annotation.annotation_type) {
+    annotations.forEach((annotation) => {
+      const displayLabel = getDisplayLabelForFilter(annotation);
+      if (displayLabel) {
         counts.set(
-          annotation.annotation_type,
-          (counts.get(annotation.annotation_type) || 0) + 1
+          displayLabel,
+          (counts.get(displayLabel) || 0) + 1
         );
       }
     });
     return Array.from(counts.entries())
       .map(([type, count]) => ({ type, count }))
       .sort((a, b) => a.type.localeCompare(b.type));
-  }, [annotationsByText]);
-
-  // Auto-select all annotation types by default when they first load
-  useEffect(() => {
-    if (annotationTypesWithCounts.length > 0 && selectedAnnotationTypes.size === 0) {
-      onSelectAllAnnotationTypes(annotationTypesWithCounts.map(item => item.type));
-    }
-  }, [annotationTypesWithCounts, selectedAnnotationTypes.size, onSelectAllAnnotationTypes]);
+  }, [annotations]);
 
   // Handle toggle all
   const handleToggleAll = () => {
@@ -73,8 +76,11 @@ export const AnnotationTypesFilter = ({
 
       {isOpen && (
         <div className="p-3 border-t border-gray-300 bg-white">
-          {loadingLeaves ? (
-            <p className="text-xs text-gray-500">Loading annotation types...</p>
+          {loading ? (
+            <div className="flex items-center gap-2 py-2">
+              <span className="inline-block w-4 h-4 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
+              <p className="text-xs text-gray-500">Updating...</p>
+            </div>
           ) : annotationTypesWithCounts.length === 0 ? (
             <p className="text-xs text-gray-500">No annotation types available</p>
           ) : (
@@ -96,7 +102,7 @@ export const AnnotationTypesFilter = ({
                   {selectedAnnotationTypes.size === annotationTypesWithCounts.length && annotationTypesWithCounts.length > 0
                     ? "Deselect All"
                     : "Select All"}</div>
-                  <span className="text-xs text-gray-500 mr-3">[{annotationsByText.length}]</span>
+                  <span className="text-xs text-gray-500 mr-3">[{annotations.length}]</span>
                 </label>
               </div>
 

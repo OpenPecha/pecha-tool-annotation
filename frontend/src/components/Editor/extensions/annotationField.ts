@@ -5,6 +5,7 @@ import {
   isStructuralAnnotationType,
   getStructuralAnnotationType,
 } from "@/config/structural-annotations";
+import { getAnnotationDisplayLabel } from "@/utils/annotationConverter";
 import type { Annotation } from "@/pages/Task";
 
 // Widget class for annotation labels
@@ -157,11 +158,8 @@ export const annotationField = StateField.define<AnnotationFieldState>({
         const annotation = effect.value;
         const isOptimistic = annotation.id.startsWith("temp-");
         const isHighlighted = highlightedAnnotationId === annotation.id;
-        // Get display name - will use custom name if provided, otherwise use error type label
-        const titleText =
-          annotation.name && annotation.name.trim()
-            ? annotation.name
-            : annotation.type;
+        // Get display name - use helper so pos shows value (e.g. v.past) not "pos"
+        const titleText = getAnnotationDisplayLabel(annotation);
 
         // Create mark decoration for highlighting the text
         const isStructural = isStructuralAnnotationType(annotation.type);

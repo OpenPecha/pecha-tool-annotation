@@ -3,6 +3,18 @@ import type { TextWithAnnotations, AnnotationResponse } from "@/api/types";
 /** Export format options */
 export type ExportFormat = "json" | "tei";
 
+/** Prefix pattern for internal labels e.g. ["pos"]-v.past → export as v.past */
+const LABEL_PREFIX_PATTERN = /^\["[^"]+"\]-/;
+
+/**
+ * Strip internal prefix from label/value for export (e.g. ["pos"]-v.past → v.past)
+ */
+function stripLabelPrefixForExport(value: string | null | undefined): string {
+  if (value == null || value === "") return "";
+  const s = String(value).trim();
+  return s.replace(LABEL_PREFIX_PATTERN, "");
+}
+
 /**
  * Escape XML special characters for TEI output
  */
@@ -56,7 +68,7 @@ function convertToTeiXml(textData: TextWithAnnotations): string {
           : rawLemma != null
             ? String(rawLemma)
             : text;
-      const posTag = ann.label ?? "";
+      const posTag = stripLabelPrefixForExport(ann.label) || "";
       const attrs = [`lemma="${escapeXml(lemma)}"`];
       if (posTag) attrs.push(`pos="${escapeXml(posTag)}"`);
       wElements.push(`<w ${attrs.join(" ")}>${escapeXml(text)}</w>`);
@@ -181,7 +193,7 @@ export function convertToBulkUploadFormat(
     format.text.annotation_type_id = textData.annotation_type_id;
   }
 
-  // Convert annotations
+  // Convert annotations (strip ["pos"]- etc. from label for export)
   format.annotations = textData.annotations.map((ann: AnnotationResponse) => {
     const annotation: BulkUploadFormat["annotations"][0] = {
       annotation_type: ann.annotation_type,
@@ -193,8 +205,9 @@ export function convertToBulkUploadFormat(
     if (ann.selected_text) {
       annotation.selected_text = ann.selected_text;
     }
-    if (ann.label) {
-      annotation.label = ann.label;
+    const exportedLabel = stripLabelPrefixForExport(ann.label);
+    if (exportedLabel) {
+      annotation.label = exportedLabel;
     }
     if (ann.name) {
       annotation.name = ann.name;

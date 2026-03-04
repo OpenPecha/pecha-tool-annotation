@@ -69,6 +69,12 @@ export interface TextResponse extends TextBase {
   annotation_type_id?: string;
   /** For TEI XML upload: annotation types created (e.g. ["pos", "tei_editorial"]) for filter selection */
   annotation_types_created?: string[];
+  /** Plain text from TEI div subtype=diplomatic (optional, may be omitted in list responses) */
+  diplomatic_text?: string | null;
+}
+
+export interface DiplomaticTextResponse {
+  diplomatic_text: string | null;
 }
 
 export interface TextFilters extends PaginationParams {

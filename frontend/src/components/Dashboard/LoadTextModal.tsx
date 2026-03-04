@@ -38,7 +38,6 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
   const [isUploadingFile, setIsUploadingFile] = useState(false);
 
   // Language and annotation type selections (shared across tabs)
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
   const [selectedAnnotationType, setSelectedAnnotationType] = useState<string>("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
@@ -48,7 +47,7 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
 
   // File upload mutation
   const uploadTextFileMutation = useUploadTextFile({
-    onSuccess: (uploadedText, variables: { file: File; annotation_type_id: string; language: string }) => {
+    onSuccess: (uploadedText, variables: { file: File; language: string; annotation_type_id?: string | null }) => {
       const isXml =
         variables.file.type === "text/xml" ||
         variables.file.type === "application/xml" ||
@@ -127,11 +126,24 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
     event.target.value = "";
   };
 
-  // Actual file upload handler
+  const isXmlFile = Boolean(
+    uploadedFile &&
+      (uploadedFile.type === "text/xml" ||
+        uploadedFile.type === "application/xml" ||
+        uploadedFile.name.toLowerCase().endsWith(".xml"))
+  );
+
+  // Actual file upload handler. For XML, annotation type is optional (derived from file).
   const handleFileUploadSubmit = () => {
-    if (!uploadedFile || !selectedLanguage || !selectedAnnotationType) {
+    if (!uploadedFile ) {
       toast.error("Missing information", {
-        description: "Please select language and annotation type",
+        description: "Please select file and language",
+      });
+      return;
+    }
+    if (!isXmlFile && !selectedAnnotationType) {
+      toast.error("Missing information", {
+        description: "Please select annotation type for non-XML uploads",
       });
       return;
     }
@@ -140,14 +152,13 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
     uploadTextFileMutation.mutate(
       {
         file: uploadedFile,
-        annotation_type_id: selectedAnnotationType,
-        language: selectedLanguage,
+        language: 'bo',
+        annotation_type_id: isXmlFile ? undefined : selectedAnnotationType || undefined,
       },
       {
         onSettled: () => {
           // Reset states
           setUploadedFile(null);
-          setSelectedLanguage("");
           setSelectedAnnotationType("");
         },
       }
@@ -217,7 +228,6 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
 
   const resetFileUploadSelections = () => {
     setUploadedFile(null);
-    setSelectedLanguage("");
     setSelectedAnnotationType("");
   };
 
@@ -335,7 +345,7 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="file">File Upload</TabsTrigger>
+              <TabsTrigger value="file">File Upload (TEI XML)</TabsTrigger>
               <TabsTrigger value="openpecha" disabled>OpenPecha</TabsTrigger>
             </TabsList>
 
@@ -399,34 +409,16 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
                 {/* Language Selection - Show after file is selected */}
                 {uploadedFile && (
                   <>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        Select Language
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <Select
-                        value={selectedLanguage}
-                        onValueChange={setSelectedLanguage}
-                        disabled={isUploadingFile}
-                      >
-                        <SelectTrigger className="focus:ring-0 ring-0 focus:outline-none focus:ring-offset-0">
-                          <SelectValue placeholder="Choose the text language..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LANGUAGE_OPTIONS.map((lang) => (
-                            <SelectItem key={lang.code} value={lang.code}>
-                              {lang.name} ({lang.nativeName})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  
 
-                    {/* Annotation Type Selection */}
-                    <div className="space-y-2">
+                    {/* Annotation Type Selection - optional for XML (type derived from file) */}
+                    {/* <div className="space-y-2">
                       <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         Select Annotation Type
-                        <span className="text-red-500">*</span>
+                        {!isXmlFile && <span className="text-red-500">*</span>}
+                        {isXmlFile && (
+                          <span className="text-gray-500 font-normal">(optional for XML)</span>
+                        )}
                       </label>
                       <Select
                         value={selectedAnnotationType}
@@ -463,7 +455,7 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
                           )}
                         </SelectContent>
                       </Select>
-                    </div>
+                    </div> */}
                   </>
                 )}
               </div>
@@ -658,8 +650,7 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
               onClick={handleFileUploadSubmit}
               disabled={
                 !uploadedFile ||
-                !selectedLanguage ||
-                !selectedAnnotationType ||
+                !isXmlFile ||
                 isUploadingFile
               }
             >
@@ -675,7 +666,7 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
           )}
           
           {/* OpenPecha Action Button */}
-          {activeTab === "openpecha" && (
+          {/* {activeTab === "openpecha" && (
             <Button
               className="bg-indigo-600 hover:bg-indigo-700"
               size="lg"
@@ -699,7 +690,7 @@ export const LoadTextModal: React.FC<LoadTextModalProps> = ({
                 "Load & Start Annotating"
               )}
             </Button>
-          )}
+          )} */}
         </div>
       </div>
     </div>

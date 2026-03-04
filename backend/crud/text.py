@@ -14,6 +14,7 @@ class TextCRUD:
             title=obj_in.title,
             content=obj_in.content,
             translation=obj_in.translation,
+            diplomatic_text=obj_in.diplomatic_text,
             source=obj_in.source,
             language=obj_in.language,
             uploaded_by=obj_in.uploaded_by,

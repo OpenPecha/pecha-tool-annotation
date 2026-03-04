@@ -11,6 +11,7 @@ import {
   IoCloseCircle,
 } from "react-icons/io5";
 import type { Annotation } from "@/pages/Task";
+import { getAnnotationDisplayLabel } from "@/utils/annotationConverter";
 import {
   isStructuralAnnotationType,
   getStructuralAnnotationType,
@@ -127,9 +128,9 @@ export const AnnotationSidebar = ({
                                 annotation.type
                               )}`}
                               style={getAnnotationStyle(annotation)}
-                              title={annotation.type}
+                              title={getAnnotationDisplayLabel(annotation)}
                             >
-                              {truncateText(annotation.type, 30)}
+                              {truncateText(getAnnotationDisplayLabel(annotation), 30)}
                             </Badge>
                             {annotation.level && (
                               <Badge

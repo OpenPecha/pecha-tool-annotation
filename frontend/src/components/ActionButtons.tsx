@@ -10,6 +10,7 @@ import {
   IoDownload,
   IoChevronDown,
   IoTrashOutline,
+  IoDocumentTextOutline,
 } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 
@@ -83,6 +84,8 @@ function ActionButtons({
   onUndoAnnotations,
   onRevertWork,
   onExport,
+  onToggleDiplomatic,
+  isDiplomaticVisible = false,
   onDeleteMyText,
   canDeleteMyText = false,
   isDeletingText = false,
@@ -93,6 +96,7 @@ function ActionButtons({
   isSkipping = false,
   isUndoing = false,
   isCompletedTask = false,
+  hasDiplomatic = true,
 }: {
   readonly annotations: Annotation[];
   readonly onSubmitTask: () => void;
@@ -100,11 +104,14 @@ function ActionButtons({
   readonly onUndoAnnotations?: () => void;
   readonly onRevertWork?: () => void;
   readonly onExport?: (format: "json" | "tei") => void;
+  readonly onToggleDiplomatic?: () => void;
+  readonly isDiplomaticVisible?: boolean;
   readonly onDeleteMyText?: () => void;
   readonly canDeleteMyText?: boolean;
   readonly isDeletingText?: boolean;
   readonly textData?: TextWithAnnotations;
   readonly userRole?: UserRole;
+  readonly hasDiplomatic?: boolean;
   readonly userAnnotationsCount?: number;
   readonly isSubmitting?: boolean;
   readonly isSkipping?: boolean;
@@ -164,6 +171,20 @@ function ActionButtons({
             }
             return isCompletedTask ? "Update" : "Submit";
           })()}
+        </Button>
+      )}
+
+      {/* Toggle diplomatic transcription (from TEI upload) */}
+      {onToggleDiplomatic && hasDiplomatic && (
+        <Button
+          onClick={onToggleDiplomatic}
+          variant={isDiplomaticVisible ? "secondary" : "outline"}
+          className={isDiplomaticVisible ? "bg-slate-200 hover:bg-slate-300" : "border-slate-300 text-slate-700 hover:bg-slate-50"}
+          size="lg"
+          title={isDiplomaticVisible ? "Hide diplomatic transcription" : "Show diplomatic transcription"}
+        >
+          <IoDocumentTextOutline className="w-4 h-4 mr-2" />
+          {isDiplomaticVisible ? "Hide diplomatic" : "Show diplomatic"}
         </Button>
       )}
 

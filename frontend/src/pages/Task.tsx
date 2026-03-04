@@ -1,13 +1,14 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useTransition } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useAnnotationStore } from "@/store/annotation";
 import { TextAnnotator } from "@/components/TextAnnotator";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 import { AnnotationSidebar } from "@/components/AnnotationSidebar/AnnotationSidebar";
-import { NavigationModeSelector } from "@/components/NavigationModeSelector";
+import { AnnotationTypesFilter } from "@/components/AnnotationTypesFilter";
 import Navbar from "@/components/Navbar";
 import ActionButtons from "@/components/ActionButtons";
 import { SkipConfirmationDialog } from "@/components/SkipConfirmationDialog";
+import { DiplomaticTextPanel } from "@/components/DiplomaticTextPanel";
 import { AnnotationColorSettings } from "@/components/AnnotationColorSettings";
 import { TaskLoadingState, TaskErrorState } from "@/components/Task";
 import { useAuth } from "@/auth/use-auth-hook";
@@ -18,12 +19,16 @@ import {
   useCurrentUser,
   useSoftDeleteMyText,
 } from "@/hooks";
-import { convertApiAnnotationsSync } from "@/utils/annotationConverter";
-import type { Annotation } from "@/utils/annotationConverter";
+import {
+  convertApiAnnotationsSync,
+  getAnnotationDisplayLabel,
+  type Annotation,
+} from "@/utils/annotationConverter";
 import { useAnnotationOperations } from "@/hooks/useAnnotationOperations";
 import { useTaskOperations } from "@/hooks/useTaskOperations";
 import { useAnnotationNavigation } from "@/hooks/useAnnotationNavigation";
 import { exportAsJsonFile, exportAsTeiXmlFile } from "@/utils/exportAnnotation";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 const Index = () => {
   const { textId } = useParams<{ textId: string }>();
@@ -31,18 +36,25 @@ const Index = () => {
   const { currentUser } = useAuth();
   const { data: currentUserData } = useCurrentUser();
 
+  /** Pending while filter changes are applied (select all / deselect all / toggle type) */
+  const [isFilterPending, startFilterTransition] = useTransition();
+
   // Parse textId early for all hooks
   const parsedTextId = textId ? parseInt(textId, 10) : undefined;
   const currentUserId = currentUser?.id ? parseInt(currentUser.id, 10) : null;
   const userRole = currentUserData?.role;
 
   // Global state from Zustand stores
-  const { navigationOpen, sidebarOpen, toggleNavigation, toggleSidebar } = useAnnotationStore();
+  const { sidebarOpen, toggleSidebar } = useAnnotationStore();
   const {
     selectedAnnotationListType,
     selectedAnnotationTypes,
+    setSelectedAnnotationTypes,
     addSelectedAnnotationTypes,
   } = useAnnotationFiltersStore();
+
+  const [sidebarFilterOpen, setSidebarFilterOpen] = useState(false);
+  const [diplomaticPanelOpen, setDiplomaticPanelOpen] = useState(false);
   const location = useLocation();
 
   // UI-only selection state
@@ -78,13 +90,28 @@ const Index = () => {
   // Check if this is a completed task
   const isCompletedTask = textData && (textData.status === "annotated" || textData.status === "reviewed");
 
-  // Determine if text should be read-only
-  const isReadOnly = allAnnotationsAccepted || !textData;
-
   // Derive UI annotations directly from query data (no local duplication)
   const annotationsForUI: Annotation[] = useMemo(() => {
     return textData?.annotations ? convertApiAnnotationsSync(textData.annotations) : [];
   }, [textData]);
+
+  /** All annotation display labels that appear in this text (for "all segments selected" check) */
+  const annotationLabelsInText = useMemo(() => {
+    const labels = new Set<string>();
+    annotationsForUI.forEach((ann) => {
+      const label = getAnnotationDisplayLabel(ann);
+      if (label) labels.add(label);
+    });
+    return labels;
+  }, [annotationsForUI]);
+
+  /** Editable only when every segment type present in the text is selected in the filter */
+  const allSegmentsSelected =
+    annotationLabelsInText.size === 0 ||
+    [...annotationLabelsInText].every((l) => selectedAnnotationTypes.has(l));
+
+  // Determine if text should be read-only
+  const isReadOnly = allAnnotationsAccepted || !textData || !allSegmentsSelected;
 
   /**
    * Custom hook: Annotation CRUD operations
@@ -164,23 +191,34 @@ const Index = () => {
     setSelectedText(null);
   };
 
+  /** On text select: always allow selection (for adding annotations). Text content editing is controlled by isReadOnly. */
+  const handleTextSelect = (selection: { text: string; start: number; end: number } | null) => {
+    setSelectedText(selection);
+  };
+
   /**
-   * Memoized filtered annotations based on selected types
-   * Always includes headers regardless of filter
+   * Only show annotations when selected in the filter (no annotations by default).
+   * Headers are shown only when "header" (or their display label) is selected.
    */
   const filteredAnnotations = useMemo(() => {
-    return annotationsForUI.filter(
-      (ann) => ann.type === "header" || selectedAnnotationTypes.has(ann.type)
-    );
-  }, [annotationsForUI, selectedAnnotationTypes]);
+    console.log(selectedAnnotationTypes);
+    if (selectedAnnotationTypes.size === 0) return [];
+    return annotationsForUI.filter((ann) => {
+      const displayLabel = getAnnotationDisplayLabel(ann);
+      if (displayLabel){
+        return selectedAnnotationTypes.has(displayLabel);
+      }else{
+        selectedAnnotationTypes.has(ann.type)
 
+      }
+    });
+  }, [annotationsForUI, selectedAnnotationTypes]);
   /**
    * Annotations without headers (for sidebar display)
    */
   const annotationsWithoutHeader = useMemo(() => {
     return filteredAnnotations.filter((ann) => ann.type !== "header");
   }, [filteredAnnotations]);
-
   const dbUserId = currentUserData?.id;
   const canDeleteMyText =
     !!parsedTextId &&
@@ -188,7 +226,6 @@ const Index = () => {
     dbUserId !== undefined &&
     dbUserId !== null &&
     textData.uploaded_by === dbUserId;
-
   const handleDeleteMyText = () => {
     if (!parsedTextId || !canDeleteMyText) return;
     if (!window.confirm(`Are you sure you want to delete "${textData?.title}"? This cannot be undone.`)) return;
@@ -227,31 +264,63 @@ const Index = () => {
       <Navbar textTitle={textData?.title} />
 
       <div className="flex w-full gap-6 flex-1 px-6 mx-auto overflow-hidden">
-        {/* Left Sidebar: Navigation (Error List + Table of Contents) */}
-        <NavigationModeSelector
-          isOpen={navigationOpen}
-          onToggle={toggleNavigation}
-          onErrorSelect={(error) => {
-            console.warn("Selected error:", error);
-          }}
-          searchable={true}
-        />
+        {/* Left: Filter + Main content */}
+        <div className="flex flex-1 gap-4 min-w-0">
+          {/* Filter: left of editor */}
+          <div className="flex-shrink-0 mt-4 mb-4">
+            <AnnotationTypesFilter
+              isOpen={sidebarFilterOpen}
+              onToggle={() => setSidebarFilterOpen((o) => !o)}
+              annotations={annotationsForUI}
+              loading={isFilterPending}
+              selectedAnnotationTypes={selectedAnnotationTypes}
+              onToggleAnnotationType={(displayLabel) => {
+                startFilterTransition(() => {
+                  const next = new Set(selectedAnnotationTypes);
+                  if (next.has(displayLabel)) next.delete(displayLabel);
+                  else next.add(displayLabel);
+                  setSelectedAnnotationTypes(next);
+                });
+              }}
+              onSelectAllAnnotationTypes={(displayLabels) => {
+                startFilterTransition(() =>
+                  setSelectedAnnotationTypes(new Set(displayLabels))
+                );
+              }}
+              onDeselectAllAnnotationTypes={() => {
+                startFilterTransition(() => setSelectedAnnotationTypes(new Set()));
+              }}
+            />
+          </div>
 
-        {/* Main Content Area: Text Annotator */}
-        <div
-          className={`flex-1 transition-all duration-300 ease-in-out min-w-0 mx-auto ${
-            navigationOpen && sidebarOpen
-              ? "mx-6"
-              : navigationOpen || sidebarOpen
-              ? "mx-3"
-              : "mx-0"
-          }`}
-          style={{
-            marginLeft: navigationOpen ? "0" : "60px",
-            marginRight: sidebarOpen ? "0" : "60px",
-          }}
-        >
-          <div className="h-[90vh] mt-4 mb-4">
+          {/* Main Content Area: Diplomatic panel (top) + Text Annotator */}
+          <div
+            className={`flex-1 flex flex-col gap-3 mt-4 mb-4 transition-all duration-300 ease-in-out min-w-0 ${
+              sidebarOpen ? "mr-3" : "mr-0"
+            }`}
+            style={{
+              marginRight: sidebarOpen ? "0" : "60px",
+            }}
+          >
+            <DiplomaticTextPanel
+            textId={parsedTextId}
+            isVisible={diplomaticPanelOpen}
+          />
+          <div className="flex-1 min-h-0 mt-0 relative">
+            {isFilterPending && (
+              <div
+                className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded border border-gray-200"
+                aria-busy="true"
+                aria-live="polite"
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-blue-600" />
+                  <p className="text-sm font-medium text-gray-700">
+                    Updating annotations...
+                  </p>
+                </div>
+              </div>
+            )}
             <TextAnnotator
               ref={textAnnotatorRef}
               text={text}
@@ -259,7 +328,7 @@ const Index = () => {
               hasTranslation={hasTranslation}
               annotations={filteredAnnotations}
               selectedText={selectedText}
-              onTextSelect={setSelectedText}
+              onTextSelect={handleTextSelect}
               onAddAnnotation={handleAddAnnotation}
               onRemoveAnnotation={removeAnnotation}
               onUpdateAnnotation={updateAnnotation}
@@ -271,6 +340,7 @@ const Index = () => {
               highlightedAnnotationId={highlightedAnnotationId}
               textId={parsedTextId}
             />
+          </div>
           </div>
         </div>
 
@@ -287,6 +357,8 @@ const Index = () => {
             onUndoAnnotations={handleUndoAnnotations}
             onRevertWork={handleRevertWork}
             onExport={handleExport}
+            onToggleDiplomatic={() => setDiplomaticPanelOpen((prev) => !prev)}
+            isDiplomaticVisible={diplomaticPanelOpen}
             onDeleteMyText={handleDeleteMyText}
             canDeleteMyText={canDeleteMyText}
             isDeletingText={softDeleteMutation.isPending}
@@ -314,7 +386,7 @@ const Index = () => {
       />
 
       {/* Floating annotation color settings */}
-      <AnnotationColorSettings />
+      {/* <AnnotationColorSettings /> */}
     </div>
   );
 };

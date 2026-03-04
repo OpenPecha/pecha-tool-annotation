@@ -18,6 +18,7 @@ class TextBase(BaseModel):
     title: str
     content: str
     translation: Optional[str] = None
+    diplomatic_text: Optional[str] = None
     source: Optional[str] = None
     language: str = "en"
 
@@ -50,6 +51,7 @@ class TextUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     translation: Optional[str] = None
+    diplomatic_text: Optional[str] = None
     source: Optional[str] = None
     language: Optional[str] = None
     status: Optional[str] = None
@@ -71,6 +73,7 @@ class TextResponse(TextBase):
     annotation_types_created: Optional[list] = None  # For upload: types created (e.g. ["pos", "tei_editorial"])
     content: Optional[str] = ""  # Optional for list views
     translation: Optional[str] = None
+    diplomatic_text: Optional[str] = None
     annotator_id: Optional[int] = None
     annotation_type_id: Optional[str] = None
     reviewer_id: Optional[int] = None

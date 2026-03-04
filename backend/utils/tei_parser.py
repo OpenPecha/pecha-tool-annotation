@@ -9,7 +9,7 @@ Parses TEI P5 documents (Transkribus/OpenPecha style) and extracts:
 
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Set
 
 TEI_NS = "http://www.tei-c.org/ns/1.0"
 
@@ -36,6 +36,9 @@ class TEIParseResult:
     annotations: List[TEIAnnotation]  # POS from annotated layer
     editorial_annotations: List[TEIAnnotation] = field(default_factory=list)  # add, unclear, hi, decoration
     source: str = "TEI XML"
+    diplomatic_text: Optional[str] = None  # Plain text from div type=transcription subtype=diplomatic
+    pos_values: Optional[Set[str]] = None  # Distinct POS tags from XML
+    editorial_labels: Optional[Set[str]] = None  # Distinct editorial element names from XML
 
 
 def _ns(tag: str) -> str:
@@ -220,7 +223,7 @@ def _text_and_annotations_from_annotated(
                     start = current_pos
                     end = current_pos + len(text)
                     content_parts.append(text)
-                    current_pos = end + 1  # +1 for space between words
+                    current_pos = end  # no space between words (preserves source spacing, e.g. Tibetan)
                     lemma = w.get("lemma")
                     pos_tag = w.get("pos")
                     meta = {"lemma": lemma} if lemma else None
@@ -233,7 +236,7 @@ def _text_and_annotations_from_annotated(
                             meta=meta,
                         )
                     )
-            content = " ".join(content_parts).strip()
+            content = "".join(content_parts).strip()
             return content, annotations
     return None, []
 
@@ -292,10 +295,29 @@ def parse_tei(content: str, filename: str = "") -> TEIParseResult:
 
     content = content.strip()
 
+    # Always extract diplomatic layer when present (for storage in text.diplomatic_text)
+    diplomatic_text: Optional[str] = None
+    for div in body.iter(_ns("div")):
+        if div.get("type") == "transcription" and div.get("subtype") == "diplomatic":
+            raw = _text_from_diplomatic(body)
+            diplomatic_text = raw.strip() if raw and raw.strip() else None
+            break
+
+    # Distinct values for annotation list merge (add-only on upload)
+    pos_values: Optional[Set[str]] = None
+    if pos_annotations:
+        pos_values = {ann.label.strip() for ann in pos_annotations if ann.label and ann.label.strip()}
+    editorial_labels_val: Optional[Set[str]] = None
+    if editorial_annotations:
+        editorial_labels_val = {ann.label.strip() for ann in editorial_annotations if ann.label and ann.label.strip()}
+
     return TEIParseResult(
         title=title,
         content=content,
         annotations=pos_annotations,
         editorial_annotations=editorial_annotations,
         source=filename or "TEI XML",
+        diplomatic_text=diplomatic_text,
+        pos_values=pos_values,
+        editorial_labels=editorial_labels_val,
     )

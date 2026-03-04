@@ -14,7 +14,8 @@ import {
   type AnnotationConfig,
   type AnnotationOption,
 } from "@/config/annotation-options";
-import type { Annotation } from "@/pages/Task";
+import type { Annotation } from "@/utils/annotationConverter";
+import { getAnnotationDisplayLabel } from "@/utils/annotationConverter";
 import { truncateText } from "@/lib/utils";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 import { useCustomAnnotationsStore } from "@/store/customAnnotations";
@@ -76,10 +77,10 @@ export const EditPopup: React.FC<EditPopupProps> = ({
     loadConfig();
   }, [selectedAnnotationListType, annotationList, ]); // Reload when type changes
 
-  // Initialize form values when annotation changes
+  // Initialize form values when annotation changes (use display label so pos shows e.g. v.past)
   useEffect(() => {
     if (annotation) {
-      setSelectedType(annotation.type);
+      setSelectedType(getAnnotationDisplayLabel(annotation));
       setAnnotationText(annotation.name || "");
       setSelectedLevel(annotation.level || "");
     }
@@ -87,18 +88,27 @@ export const EditPopup: React.FC<EditPopupProps> = ({
 
   if (!visible || !annotation || !annotationConfig) return null;
 
+  const displayLabel = getAnnotationDisplayLabel(annotation);
   const customOptions = getCustomOptions(selectedAnnotationListType);
   const currentValueOption =
-    annotation.type &&
+    (annotation.type || displayLabel) &&
     !annotationConfig.options.some(
-      (o) => o.id === annotation.type || o.label === annotation.type
+      (o) =>
+        o.id === annotation.type ||
+        o.label === annotation.type ||
+        o.id === displayLabel ||
+        o.label === displayLabel
     ) &&
     !customOptions.some(
-      (o) => o.id === annotation.type || o.label === annotation.type
+      (o) =>
+        o.id === annotation.type ||
+        o.label === annotation.type ||
+        o.id === displayLabel ||
+        o.label === displayLabel
     )
       ? {
-          id: annotation.type,
-          label: annotation.type,
+          id: displayLabel,
+          label: displayLabel,
           color: "#ffffff",
           backgroundColor: "rgba(249, 115, 22, 0.2)",
           borderColor: "#f97316",
@@ -150,7 +160,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
             </p>
             <p className="text-xs text-green-600 mt-2">
               Type:{" "}
-              <span className="font-medium capitalize">{annotation.type}</span>
+              <span className="font-medium capitalize">{displayLabel}</span>
               {annotation.name && <span> • Note: "{annotation.name}"</span>}
             </p>
           </div>
@@ -234,7 +244,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   };
 
   const hasChanges =
-    selectedType !== annotation.type ||
+    selectedType !== displayLabel ||
     annotationText !== (annotation.name || "") ||
     selectedLevel !== (annotation.level || "");
 

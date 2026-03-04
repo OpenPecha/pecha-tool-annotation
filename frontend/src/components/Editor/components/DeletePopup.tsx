@@ -8,6 +8,7 @@ import {
   IoCloseCircle,
 } from "react-icons/io5";
 import type { DeletePopupProps } from "../types";
+import { getAnnotationDisplayLabel } from "@/utils/annotationConverter";
 
 export const DeletePopup: React.FC<DeletePopupProps> = ({
   visible,
@@ -19,6 +20,7 @@ export const DeletePopup: React.FC<DeletePopupProps> = ({
 }) => {
   if (!visible || !annotation) return null;
 
+  const displayLabel = getAnnotationDisplayLabel(annotation);
   const modalContent = (
     <div
       className="delete-popup fixed bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-64"
@@ -34,7 +36,7 @@ export const DeletePopup: React.FC<DeletePopupProps> = ({
         </p>
         <p className="text-xs text-gray-500 mb-2">
           Type:{" "}
-          <span className="font-medium capitalize">{annotation.type}</span>
+          <span className="font-medium capitalize">{displayLabel}</span>
         </p>
         <p className="text-xs text-gray-600 bg-gray-50 p-2 rounded border">
           "

@@ -23,6 +23,7 @@ class Text(Base):
     title = Column(String, unique=True,  nullable=False, index=True) 
     content = Column(SQLText, nullable=False)
     translation = Column(SQLText, nullable=True)  # Optional translation of the content
+    diplomatic_text = Column(SQLText, nullable=True)  # Plain text from TEI div subtype=diplomatic
     source = Column(String, nullable=True)  # Source document/file
     language = Column(String, default="en")
     status = Column(String, default=INITIALIZED, nullable=False)

@@ -258,8 +258,8 @@ export const useSoftDeleteMyText = (options?: { onSuccess?: () => void; onError?
 
 interface UploadTextFileVariables {
   file: File;
-  annotation_type_id: string;
   language: string;
+  annotation_type_id?: string | null;
 }
 
 interface UseUploadTextFileOptions {
@@ -276,7 +276,8 @@ export const useUploadTextFile = (options?: UseUploadTextFileOptions) => {
   const { showToast = true } = options || {};
 
   return useMutation({
-    mutationFn: ({file, annotation_type_id, language}: {file: File, annotation_type_id: string, language: string}) => textApi.uploadTextFile(file, annotation_type_id, language),
+    mutationFn: ({ file, language, annotation_type_id }: UploadTextFileVariables) =>
+      textApi.uploadTextFile(file, language, annotation_type_id),
     onSuccess: (data: TextResponse, variables: UploadTextFileVariables) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: queryKeys.texts.all });

@@ -476,15 +476,13 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                 };
                 initialBubblePositionRef.current = { x: bubbleX, y: bubbleY };
 
-                // Only show bubble menu if editor is not read-only
-                if (!readOnly) {
-                  setBubbleMenuPosition({
-                    x: bubbleX,
-                    y: bubbleY,
-                    transformX: bubbleTransformX,
-                  });
-                  setBubbleMenuVisible(true);
-                }
+                // Show bubble menu on selection (position correct regardless of filter/readOnly)
+                setBubbleMenuPosition({
+                  x: bubbleX,
+                  y: bubbleY,
+                  transformX: bubbleTransformX,
+                });
+                setBubbleMenuVisible(true);
               }
             }
           } else {
@@ -907,23 +905,13 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           extensions={extensions}
           readOnly={readOnly}
           onCreateEditor={(view) => {
-            // Store the view in the editorRef for useImperativeHandle and useAnnotationEffects
+            // Store the view in the editorRef for useImperativeHandle and useAnnotationEffects.
+            // Annotations are applied only by useAnnotationEffects (which runs when editorReady
+            // becomes true), so we never apply annotations on first paint—only when filter allows.
             if (editorRef.current) {
               editorRef.current.view = view;
             }
             setEditorReady(true);
-            setTimeout(() => {
-              if (annotations.length > 0) {
-                view.dispatch({
-                  effects: clearAnnotationsEffect.of(null),
-                });
-                annotations.forEach((annotation) => {
-                  view.dispatch({
-                    effects: addAnnotationEffect.of(annotation),
-                  });
-                });
-              }
-            }, 50);
           }}
           basicSetup={{
             lineNumbers: true,

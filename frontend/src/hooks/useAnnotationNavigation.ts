@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import type { Annotation } from "@/utils/annotationConverter";
+import { getAnnotationDisplayLabel } from "@/utils/annotationConverter";
 import type { TextAnnotatorRef } from "@/components/TextAnnotator";
 import { TOAST_MESSAGES, NAVIGATION_DELAYS } from "@/constants/taskConstants";
 
@@ -44,10 +45,11 @@ export const useAnnotationNavigation = (annotations: Annotation[]) => {
   const showNavigationToast = useCallback((annotation: Annotation) => {
     const truncatedText = annotation.text.substring(0, 50);
     const displayText = annotation.text.length > 50 ? `${truncatedText}...` : truncatedText;
+    const displayLabel = getAnnotationDisplayLabel(annotation);
 
     toast({
       title: TOAST_MESSAGES.NAVIGATED_TO_ANNOTATION,
-      description: `Found "${annotation.type}" annotation: "${displayText}"`,
+      description: `Found "${displayLabel}" annotation: "${displayText}"`,
     });
   }, [toast]);
 

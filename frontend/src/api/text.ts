@@ -13,6 +13,7 @@ import type {
   RejectedTextWithDetails,
   AdminTextStatistics,
   RecentActivityWithReviewCounts,
+  DiplomaticTextResponse,
 } from "./types";
 
 // Text API client
@@ -32,17 +33,28 @@ export const textApi = {
     return apiClient.get<TextWithAnnotations>(`/texts/${id}/with-annotations`);
   },
 
+  // Get diplomatic transcription text (from TEI upload)
+  getDiplomaticText: async (id: number): Promise<DiplomaticTextResponse> => {
+    return apiClient.get<DiplomaticTextResponse>(`/texts/${id}/diplomatic`);
+  },
+
   // Create new text
   createText: async (data: TextCreate): Promise<TextResponse> => {
     return apiClient.post<TextResponse>("/texts", data);
   },
 
-  // Upload text file
-  uploadTextFile: async (file: File, annotation_type_id: string, language: string): Promise<TextResponse> => {
+  // Upload text file. For TEI XML, annotation_type_id is optional (derived from file).
+  uploadTextFile: async (
+    file: File,
+    language: string,
+    annotation_type_id?: string | null
+  ): Promise<TextResponse> => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("annotation_type_id", annotation_type_id);
     formData.append("language", language);
+    if (annotation_type_id != null && annotation_type_id !== "") {
+      formData.append("annotation_type_id", annotation_type_id);
+    }
     return apiClient.post<TextResponse>("/texts/upload-file", formData);
   },
 

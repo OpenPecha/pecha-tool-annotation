@@ -23,19 +23,14 @@ export const useAnnotationEffects = (
         const scrollTop = scrollElement.scrollTop;
         const scrollLeft = scrollElement.scrollLeft;
 
-        // Clear existing annotations first
-        view.dispatch({
-          effects: clearAnnotationsEffect.of(null),
-        });
-
-        // Add all current annotations
+        // Batch clear + all add effects in a single transaction to avoid UI hang
+        const effects = [clearAnnotationsEffect.of(null)];
         if (annotations.length > 0) {
-          annotations.forEach((annotation) => {
-            view.dispatch({
-              effects: addAnnotationEffect.of(annotation),
-            });
-          });
+          for (const annotation of annotations) {
+            effects.push(addAnnotationEffect.of(annotation));
+          }
         }
+        view.dispatch({ effects });
 
         // Restore scroll position after a short delay to allow DOM updates
         requestAnimationFrame(() => {
