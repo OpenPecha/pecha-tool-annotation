@@ -201,7 +201,6 @@ const Index = () => {
    * Headers are shown only when "header" (or their display label) is selected.
    */
   const filteredAnnotations = useMemo(() => {
-    console.log(selectedAnnotationTypes);
     if (selectedAnnotationTypes.size === 0) return [];
     return annotationsForUI.filter((ann) => {
       const displayLabel = getAnnotationDisplayLabel(ann);
