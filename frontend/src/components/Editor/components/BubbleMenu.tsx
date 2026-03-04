@@ -51,7 +51,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     useState<StructuralAnnotationType | null>(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string>("");
-  const [showDropdown, setShowDropdown] = useState(false);
   const [customInput, setCustomInput] = useState("");
   const { currentUser } = useAuth();
   const {
@@ -98,7 +97,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     setIsSearchFocused(false);
     // Reset level when mode or context changes
     setSelectedLevel("");
-    setShowDropdown(false);
   }, [annotationMode, contextAnnotation, selectedAnnotationListType]);
 
   // Reset selected items when text selection changes (but preserve level)
@@ -107,7 +105,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     setSelectedStructuralType(null);
     setSearchQuery("");
     setIsSearchFocused(false);
-    setShowDropdown(false);
   }, [currentSelection, selectedAnnotationListType]);
 
   // Helper function to flatten error categories
@@ -236,27 +233,16 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     }
   };
 
-  const handleErrorSelection = (errorCategory: CategoryWithBreadcrumb) => {
-    setSelectedErrorCategory(errorCategory);
-    setSearchQuery("");
-    setIsSearchFocused(false);
-    setShowDropdown(false);
-  };
-
   const handleSearchFocus = () => {
     setIsSearchFocused(true);
-    if (effectiveMode === "error-list") {
-      setShowDropdown(true);
-    }
+  
   };
 
   const handleSearchBlur = () => {
     // Delay hiding to allow dropdown clicks
     setTimeout(() => {
       setIsSearchFocused(false);
-      if (effectiveMode === "error-list") {
-        setShowDropdown(false);
-      }
+   
     }, 200);
   };
 
@@ -267,7 +253,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   const searchPlaceholder =
     effectiveMode === "table-of-contents"
       ? "Search structural types..."
-      : "Search error categories...";
+      : "Search categories...";
 
   const canSubmit =
     effectiveMode === "table-of-contents"
@@ -305,7 +291,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
           <p className="text-xs text-gray-500 mb-3">
             {effectiveMode === "table-of-contents"
               ? "Choose structural type:"
-              : "Choose error type:"}
+              : "Choose type:"}
           </p>
         )}
 
@@ -323,6 +309,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
                   placeholder={searchPlaceholder}
+                  autoComplete="off"
                   className={`w-full pl-7 pr-8 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent min-w-0 ${
                     searchQuery.trim() || isSearchFocused
                       ? "border-orange-300 bg-orange-50"
@@ -334,7 +321,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
                     onClick={() => {
                       setSearchQuery("");
                       setIsSearchFocused(false);
-                      setShowDropdown(false);
                     }}
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 hover:text-gray-600"
                   >
@@ -346,8 +332,8 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
                 annotationMode === "error-list" && (
                   <p className="text-xs text-gray-500 mt-1">
                     {searchQuery
-                      ? `${filteredItems.length} errors found`
-                      : `${filteredItems.length} total errors`}
+                      ? `${filteredItems.length}  found`
+                      : `${filteredItems.length} total `}
                   </p>
                 )}
               {/* Add your own annotation - error-list mode */}
@@ -358,6 +344,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
                     placeholder="Can't find it? Add your own..."
                     value={customInput}
                     onChange={(e) => setCustomInput(e.target.value)}
+                    autoComplete="off"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault()
@@ -380,7 +367,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
                           setSelectedErrorCategory(customItem)
                           setCustomInput("")
                           setSearchQuery("")
-                          setShowDropdown(false)
                         }
                       }
                     }}
@@ -410,7 +396,6 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
                         setSelectedErrorCategory(customItem)
                         setCustomInput("")
                         setSearchQuery("")
-                        setShowDropdown(false)
                       }
                     }}
                     className="shrink-0 px-2 py-1.5 text-xs"
@@ -476,14 +461,14 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
         {loading && effectiveMode === "error-list" && (
           <div className="text-center py-4">
             <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin mx-auto mb-2 text-gray-400" />
-            <p className="text-xs text-gray-500">Loading error types...</p>
+            <p className="text-xs text-gray-500">Loading  types...</p>
           </div>
         )}
 
         {error && effectiveMode === "error-list" && (
           <div className="text-center py-4">
             <p className="text-xs text-red-500">
-              {error instanceof Error ? error.message : 'Failed to load error list'}
+              {error instanceof Error ? error.message : 'Failed to load  list'}
             </p>
           </div>
         )}
@@ -547,7 +532,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
                             </div>
                           </>
                         ) : (
-                          // Error category display (preserving original layout)
+                          //  category display (preserving original layout)
                           <>
                             <div className="text-sm font-medium truncate">
                               {item.name}
@@ -638,70 +623,5 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     </div>
   );
 
-  // Error dropdown that appears above the modal (only for error-list mode)
-  const errorDropdown = showDropdown &&
-    effectiveMode === "error-list" &&
-    !loading &&
-    !error &&
-    errorData && (
-      <div
-        className="fixed bg-white border border-gray-200 rounded-lg shadow-xl z-[60] max-w-[400px] max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 animate-in fade-in-0 slide-in-from-top-2 duration-200"
-        style={{
-          left: `max(${position.x}px, 5vw)`,
-          bottom: `calc(100vh - ${position.y}px + 10px)`, // Position above the modal with gap
-          transform: `translateX(${position.transformX})`,
-          minWidth: "380px",
-        }}
-      >
-        {/* Small arrow pointing to search input */}
-        <div className="absolute bottom-[-6px] left-8 w-3 h-3 bg-white border-r border-b border-gray-200 transform rotate-45"></div>
-
-        <div className="p-2">
-          <div className="space-y-1">
-            {filteredItems.slice(0, 20).map((item) => (
-              <Button
-                key={(item as CategoryWithBreadcrumb).id}
-                onClick={() =>
-                  handleErrorSelection(item as CategoryWithBreadcrumb)
-                }
-                disabled={isCreatingAnnotation}
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-16 px-3 py-2 text-left transition-all duration-200 hover:bg-orange-50 hover:border-orange-300"
-              >
-                <div className="flex items-center gap-2 w-full">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">
-                      {item.name}
-                    </div>
-                    {(item as CategoryWithBreadcrumb).breadcrumb && (
-                      <div className="text-xs text-gray-600 truncate">
-                        {(item as CategoryWithBreadcrumb).breadcrumb}
-                      </div>
-                    )}
-                    <div className="text-xs font-mono opacity-70">
-                      {(item as CategoryWithBreadcrumb).mnemonic} • L
-                      {(item as CategoryWithBreadcrumb).level}
-                    </div>
-                  </div>
-                </div>
-              </Button>
-            ))}
-            {filteredItems.length === 0 && (
-              <p className="text-xs text-gray-500 italic px-3 py-4 text-center">
-                No errors found matching your search.
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-
-  return createPortal(
-    <>
-      {modalContent}
-      {errorDropdown}
-    </>,
-    document.body
-  );
+  return createPortal(modalContent, document.body);
 };

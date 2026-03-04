@@ -32,7 +32,7 @@ export const AnnotationTypesFilter = ({
   onSelectAllAnnotationTypes,
   onDeselectAllAnnotationTypes,
 }: AnnotationTypesFilterProps) => {
-  // Get distinct annotation display labels (values) with counts
+  // Get distinct annotation display labels (values) with counts; marked (selected) types first, then alphabetically
   const annotationTypesWithCounts = useMemo(() => {
     const counts = new Map<string, number>();
     annotations.forEach((annotation) => {
@@ -46,8 +46,13 @@ export const AnnotationTypesFilter = ({
     });
     return Array.from(counts.entries())
       .map(([type, count]) => ({ type, count }))
-      .sort((a, b) => a.type.localeCompare(b.type));
-  }, [annotations]);
+      .sort((a, b) => {
+        const aSelected = selectedAnnotationTypes.has(a.type);
+        const bSelected = selectedAnnotationTypes.has(b.type);
+        if (aSelected !== bSelected) return aSelected ? -1 : 1;
+        return a.type.localeCompare(b.type);
+      });
+  }, [annotations, selectedAnnotationTypes]);
 
   // Handle toggle all
   const handleToggleAll = () => {

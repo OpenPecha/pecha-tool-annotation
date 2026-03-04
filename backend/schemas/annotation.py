@@ -34,8 +34,8 @@ class AnnotationBase(BaseModel):
 
     @validator('level', pre=True)
     def validate_level(cls, v):
-        if v is None:
-            return v
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
         if isinstance(v, str):
             # Convert string to lowercase to match enum values
             v = v.lower()
@@ -76,8 +76,8 @@ class AnnotationUpdate(BaseModel):
 
     @validator('level', pre=True)
     def validate_level_update(cls, v):
-        if v is None:
-            return v
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
         if isinstance(v, str):
             # Convert string to lowercase to match enum values
             v = v.lower()

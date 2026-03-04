@@ -192,7 +192,7 @@ export const AnnotationList = ({
   };
 
 
-  // Component to render individual error category
+  // Component to render individual  category
   const ErrorCategoryComponent = ({
     category,
     level = 0,
@@ -423,7 +423,7 @@ export const AnnotationList = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search error types..."
+              placeholder="Search types..."
               className="w-full pl-7 pr-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent"
             />
           </div>

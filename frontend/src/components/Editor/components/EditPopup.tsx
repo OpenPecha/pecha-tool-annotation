@@ -396,7 +396,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
               ))
             ) : (
               <div className="p-3 text-center text-gray-500 text-sm">
-                Loading error types...
+                Loading types...
               </div>
             )}
           </div>

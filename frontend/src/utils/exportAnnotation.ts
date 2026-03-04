@@ -36,6 +36,11 @@ function convertToTeiXml(textData: TextWithAnnotations): string {
   const TEI_NS = "http://www.tei-c.org/ns/1.0";
   const title = escapeXml(textData.title);
   const content = textData.content;
+  // Use diplomatic field for the diplomatic layer when available; otherwise fall back to content
+  const diplomaticContent =
+    textData.diplomatic_text != null && textData.diplomatic_text !== ""
+      ? textData.diplomatic_text
+      : content;
   const lang = textData.language ? ` xml:lang="${escapeXml(textData.language)}"` : "";
 
   // Sort annotations by start_position
@@ -108,7 +113,7 @@ function convertToTeiXml(textData: TextWithAnnotations): string {
   <text${lang}>
     <body>
       <div type="transcription" subtype="diplomatic">
-        <p>${escapeXml(content)}</p>
+        <p>${escapeXml(diplomaticContent)}</p>
       </div>
       <div type="transcription" subtype="annotated">
         <u xml:id="ann_u1">

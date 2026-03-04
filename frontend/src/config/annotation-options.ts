@@ -19,7 +19,7 @@ export interface AnnotationConfig {
   options: AnnotationOption[];
 }
 
-// Interface for error category structure from error_list.json
+// Interface for  category structure from error_list.json
 interface ErrorCategory {
   id?: string;
   name: string;
