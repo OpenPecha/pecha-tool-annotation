@@ -20,7 +20,7 @@ import { getAnnotationDisplayLabel } from "@/utils/annotationConverter";
 import { truncateText } from "@/lib/utils";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 import { useCustomAnnotationsStore } from "@/store/customAnnotations";
-import { useAnnotationListHierarchical } from "@/hooks/";
+import { useAnnotationListHierarchical, useAnnotationTypes } from "@/hooks/";
 
 interface EditPopupProps {
   visible: boolean;
@@ -58,28 +58,24 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const { selectedAnnotationListType } = useAnnotationFiltersStore();
   const { getCustomOptions, addCustomAnnotation } = useCustomAnnotationsStore();
+  const { data: annotationTypes = [] } = useAnnotationTypes();
 
-  const {
-    data: annotationList,
-  } = useAnnotationListHierarchical({
-    type_id: selectedAnnotationListType,
-    enabled: !!selectedAnnotationListType,
+  const listTypeId =
+    annotation?.type != null
+      ? annotationTypes.find((t) => t.name === annotation.type)?.id ?? ""
+      : selectedAnnotationListType;
+
+  const { data: annotationList } = useAnnotationListHierarchical({
+    type_id: listTypeId,
+    enabled: !!listTypeId,
   });
-  // Load annotation configuration based on selected type
+
   useEffect(() => {
     if (!annotationList?.categories) return;
-    const loadConfig = async () => {
-      try {
-        const config = extractLeafNodes(annotationList?.categories || [], 0);
-        setAnnotationConfig({options: config});
-      } catch (error) {
-        console.error("Failed to load annotation configuration:", error);
-      }
-    };
-    loadConfig();
-  }, [selectedAnnotationListType, annotationList, ]); // Reload when type changes
+    const config = extractLeafNodes(annotationList.categories, 0);
+    setAnnotationConfig({ options: config });
+  }, [annotationList]);
 
-  // Initialize form values when annotation changes (use display label so pos shows e.g. v.past)
   useEffect(() => {
     if (annotation) {
       setSelectedType(getAnnotationDisplayLabel(annotation));
@@ -92,7 +88,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   if (!visible || !annotation || !annotationConfig) return null;
 
   const displayLabel = getAnnotationDisplayLabel(annotation);
-  const customOptions = getCustomOptions(selectedAnnotationListType);
+  const customOptions = getCustomOptions(listTypeId);
   const currentValueOption =
     (annotation.type || displayLabel) &&
     !annotationConfig.options.some(
@@ -456,8 +452,8 @@ export const EditPopup: React.FC<EditPopupProps> = ({
                 if (e.key === "Enter") {
                   e.preventDefault()
                   const trimmed = customInput.trim()
-                  if (trimmed && selectedAnnotationListType) {
-                    addCustomAnnotation(selectedAnnotationListType, trimmed)
+                  if (trimmed && listTypeId) {
+                    addCustomAnnotation(listTypeId, trimmed)
                     setSelectedType(trimmed)
                     setCustomInput("")
                   }
@@ -472,13 +468,13 @@ export const EditPopup: React.FC<EditPopupProps> = ({
               size="sm"
               disabled={
                 !customInput.trim() ||
-                !selectedAnnotationListType ||
+                !listTypeId ||
                 isUpdatingAnnotation
               }
               onClick={() => {
                 const trimmed = customInput.trim()
-                if (trimmed && selectedAnnotationListType) {
-                  addCustomAnnotation(selectedAnnotationListType, trimmed)
+                if (trimmed && listTypeId) {
+                  addCustomAnnotation(listTypeId, trimmed)
                   setSelectedType(trimmed)
                   setCustomInput("")
                 }

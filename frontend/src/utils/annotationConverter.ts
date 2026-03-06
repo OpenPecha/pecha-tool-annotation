@@ -6,12 +6,22 @@ import { reviewApi } from "@/api/reviews";
  * Annotation type used in the UI layer
  * Simplified from API response format for easier component consumption
  */
-/** Match ["pos"]-value so we can extract the annotation value for display */
-const POS_LABEL_PREFIX = '["pos"]-';
+/**
+ * Unique filter key for an annotation: "type|label".
+ * Used so the same label under different annotation types is distinct.
+ */
+export const FILTER_KEY_SEP = "|";
+
+export function getFilterKey(type: string, label: string | null | undefined): string {
+  const t = type?.trim() || "";
+  const l = label?.trim();
+  if (!t) return "";
+  return l ? `${t}${FILTER_KEY_SEP}${l}` : t;
+}
 
 /**
- * Get the display label for an annotation. For pos type with label in ["pos"]-value
- * format, returns the value (e.g. "v.past"); otherwise name or type.
+ * Get the display label for an annotation (e.g. for tooltips, sidebar).
+ * Prefers name, then label, then type. No type prefix in the label.
  */
 export function getAnnotationDisplayLabel(annotation: {
   type: string;
@@ -19,34 +29,29 @@ export function getAnnotationDisplayLabel(annotation: {
   name?: string | null;
 }): string {
   if (annotation.name?.trim()) return annotation.name.trim();
-  if (
-    annotation.type === "pos" &&
-    annotation.label?.startsWith(POS_LABEL_PREFIX)
-  ) {
-    return annotation.label.slice(POS_LABEL_PREFIX.length);
-  }
   if (annotation.label?.trim()) return annotation.label.trim();
   return annotation.type;
 }
 
-/** Normalize API or UI annotation to { type, label, name } for display label */
-function toDisplayLabelInput(
+/** Normalize API or UI annotation to { type, label, name } for filter key */
+function toFilterKeyInput(
   ann: { type?: string; annotation_type?: string; label?: string | null; name?: string | null }
-): { type: string; label?: string | null; name?: string | null } {
+): { type: string; label?: string | null } {
   return {
     type: ann.type ?? ann.annotation_type ?? "",
     label: ann.label,
-    name: ann.name,
   };
 }
 
 /**
- * Get display label for API or UI annotation (handles annotation_type field).
+ * Get the filter key for API or UI annotation (type|label).
+ * Used for filter checkboxes and visibility so each (type, label) is one option.
  */
 export function getDisplayLabelForFilter(
   ann: { type?: string; annotation_type?: string; label?: string | null; name?: string | null }
 ): string {
-  return getAnnotationDisplayLabel(toDisplayLabelInput(ann));
+  const { type, label } = toFilterKeyInput(ann);
+  return getFilterKey(type, label);
 }
 
 export type Annotation = {

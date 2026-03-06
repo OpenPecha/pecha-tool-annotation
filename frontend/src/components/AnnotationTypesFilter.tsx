@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { IoChevronDown, IoChevronForward } from "react-icons/io5";
-import { getDisplayLabelForFilter } from "@/utils/annotationConverter";
+import { getDisplayLabelForFilter, FILTER_KEY_SEP } from "@/utils/annotationConverter";
 
 /** Annotation shape from API (annotation_type) or UI (type) */
 type AnnotationForFilter = {
@@ -10,16 +10,21 @@ type AnnotationForFilter = {
   name?: string | null;
 };
 
+/** Filter option: key is type|label, displayLabel is the label part for showing under a type group */
+type FilterOption = { key: string; typeName: string; label: string; count: number };
+
 interface AnnotationTypesFilterProps {
   isOpen: boolean;
   onToggle: () => void;
-  /** Annotations from API or UI; filter options are derived from display labels (e.g. v.past, n, header) */
+  /** Annotations from API or UI; filter options are derived and grouped by annotation type */
   annotations: AnnotationForFilter[];
   loading?: boolean;
   selectedAnnotationTypes: Set<string>;
-  onToggleAnnotationType: (displayLabel: string) => void;
-  onSelectAllAnnotationTypes: (displayLabels: string[]) => void;
+  onToggleAnnotationType: (filterKey: string) => void;
+  onSelectAllAnnotationTypes: (filterKeys: string[]) => void;
   onDeselectAllAnnotationTypes: () => void;
+  /** Set selection to exactly these keys (e.g. "show only this type") */
+  onSetSelectedAnnotationTypes?: (filterKeys: Set<string>) => void;
 }
 
 export const AnnotationTypesFilter = ({
@@ -31,35 +36,89 @@ export const AnnotationTypesFilter = ({
   onToggleAnnotationType,
   onSelectAllAnnotationTypes,
   onDeselectAllAnnotationTypes,
+  onSetSelectedAnnotationTypes,
 }: AnnotationTypesFilterProps) => {
-  // Get distinct annotation display labels (values) with counts; marked (selected) types first, then alphabetically
-  const annotationTypesWithCounts = useMemo(() => {
+  const [expandedTypes, setExpandedTypes] = useState<Set<string>>(new Set());
+
+  const toggleTypeExpanded = (typeName: string) => {
+    setExpandedTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(typeName)) next.delete(typeName);
+      else next.add(typeName);
+      return next;
+    });
+  };
+
+  // Build filter keys (type|label) with counts, grouped by annotation type
+  const groupedByType = useMemo(() => {
     const counts = new Map<string, number>();
     annotations.forEach((annotation) => {
-      const displayLabel = getDisplayLabelForFilter(annotation);
-      if (displayLabel) {
-        counts.set(
-          displayLabel,
-          (counts.get(displayLabel) || 0) + 1
-        );
-      }
+      const key = getDisplayLabelForFilter(annotation);
+      if (key) counts.set(key, (counts.get(key) || 0) + 1);
     });
-    return Array.from(counts.entries())
-      .map(([type, count]) => ({ type, count }))
-      .sort((a, b) => {
-        const aSelected = selectedAnnotationTypes.has(a.type);
-        const bSelected = selectedAnnotationTypes.has(b.type);
-        if (aSelected !== bSelected) return aSelected ? -1 : 1;
-        return a.type.localeCompare(b.type);
-      });
+    const options: FilterOption[] = Array.from(counts.entries()).map(
+      ([key, count]) => {
+        const idx = key.indexOf(FILTER_KEY_SEP);
+        const typeName = idx >= 0 ? key.slice(0, idx) : key;
+        const label = idx >= 0 ? key.slice(idx + 1) : key;
+        return { key, typeName, label, count };
+      }
+    );
+    const byType = new Map<string, FilterOption[]>();
+    options.forEach((opt) => {
+      const list = byType.get(opt.typeName) || [];
+      list.push(opt);
+      byType.set(opt.typeName, list);
+    });
+    byType.forEach((list) =>
+      list.sort((a, b) => {
+        const aSel = selectedAnnotationTypes.has(a.key);
+        const bSel = selectedAnnotationTypes.has(b.key);
+        if (aSel !== bSel) return aSel ? -1 : 1;
+        return a.label.localeCompare(b.label);
+      })
+    );
+    return Array.from(byType.entries()).sort((a, b) =>
+      a[0].localeCompare(b[0])
+    );
   }, [annotations, selectedAnnotationTypes]);
 
-  // Handle toggle all
+  const allKeys = useMemo(
+    () => groupedByType.flatMap(([, opts]) => opts.map((o) => o.key)),
+    [groupedByType]
+  );
+
   const handleToggleAll = () => {
-    if (selectedAnnotationTypes.size === annotationTypesWithCounts.length) {
+    if (selectedAnnotationTypes.size === allKeys.length && allKeys.length > 0) {
       onDeselectAllAnnotationTypes();
     } else {
-      onSelectAllAnnotationTypes(annotationTypesWithCounts.map(item => item.type));
+      onSelectAllAnnotationTypes(allKeys);
+    }
+  };
+
+  const keysForType = (opts: FilterOption[]) => opts.map((o) => o.key);
+  const isOnlyTypeSelected = (opts: FilterOption[]) => {
+    const keys = keysForType(opts);
+    if (keys.length === 0) return false;
+    return keys.every((k) => selectedAnnotationTypes.has(k)) && selectedAnnotationTypes.size === keys.length;
+  };
+  const handleTypeCheckboxChange = (opts: FilterOption[]) => {
+    const keys = keysForType(opts);
+    const onlyThisSelected = isOnlyTypeSelected(opts);
+    if (onlyThisSelected) {
+      const next = new Set(selectedAnnotationTypes);
+      keys.forEach((k) => next.delete(k));
+      if (onSetSelectedAnnotationTypes) {
+        onSetSelectedAnnotationTypes(next);
+      } else {
+        onDeselectAllAnnotationTypes();
+      }
+    } else if (keys.length > 0) {
+      if (onSetSelectedAnnotationTypes && keys.length > 0) {
+        onSetSelectedAnnotationTypes(new Set(keys));
+      } else {
+        onSelectAllAnnotationTypes(keys);
+      }
     }
   };
 
@@ -86,7 +145,7 @@ export const AnnotationTypesFilter = ({
               <span className="inline-block w-4 h-4 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
               <p className="text-xs text-gray-500">Updating...</p>
             </div>
-          ) : annotationTypesWithCounts.length === 0 ? (
+          ) : allKeys.length === 0 ? (
             <p className="text-xs text-gray-500">No annotation types available</p>
           ) : (
             <div className="space-y-2">
@@ -95,7 +154,7 @@ export const AnnotationTypesFilter = ({
                 <input
                   type="checkbox"
                   id="select-all-annotation-types"
-                  checked={selectedAnnotationTypes.size === annotationTypesWithCounts.length && annotationTypesWithCounts.length > 0}
+                  checked={selectedAnnotationTypes.size === allKeys.length && allKeys.length > 0}
                   onChange={handleToggleAll}
                   className="w-3.5 h-3.5 text-orange-500 border-gray-300 rounded focus:ring-orange-400 focus:ring-1 cursor-pointer"
                 />
@@ -104,40 +163,84 @@ export const AnnotationTypesFilter = ({
                   className="flex-1 cursor-pointer flex items-center justify-between"
                 >
                   <div className="text-xs font-medium text-gray-700">
-                  {selectedAnnotationTypes.size === annotationTypesWithCounts.length && annotationTypesWithCounts.length > 0
-                    ? "Deselect All"
-                    : "Select All"}</div>
+                  {selectedAnnotationTypes.size === allKeys.length && allKeys.length > 0
+                      ? "Deselect All"
+                      : "Select All"}</div>
                   <span className="text-xs text-gray-500 mr-3">[{annotations.length}]</span>
                 </label>
               </div>
 
-              {/* Annotation types list with max height and scroll */}
-              <div className="max-h-60 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                {annotationTypesWithCounts.map(({ type, count }) => (
-                  <div
-                    key={type}
-                    className="flex items-start gap-2 p-2 hover:bg-gray-50 rounded transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      id={`annotation-type-${type}`}
-                      checked={selectedAnnotationTypes.has(type)}
-                      onChange={() => onToggleAnnotationType(type)}
-                      className="w-3.5 h-3.5 text-orange-500 border-gray-300 rounded focus:ring-orange-400 focus:ring-1 cursor-pointer mt-0.5 flex-shrink-0"
-                    />
-                    <label
-                      htmlFor={`annotation-type-${type}`}
-                      className="flex-1 cursor-pointer flex items-center justify-between"
-                    >
-                      <div className="text-xs font-medium text-gray-900">
-                        {type}
+              {/* Annotation list grouped by annotation type (collapsible, show-only-this-type) */}
+              <div className="max-h-60 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                {groupedByType.map(([typeName, opts]) => {
+                  const isExpanded = expandedTypes.has(typeName);
+                  const onlyThisSelected = isOnlyTypeSelected(opts);
+                  return (
+                    <div key={typeName} className="border border-gray-200 rounded overflow-hidden">
+                      <div className="flex items-center gap-1 bg-gray-50 border-b border-gray-200 min-h-8">
+                        <button
+                          type="button"
+                          onClick={() => toggleTypeExpanded(typeName)}
+                          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded flex-shrink-0"
+                          aria-expanded={isExpanded}
+                          title={isExpanded ? "Collapse" : "Expand"}
+                        >
+                          {isExpanded ? (
+                            <IoChevronDown className="w-3.5 h-3.5" />
+                          ) : (
+                            <IoChevronForward className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        <input
+                          type="checkbox"
+                          id={`filter-type-${typeName}`}
+                          checked={onlyThisSelected}
+                          onChange={() => handleTypeCheckboxChange(opts)}
+                          className="w-3.5 h-3.5 text-orange-500 border-gray-300 rounded focus:ring-orange-400 focus:ring-1 cursor-pointer flex-shrink-0"
+                          title={onlyThisSelected ? "Show all types" : "Show only this annotation type"}
+                        />
+                        <label
+                          htmlFor={`filter-type-${typeName}`}
+                          className="flex-1 text-xs font-semibold text-gray-700 cursor-pointer py-1.5 pr-2 flex items-center justify-between"
+                        >
+                          <span>{typeName}</span>
+                          <span className="text-gray-500 font-normal">
+                            {opts.reduce((s, o) => s + o.count, 0)}
+                          </span>
+                        </label>
                       </div>
-                      <span className="text-xs text-gray-500 ml-2">
-                        {`[${count}]`}
-                      </span>
-                    </label>
-                  </div>
-                ))}
+                      {isExpanded && (
+                        <div className="bg-white space-y-0.5 p-1">
+                          {opts.map(({ key, label, count }) => (
+                            <div
+                              key={key}
+                              className="flex items-start gap-2 p-2 hover:bg-gray-50 rounded transition-colors ml-1"
+                            >
+                              <input
+                                type="checkbox"
+                                id={`annotation-type-${key}`}
+                                checked={selectedAnnotationTypes.has(key)}
+                                onChange={() => onToggleAnnotationType(key)}
+                                className="w-3.5 h-3.5 text-orange-500 border-gray-300 rounded focus:ring-orange-400 focus:ring-1 cursor-pointer mt-0.5 flex-shrink-0"
+                              />
+                              <label
+                                htmlFor={`annotation-type-${key}`}
+                                className="flex-1 cursor-pointer flex items-center justify-between"
+                              >
+                                <div className="text-xs font-medium text-gray-900">
+                                  {label}
+                                </div>
+                                <span className="text-xs text-gray-500 ml-2">
+                                  {`[${count}]`}
+                                </span>
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

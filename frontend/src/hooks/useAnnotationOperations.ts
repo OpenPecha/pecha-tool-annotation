@@ -3,7 +3,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useAnnotationStore } from "@/store/annotation";
 import { useAnnotationFiltersStore } from "@/store/annotationFilters";
 import type { AnnotationCreate, AnnotationResponse, TextWithAnnotations } from "@/api/types";
-import { useCreateAnnotation, useUpdateAnnotation, useDeleteAnnotation } from "@/hooks";
+import {
+  useCreateAnnotation,
+  useUpdateAnnotation,
+  useDeleteAnnotation,
+  useAnnotationTypes,
+} from "@/hooks";
 import {
   extractLeafNodes,
   isValidAnnotationType,
@@ -14,8 +19,6 @@ import { TOAST_MESSAGES } from "@/constants/taskConstants";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/constants/queryKeys";
 import { getDisplayLabelForFilter } from "@/utils/annotationConverter";
-
-const POS_LABEL_PREFIX = '["pos"]-';
 
 /**
  * Custom hook that encapsulates all annotation CRUD operations
@@ -42,7 +45,8 @@ export const useAnnotationOperations = (
   } = useAnnotationFiltersStore();
   const { getCustomOptions } = useCustomAnnotationsStore();
   const queryClient = useQueryClient();
-  
+  const { data: annotationTypes = [] } = useAnnotationTypes();
+
   const [pendingHeader, setPendingHeader] = useState<{
     text: string;
     start: number;
@@ -56,7 +60,7 @@ export const useAnnotationOperations = (
 
   /**
    * Validates annotation type against current navigation mode.
-   * Also accepts custom annotations added by the user.
+   * For error-list: type is annotation type name (e.g. "pos"); must be a known type from API.
    */
   const validateAnnotationType = useCallback(
     async (type: string): Promise<boolean> => {
@@ -72,16 +76,18 @@ export const useAnnotationOperations = (
         );
       }
 
+      if (type === "header") return true;
+      const isKnownType = annotationTypes.some((t) => t.name === type);
+      if (isKnownType) return true;
+
       const apiOptions = extractLeafNodes(annotationList?.categories || [], 0);
       const customOptions: AnnotationOption[] = selectedAnnotationListType
         ? getCustomOptions(selectedAnnotationListType)
         : [];
       const allOptions = [...apiOptions, ...customOptions];
-      return (
-        isValidAnnotationType({ options: allOptions }, type) || type === "header"
-      );
+      return isValidAnnotationType({ options: allOptions }, type);
     },
-    [annotationList, selectedAnnotationListType, getCustomOptions]
+    [annotationList, selectedAnnotationListType, getCustomOptions, annotationTypes]
   );
 
   /**
@@ -128,6 +134,7 @@ export const useAnnotationOperations = (
     // Optimistic add to cache of text-with-annotations
     const cacheKey = queryKeys.texts.withAnnotations(textIdNumber);
     const previous = queryClient.getQueryData<TextWithAnnotations>(cacheKey);
+    const labelValue = name?.trim() ? name : type;
     const tempApiAnnotation: AnnotationResponse = {
       id: -Math.floor(Math.random() * 1_000_000),
       text_id: textIdNumber,
@@ -136,7 +143,7 @@ export const useAnnotationOperations = (
       end_position: selectedText.end,
       selected_text: selectedText.text,
       confidence: 1.0,
-      label: type,
+      label: labelValue,
       name: name,
       level: level as any,
       meta: {},
@@ -158,7 +165,7 @@ export const useAnnotationOperations = (
       description: `Adding ${type} annotation`,
     });
 
-    // Create annotation data for API
+    // Create annotation data for API (type = annotation_type, name = label)
     const annotationData: AnnotationCreate = {
       text_id: textIdNumber,
       annotation_type: type,
@@ -166,7 +173,7 @@ export const useAnnotationOperations = (
       end_position: selectedText.end,
       selected_text: selectedText.text,
       confidence: 1.0,
-      label: type,
+      label: labelValue,
       name: name,
       level: level as "minor" | "major" | "critical" | undefined,
       meta: {},
@@ -263,11 +270,8 @@ export const useAnnotationOperations = (
       ? (newLevel as "minor" | "major" | "critical")
       : undefined;
 
-    const isPosAnnotation = annotation.annotation_type === "pos";
-    const createAnnotationType = isPosAnnotation ? "pos" : newType;
-    const createLabel = isPosAnnotation
-      ? (newType.startsWith(POS_LABEL_PREFIX) ? newType : `${POS_LABEL_PREFIX}${newType}`)
-      : newType;
+    const createAnnotationType = annotation.annotation_type;
+    const createLabel = newType;
 
     const selectedText = {
       text: annotation.selected_text ?? text.slice(annotation.start_position, annotation.end_position),
@@ -489,7 +493,8 @@ export const useAnnotationOperations = (
           });
         }
 
-        autoCheckAnnotationType(data.annotation_type);
+        const filterKey = getDisplayLabelForFilter(data);
+        if (filterKey) autoCheckAnnotationType(filterKey);
 
         toast({
           title: TOAST_MESSAGES.ANNOTATION_CREATED,

@@ -206,16 +206,15 @@ def upload_text_file(
             if at:
                 selected_type_name = at.name
         # Create POS annotations from TEI annotated layer (output_combined style).
-        # Store label as ["pos"]-value so UI can regex-extract value while keeping attribute name.
+        # Store label as plain value (e.g. n.prop); annotation_type="pos" identifies the type.
         for ann in tei_annotations:
-            pos_label = f'["pos"]-{ann.label}' if ann.label else None
             ann_create = AnnotationCreate(
                 text_id=created_text.id,
                 annotation_type="pos",
                 start_position=ann.start_position,
                 end_position=ann.end_position,
                 selected_text=ann.selected_text,
-                label=pos_label,
+                label=ann.label,
                 meta=ann.meta,
             )
             annotation_crud.create_bulk(

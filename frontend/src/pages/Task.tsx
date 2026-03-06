@@ -21,7 +21,7 @@ import {
 } from "@/hooks";
 import {
   convertApiAnnotationsSync,
-  getAnnotationDisplayLabel,
+  getDisplayLabelForFilter,
   type Annotation,
 } from "@/utils/annotationConverter";
 import { useAnnotationOperations } from "@/hooks/useAnnotationOperations";
@@ -95,14 +95,14 @@ const Index = () => {
     return textData?.annotations ? convertApiAnnotationsSync(textData.annotations) : [];
   }, [textData]);
 
-  /** All annotation display labels that appear in this text (for "all segments selected" check) */
+  /** All annotation filter keys (type|label) that appear in this text (for "all segments selected" check) */
   const annotationLabelsInText = useMemo(() => {
-    const labels = new Set<string>();
+    const keys = new Set<string>();
     annotationsForUI.forEach((ann) => {
-      const label = getAnnotationDisplayLabel(ann);
-      if (label) labels.add(label);
+      const key = getDisplayLabelForFilter(ann);
+      if (key) keys.add(key);
     });
-    return labels;
+    return keys;
   }, [annotationsForUI]);
 
   /** Editable only when every segment type present in the text is selected in the filter */
@@ -203,13 +203,8 @@ const Index = () => {
   const filteredAnnotations = useMemo(() => {
     if (selectedAnnotationTypes.size === 0) return [];
     return annotationsForUI.filter((ann) => {
-      const displayLabel = getAnnotationDisplayLabel(ann);
-      if (displayLabel){
-        return selectedAnnotationTypes.has(displayLabel);
-      }else{
-        selectedAnnotationTypes.has(ann.type)
-
-      }
+      const filterKey = getDisplayLabelForFilter(ann);
+      return filterKey ? selectedAnnotationTypes.has(filterKey) : false;
     });
   }, [annotationsForUI, selectedAnnotationTypes]);
   /**
@@ -288,6 +283,9 @@ const Index = () => {
               }}
               onDeselectAllAnnotationTypes={() => {
                 startFilterTransition(() => setSelectedAnnotationTypes(new Set()));
+              }}
+              onSetSelectedAnnotationTypes={(set) => {
+                startFilterTransition(() => setSelectedAnnotationTypes(set));
               }}
             />
           </div>
