@@ -55,7 +55,7 @@ const Index = () => {
     addSelectedAnnotationTypes,
   } = useAnnotationFiltersStore();
 
-  const [sidebarFilterOpen, setSidebarFilterOpen] = useState(false);
+  const [sidebarFilterOpen, setSidebarFilterOpen] = useState(true);
   const [diplomaticPanelOpen, setDiplomaticPanelOpen] = useState(false);
   const location = useLocation();
   const queryClient = useQueryClient();
