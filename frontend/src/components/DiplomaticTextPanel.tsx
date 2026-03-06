@@ -1,24 +1,37 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { AiOutlineLoading3Quarters } from "react-icons/ai"
 import { textApi } from "@/api/text"
+import { Button } from "@/components/ui/button"
 
 interface DiplomaticTextPanelProps {
   textId: number | undefined
   isVisible: boolean
+  onDiplomaticSaved?: () => void
 }
 
 export function DiplomaticTextPanel({
   textId,
   isVisible,
+  onDiplomaticSaved,
 }: DiplomaticTextPanelProps) {
   const [diplomaticText, setDiplomaticText] = useState<string | null | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<Error | null>(null)
+  const [teiFile, setTeiFile] = useState<File | null>(null)
+  const [parsedContent, setParsedContent] = useState<string | null>(null)
+  const [isParsing, setIsParsing] = useState(false)
+  const [parseError, setParseError] = useState<Error | null>(null)
+  const [isResetting, setIsResetting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!isVisible || textId === undefined) {
       setDiplomaticText(undefined)
       setError(null)
+      setParsedContent(null)
+      setTeiFile(null)
+      setParseError(null)
       return
     }
     let cancelled = false
@@ -28,7 +41,8 @@ export function DiplomaticTextPanel({
       .getDiplomaticText(textId)
       .then((res) => {
         if (!cancelled) {
-          setDiplomaticText(res.diplomatic_text ?? null)
+          const value = res.diplomatic_text ?? null
+          setDiplomaticText(value)
         }
       })
       .catch((err) => {
@@ -42,6 +56,84 @@ export function DiplomaticTextPanel({
     }
   }, [isVisible, textId])
 
+  const canAdd = !isLoading && !error && (diplomaticText === null || diplomaticText === "")
+  const hasContent = diplomaticText != null && diplomaticText !== ""
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const isXml =
+      file.type === "text/xml" ||
+      file.type === "application/xml" ||
+      file.name.toLowerCase().endsWith(".xml")
+    if (!isXml) {
+      setParseError(new Error("Please select a TEI XML file (.xml)"))
+      e.target.value = ""
+      return
+    }
+    setTeiFile(file)
+    setParsedContent(null)
+    setParseError(null)
+    e.target.value = ""
+    setIsParsing(true)
+    textApi
+      .parseDiplomaticFromTei(file)
+      .then((res) => {
+        setParsedContent(res.diplomatic_text ?? "")
+      })
+      .catch((err) => {
+        setParseError(err instanceof Error ? err : new Error(String(err)))
+      })
+      .finally(() => setIsParsing(false))
+  }
+
+  const handleReupload = () => {
+    setTeiFile(null)
+    setParsedContent(null)
+    setParseError(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+      fileInputRef.current.click()
+    }
+  }
+
+  const handleSaveDiplomatic = () => {
+    if (textId === undefined || parsedContent === null) return
+    setIsSaving(true)
+    setError(null)
+    textApi
+      .updateText(textId, { diplomatic_text: parsedContent })
+      .then(() => {
+        setDiplomaticText(parsedContent)
+        setTeiFile(null)
+        setParsedContent(null)
+        onDiplomaticSaved?.()
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err : new Error(String(err)))
+      })
+      .finally(() => setIsSaving(false))
+  }
+
+  const handleResetDiplomatic = () => {
+    if (textId === undefined) return
+    setIsResetting(true)
+    setError(null)
+    textApi
+      .updateText(textId, { diplomatic_text: "" })
+      .then(() => {
+        setDiplomaticText("")
+        setTeiFile(null)
+        setParsedContent(null)
+        setParseError(null)
+        onDiplomaticSaved?.()
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err : new Error(String(err)))
+      })
+      .finally(() => setIsResetting(false))
+  }
+
   if (!isVisible) return null
 
   return (
@@ -49,7 +141,7 @@ export function DiplomaticTextPanel({
       <div className="px-4 py-2 border-b border-slate-200 bg-slate-50">
         <h2 className="text-sm font-semibold text-slate-800">Diplomatic transcription</h2>
       </div>
-      <div className="flex-1 overflow-auto p-4 min-h-0">
+      <div className="flex-1 overflow-auto p-4 min-h-0 flex flex-col">
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
             <AiOutlineLoading3Quarters className="w-6 h-6 animate-spin text-blue-600" />
@@ -58,19 +150,88 @@ export function DiplomaticTextPanel({
         )}
         {error && (
           <p className="text-red-600 text-sm py-4">
-            Failed to load diplomatic text: {error.message}
+            {error.message}
           </p>
         )}
-        {!isLoading && !error && diplomaticText === null && (
-          <p className="text-slate-500 py-4">No diplomatic transcription available for this text.</p>
+        {canAdd && (
+          <div className="flex flex-col flex-1 min-h-0">
+            <p className="text-slate-600 text-sm mb-2">Upload a TEI XML file to extract text from <code className="text-xs bg-slate-100 px-1 rounded">&lt;text&gt;&lt;body&gt;&lt;div&gt;</code>. It will be parsed automatically.</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xml,text/xml,application/xml"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            {!teiFile && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Choose TEI XML file
+              </Button>
+            )}
+            {teiFile && isParsing && (
+              <div className="flex flex-col items-center justify-center py-6 gap-2">
+                <AiOutlineLoading3Quarters className="w-6 h-6 animate-spin text-blue-600" />
+                <p className="text-sm text-slate-600">Parsing {teiFile.name}…</p>
+              </div>
+            )}
+            {teiFile && !isParsing && parseError && (
+              <div className="flex flex-col gap-2">
+                <p className="text-red-600 text-sm">{parseError.message}</p>
+                <Button type="button" variant="outline" size="sm" onClick={handleReupload}>
+                  Re-upload
+                </Button>
+              </div>
+            )}
+            {teiFile && !isParsing && parsedContent !== null && !parseError && (
+              <div className="flex flex-col flex-1 min-h-0">
+                <p className="text-slate-600 text-sm mb-1">Extracted content:</p>
+                <pre className="flex-1 min-h-[80px] overflow-auto rounded border border-slate-200 p-2 text-xs text-slate-800 whitespace-pre-wrap bg-slate-50">
+                  {parsedContent || "(empty)"}
+                </pre>
+                <div className="mt-3 flex gap-2 shrink-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReupload}
+                  >
+                    Re-upload
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleSaveDiplomatic}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? "Saving…" : "Save diplomatic"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
-        {!isLoading && !error && diplomaticText != null && diplomaticText !== "" && (
-          <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800 leading-relaxed">
-            {diplomaticText}
-          </pre>
-        )}
-        {!isLoading && !error && diplomaticText === "" && (
-          <p className="text-slate-500 py-4">Diplomatic transcription is empty.</p>
+        {hasContent && (
+          <div className="flex flex-col flex-1 min-h-0">
+            <pre className="flex-1 whitespace-pre-wrap font-sans text-sm text-slate-800 leading-relaxed overflow-auto">
+              {diplomaticText}
+            </pre>
+            <div className="mt-3 shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleResetDiplomatic}
+                disabled={isResetting}
+              >
+                {isResetting ? "Resetting…" : "Reset diplomatic and upload again"}
+              </Button>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -41,6 +41,7 @@ export interface TextUpdate {
   title?: string;
   content?: string;
   translation?: string;
+  diplomatic_text?: string | null;
   source?: string;
   language?: string;
   status?: TextStatus;

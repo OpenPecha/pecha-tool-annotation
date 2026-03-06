@@ -96,7 +96,7 @@ function ActionButtons({
   isSkipping = false,
   isUndoing = false,
   isCompletedTask = false,
-  hasDiplomatic = true,
+  hasDiplomatic = false,
 }: {
   readonly annotations: Annotation[];
   readonly onSubmitTask: () => void;
@@ -174,17 +174,23 @@ function ActionButtons({
         </Button>
       )}
 
-      {/* Toggle diplomatic transcription (from TEI upload) */}
-      {onToggleDiplomatic && hasDiplomatic && (
+      {/* Toggle diplomatic section: Add / Show / Hide */}
+      {onToggleDiplomatic && (
         <Button
           onClick={onToggleDiplomatic}
           variant={isDiplomaticVisible ? "secondary" : "outline"}
           className={isDiplomaticVisible ? "bg-slate-200 hover:bg-slate-300" : "border-slate-300 text-slate-700 hover:bg-slate-50"}
           size="lg"
-          title={isDiplomaticVisible ? "Hide diplomatic transcription" : "Show diplomatic transcription"}
+          title={
+            isDiplomaticVisible
+              ? "Hide diplomatic transcription"
+              : hasDiplomatic
+                ? "Show diplomatic transcription"
+                : "Add diplomatic transcription"
+          }
         >
           <IoDocumentTextOutline className="w-4 h-4 mr-2" />
-          {isDiplomaticVisible ? "Hide diplomatic" : "Show diplomatic"}
+          {isDiplomaticVisible ? "Hide diplomatic" : hasDiplomatic ? "Show diplomatic" : "Add diplomatic"}
         </Button>
       )}
 
@@ -197,19 +203,6 @@ function ActionButtons({
         />
       )}
 
-      {/* Skip button - only show for new tasks, not completed ones */}
-      {!isCompletedTask && onSkipText && (
-        <Button
-          onClick={handleSkip}
-          className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
-          disabled={isSubmitting || isSkipping || isUndoing}
-          size={"lg"}
-          title="Skip this text - it won't be shown to you again"
-        >
-          <IoPlaySkipForward className="w-4 h-4 mr-2" />
-          {isSkipping ? "Skipping..." : "Skip"}
-        </Button>
-      )}
 
       {/* Revert Work button - only show for completed tasks (edit mode) */}
       {isCompletedTask && onRevertWork && (

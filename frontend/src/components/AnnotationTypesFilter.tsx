@@ -150,7 +150,7 @@ export const AnnotationTypesFilter = ({
           ) : (
             <div className="space-y-2">
               {/* Select All / Deselect All */}
-              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+              {/* <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
                 <input
                   type="checkbox"
                   id="select-all-annotation-types"
@@ -168,7 +168,7 @@ export const AnnotationTypesFilter = ({
                       : "Select All"}</div>
                   <span className="text-xs text-gray-500 mr-3">[{annotations.length}]</span>
                 </label>
-              </div>
+              </div> */}
 
               {/* Annotation list grouped by annotation type (collapsible, show-only-this-type) */}
               <div className="max-h-60 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
@@ -201,7 +201,7 @@ export const AnnotationTypesFilter = ({
                         />
                         <label
                           htmlFor={`filter-type-${typeName}`}
-                          className="flex-1 text-xs font-semibold text-gray-700 cursor-pointer py-1.5 pr-2 flex items-center justify-between"
+                          className="flex-1 uppercase text-xs font-semibold text-gray-700 cursor-pointer py-1.5 pr-2 flex items-center justify-between"
                         >
                           <span>{typeName}</span>
                           <span className="text-gray-500 font-normal">

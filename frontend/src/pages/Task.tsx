@@ -29,6 +29,8 @@ import { useTaskOperations } from "@/hooks/useTaskOperations";
 import { useAnnotationNavigation } from "@/hooks/useAnnotationNavigation";
 import { exportAsJsonFile, exportAsTeiXmlFile } from "@/utils/exportAnnotation";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/constants/queryKeys";
 
 const Index = () => {
   const { textId } = useParams<{ textId: string }>();
@@ -56,6 +58,7 @@ const Index = () => {
   const [sidebarFilterOpen, setSidebarFilterOpen] = useState(false);
   const [diplomaticPanelOpen, setDiplomaticPanelOpen] = useState(false);
   const location = useLocation();
+  const queryClient = useQueryClient();
 
   // UI-only selection state
   const [selectedText, setSelectedText] = useState<{
@@ -86,6 +89,9 @@ const Index = () => {
   const text = textData?.content || "";
   const translation = textData?.translation || "";
   const hasTranslation = Boolean(translation && translation.trim().length > 0);
+  const hasDiplomatic = Boolean(
+    textData?.diplomatic_text != null && textData.diplomatic_text !== ""
+  );
 
   // Check if this is a completed task
   const isCompletedTask = textData && (textData.status === "annotated" || textData.status === "reviewed");
@@ -300,9 +306,16 @@ const Index = () => {
             }}
           >
             <DiplomaticTextPanel
-            textId={parsedTextId}
-            isVisible={diplomaticPanelOpen}
-          />
+              textId={parsedTextId}
+              isVisible={diplomaticPanelOpen}
+              onDiplomaticSaved={() => {
+                if (parsedTextId != null) {
+                  queryClient.invalidateQueries({
+                    queryKey: queryKeys.texts.withAnnotations(parsedTextId),
+                  });
+                }
+              }}
+            />
           <div className="flex-1 min-h-0 mt-0 relative">
             {isFilterPending && (
               <div
@@ -356,6 +369,7 @@ const Index = () => {
             onExport={handleExport}
             onToggleDiplomatic={() => setDiplomaticPanelOpen((prev) => !prev)}
             isDiplomaticVisible={diplomaticPanelOpen}
+            hasDiplomatic={hasDiplomatic}
             onDeleteMyText={handleDeleteMyText}
             canDeleteMyText={canDeleteMyText}
             isDeletingText={softDeleteMutation.isPending}

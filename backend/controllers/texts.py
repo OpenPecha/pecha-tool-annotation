@@ -20,6 +20,7 @@ from schemas.annotation import AnnotationCreate
 from schemas.combined import TextWithAnnotations
 from schemas.user_rejected_text import RejectedTextWithDetails
 from utils.tei_parser import parse_tei, TEIAnnotation
+from utils.diplomatic_parser import parse_diplomatic_from_tei
 
 
 def get_status_options() -> dict:
@@ -150,7 +151,8 @@ def upload_text_file(
             tei_annotations = parsed.annotations  # POS from annotated layer
             tei_editorial_annotations = parsed.editorial_annotations  # add, unclear, hi, decoration
             source = parsed.source
-            diplomatic_text = getattr(parsed, "diplomatic_text", None)
+            # Diplomatic text is not taken from XML; user adds it in the text workspace
+            diplomatic_text = None
             pos_values = getattr(parsed, "pos_values", None) or set()
             editorial_labels = getattr(parsed, "editorial_labels", None) or set()
         except ValueError as e:
@@ -511,6 +513,34 @@ def get_diplomatic_text(db: Session, current_user: User, text_id: int) -> dict:
             detail="Text not found",
         )
     return {"diplomatic_text": getattr(text, "diplomatic_text", None)}
+
+
+def parse_diplomatic_file(file: UploadFile) -> dict:
+    """Parse a TEI XML file with the diplomatic-only parser; return extracted diplomatic text.
+    Does not use the full TEI parser (tei_parser.parse_tei).
+    """
+    filename = file.filename or ""
+    if not (filename.lower().endswith(".xml") or file.content_type in ("text/xml", "application/xml")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be TEI XML (.xml)",
+        )
+    raw = file.file.read()
+    try:
+        content = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be UTF-8 encoded",
+        )
+    try:
+        diplomatic_text = parse_diplomatic_from_tei(content)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    return {"diplomatic_text": diplomatic_text if diplomatic_text is not None else ""}
 
 
 def read_text_with_annotations(

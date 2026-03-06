@@ -80,6 +80,15 @@ def upload_text_file(
     )
 
 
+@router.post("/parse-diplomatic")
+def parse_diplomatic_tei_file(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Parse a TEI XML file with the diplomatic-only parser; returns extracted diplomatic text. Does not use the full text upload parser."""
+    return texts_controller.parse_diplomatic_file(file)
+
+
 @router.get("/for-annotation", response_model=List[TextResponse])
 def get_texts_for_annotation(
     skip: int = Query(0, ge=0),

@@ -38,6 +38,18 @@ export const textApi = {
     return apiClient.get<DiplomaticTextResponse>(`/texts/${id}/diplomatic`);
   },
 
+  // Parse TEI XML file with diplomatic-only parser; returns { diplomatic_text }. Does not use full upload parser.
+  parseDiplomaticFromTei: async (
+    file: File
+  ): Promise<DiplomaticTextResponse> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiClient.post<DiplomaticTextResponse>(
+      "/texts/parse-diplomatic",
+      formData
+    );
+  },
+
   // Create new text
   createText: async (data: TextCreate): Promise<TextResponse> => {
     return apiClient.post<TextResponse>("/texts", data);
