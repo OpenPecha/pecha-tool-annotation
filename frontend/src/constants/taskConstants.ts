@@ -47,6 +47,8 @@ export const TOAST_MESSAGES = {
   // Locked messages
   CANNOT_EDIT_AGREED: "🔒 Cannot Edit Annotation",
   CANNOT_DELETE_AGREED: "🔒 Cannot Delete Annotation",
+  NO_WRITE_PERMISSION: "You can't update this task",
+  NO_WRITE_PERMISSION_DESCRIPTION: "You don't have permission to make changes.",
 } as const;
 
 // Confirmation messages

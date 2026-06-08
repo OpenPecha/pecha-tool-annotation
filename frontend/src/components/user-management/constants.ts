@@ -1,8 +1,8 @@
 import type { UserRole } from "@/api/types";
 
-export const USER_ROLES: UserRole[] = ["admin", "reviewer", "annotator", "user"];
+export const USER_ROLES: UserRole[] = ["admin", "reviewer", "annotator", "viewer", "user"];
 
-export const STAFF_FILTER_ROLES: UserRole[] = ["admin", "reviewer", "annotator"];
+export const STAFF_FILTER_ROLES: UserRole[] = ["admin", "reviewer", "annotator", "viewer"];
 
 export type StatusFilter = "all" | "active" | "inactive";
 
@@ -12,5 +12,6 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",
   reviewer: "Reviewer",
   annotator: "Annotator",
+  viewer: "Viewer",
   user: "User",
 };

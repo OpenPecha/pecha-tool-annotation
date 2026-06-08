@@ -649,6 +649,21 @@ def search_texts(
     return text_crud.search(db=db, query=q, skip=skip, limit=limit)
 
 
+def _ensure_text_read_access(db: Session, current_user: User, text) -> str:
+    permission = text_crud.get_effective_text_permission(
+        db=db,
+        user_id=current_user.id,
+        text=text,
+        role=current_user.role.value,
+    )
+    if permission is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to view this text",
+        )
+    return permission
+
+
 def read_text(db: Session, current_user: User, text_id: int):
     """Get text by ID."""
     text = text_crud.get(db=db, text_id=text_id)
@@ -657,6 +672,7 @@ def read_text(db: Session, current_user: User, text_id: int):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Text not found",
         )
+    text.current_user_permission = _ensure_text_read_access(db, current_user, text)
     return text
 
 
@@ -668,6 +684,7 @@ def get_diplomatic_text(db: Session, current_user: User, text_id: int) -> dict:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Text not found",
         )
+    _ensure_text_read_access(db, current_user, text)
     return {"diplomatic_text": getattr(text, "diplomatic_text", None)}
 
 
@@ -706,12 +723,7 @@ def read_text_with_annotations(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Text not found",
         )
-    text.current_user_permission = text_crud.get_effective_text_permission(
-        db=db,
-        user_id=current_user.id,
-        text=text,
-        role=current_user.role.value,
-    )
+    text.current_user_permission = _ensure_text_read_access(db, current_user, text)
     return text
 
 
@@ -722,6 +734,11 @@ def update_text(db: Session, current_user: User, text_id: int, text_in: TextUpda
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Text not found",
+        )
+    if not text_crud.can_write_text(db, current_user.id, text, current_user.role.value):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have write permission for this text",
         )
     return text_crud.update(db=db, db_obj=text, obj_in=text_in)
 

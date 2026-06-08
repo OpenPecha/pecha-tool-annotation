@@ -36,6 +36,7 @@ export function usePermission() {
     isAdmin: role === UserRole.ADMIN,
     isAnnotator: role === UserRole.ANNOTATOR,
     isReviewer: role === UserRole.REVIEWER,
+    isViewer: role === UserRole.VIEWER,
     isRegularUser: role === UserRole.USER,
   };
 }

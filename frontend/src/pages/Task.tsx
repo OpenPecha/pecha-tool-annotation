@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useTransition } from "react";
+import { useState, useMemo, useEffect, useTransition, useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useAnnotationStore } from "@/store/annotation";
 import { TextAnnotator } from "@/components/TextAnnotator";
@@ -31,6 +31,7 @@ import { useAnnotationOperations } from "@/hooks/useAnnotationOperations";
 import { useTaskOperations } from "@/hooks/useTaskOperations";
 import { useAnnotationNavigation } from "@/hooks/useAnnotationNavigation";
 import { exportAsJsonFile, exportAsTeiXmlFile } from "@/utils/exportAnnotation";
+import { TOAST_MESSAGES } from "@/constants/taskConstants";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/constants/queryKeys";
@@ -121,6 +122,31 @@ const Index = () => {
     allAnnotationsAccepted ||
     !textData;
 
+  const notifyNoWritePermission = useCallback(() => {
+    toast.error(TOAST_MESSAGES.NO_WRITE_PERMISSION, {
+      description: TOAST_MESSAGES.NO_WRITE_PERMISSION_DESCRIPTION,
+    });
+  }, []);
+
+  const requireWritePermission = useCallback((): boolean => {
+    if (!hasWritePermission || forceReadOnlyFromNavigation) {
+      notifyNoWritePermission();
+      return false;
+    }
+    if (allAnnotationsAccepted) {
+      toast.error(TOAST_MESSAGES.CANNOT_EDIT_AGREED, {
+        description: "This task can no longer be edited.",
+      });
+      return false;
+    }
+    return true;
+  }, [
+    hasWritePermission,
+    forceReadOnlyFromNavigation,
+    allAnnotationsAccepted,
+    notifyNoWritePermission,
+  ]);
+
   /**
    * Custom hook: Annotation CRUD operations
    * Handles creating, updating, deleting annotations with optimistic updates
@@ -208,17 +234,64 @@ const Index = () => {
    * Wrapper for addAnnotation that handles selectedText state
    */
   const handleAddAnnotation = (type: string, name?: string, level?: string) => {
-    if (forceReadOnlyFromNavigation || !hasWritePermission) return;
+    if (!requireWritePermission()) return;
     if (!selectedText) return;
     addAnnotationFn(selectedText, type, name, level);
     setSelectedText(null);
   };
 
-  /** On text select: always allow selection (for adding annotations). Text content editing is controlled by isReadOnly. */
+  /** On text select: allow selection for reading; writes are blocked in handlers above. */
   const handleTextSelect = (selection: { text: string; start: number; end: number } | null) => {
-    if (forceReadOnlyFromNavigation || !hasWritePermission) return;
     setSelectedText(selection);
   };
+
+  const guardedRemoveAnnotation = useCallback(
+    (...args: Parameters<typeof removeAnnotation>) => {
+      if (!requireWritePermission()) return;
+      removeAnnotation(...args);
+    },
+    [removeAnnotation, requireWritePermission]
+  );
+
+  const guardedUpdateAnnotation = useCallback(
+    (...args: Parameters<typeof updateAnnotation>) => {
+      if (!requireWritePermission()) return;
+      updateAnnotation(...args);
+    },
+    [updateAnnotation, requireWritePermission]
+  );
+
+  const guardedHandleHeaderSelected = useCallback(
+    (...args: Parameters<typeof handleHeaderSelected>) => {
+      if (!requireWritePermission()) return;
+      handleHeaderSelected(...args);
+    },
+    [handleHeaderSelected, requireWritePermission]
+  );
+
+  const guardedHandleUpdateHeaderSpan = useCallback(
+    (...args: Parameters<typeof handleUpdateHeaderSpan>) => {
+      if (!requireWritePermission()) return;
+      handleUpdateHeaderSpan(...args);
+    },
+    [handleUpdateHeaderSpan, requireWritePermission]
+  );
+
+  const guardedApplyAnnotationToAll = useCallback(
+    (...args: Parameters<typeof applyAnnotationToAll>) => {
+      if (!requireWritePermission()) return;
+      applyAnnotationToAll(...args);
+    },
+    [applyAnnotationToAll, requireWritePermission]
+  );
+
+  const guardedRemoveAnnotationFromAll = useCallback(
+    (...args: Parameters<typeof removeAnnotationFromAll>) => {
+      if (!requireWritePermission()) return;
+      removeAnnotationFromAll(...args);
+    },
+    [removeAnnotationFromAll, requireWritePermission]
+  );
 
   const handleSharePermission = () => {
     if (!parsedTextId || !isShareManager) return;
@@ -363,6 +436,8 @@ const Index = () => {
             <DiplomaticTextPanel
               textId={parsedTextId}
               isVisible={diplomaticPanelOpen}
+              canEdit={hasWritePermission}
+              onEditBlocked={notifyNoWritePermission}
               onDiplomaticSaved={() => {
                 if (parsedTextId != null) {
                   queryClient.invalidateQueries({
@@ -395,10 +470,10 @@ const Index = () => {
               selectedText={selectedText}
               onTextSelect={handleTextSelect}
               onAddAnnotation={handleAddAnnotation}
-              onRemoveAnnotation={hasWritePermission ? removeAnnotation : () => {}}
-              onUpdateAnnotation={hasWritePermission ? updateAnnotation : () => {}}
-              onHeaderSelected={hasWritePermission ? handleHeaderSelected : () => {}}
-              onUpdateHeaderSpan={hasWritePermission ? handleUpdateHeaderSpan : () => {}}
+              onRemoveAnnotation={guardedRemoveAnnotation}
+              onUpdateAnnotation={guardedUpdateAnnotation}
+              onHeaderSelected={guardedHandleHeaderSelected}
+              onUpdateHeaderSpan={guardedHandleUpdateHeaderSpan}
               readOnly={isReadOnly}
               isCreatingAnnotation={isCreatingAnnotation}
               isDeletingAnnotation={isDeletingAnnotation}
@@ -443,10 +518,10 @@ const Index = () => {
             annotations={annotationsWithoutHeader}
             fullText={text}
             isBulkOperationPending={isCreatingAnnotation || isDeletingAnnotation || isBulkOperationPending}
-            onRemoveAnnotation={hasWritePermission ? removeAnnotation : () => {}}
+            onRemoveAnnotation={guardedRemoveAnnotation}
             onAnnotationClick={handleAnnotationClick}
-            onApplyToAll={hasWritePermission ? applyAnnotationToAll : undefined}
-            onRemoveFromAll={hasWritePermission ? removeAnnotationFromAll : undefined}
+            onApplyToAll={guardedApplyAnnotationToAll}
+            onRemoveFromAll={guardedRemoveAnnotationFromAll}
             isOpen={sidebarOpen}
             onToggle={toggleSidebar}
           />

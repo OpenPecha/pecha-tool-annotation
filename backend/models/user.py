@@ -10,6 +10,7 @@ class UserRole(enum.Enum):
     USER = "user"
     ANNOTATOR = "annotator"
     REVIEWER = "reviewer"
+    VIEWER = "viewer"
 
 
 class User(Base):

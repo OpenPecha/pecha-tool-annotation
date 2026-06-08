@@ -16,12 +16,16 @@ function sanitizeDiplomaticHtml(html: string): string {
 interface DiplomaticTextPanelProps {
   textId: number | undefined
   isVisible: boolean
+  canEdit?: boolean
+  onEditBlocked?: () => void
   onDiplomaticSaved?: () => void
 }
 
 export function DiplomaticTextPanel({
   textId,
   isVisible,
+  canEdit = true,
+  onEditBlocked,
   onDiplomaticSaved,
 }: DiplomaticTextPanelProps) {
   const [diplomaticText, setDiplomaticText] = useState<string | null | undefined>(undefined)
@@ -70,6 +74,11 @@ export function DiplomaticTextPanel({
   const hasContent = diplomaticText != null && diplomaticText !== ""
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canEdit) {
+      onEditBlocked?.()
+      e.target.value = ""
+      return
+    }
     const file = e.target.files?.[0]
     if (!file) return
     const isXml =
@@ -115,6 +124,10 @@ export function DiplomaticTextPanel({
   }
 
   const handleReupload = () => {
+    if (!canEdit) {
+      onEditBlocked?.()
+      return
+    }
     setTeiFile(null)
     setParsedContent(null)
     setParseError(null)
@@ -125,6 +138,10 @@ export function DiplomaticTextPanel({
   }
 
   const handleResetDiplomatic = () => {
+    if (!canEdit) {
+      onEditBlocked?.()
+      return
+    }
     if (textId === undefined) return
     setIsResetting(true)
     setError(null)

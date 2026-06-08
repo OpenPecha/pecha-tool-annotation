@@ -187,6 +187,7 @@ export const UserRole = {
   USER: "user",
   ANNOTATOR: "annotator",
   REVIEWER: "reviewer",
+  VIEWER: "viewer",
   ADMIN: "admin",
 } as const;
 

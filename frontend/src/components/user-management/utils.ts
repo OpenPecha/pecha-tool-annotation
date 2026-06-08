@@ -23,6 +23,8 @@ export function getRoleIcon(role: UserRole) {
       return IoCreateOutline;
     case "annotator":
       return IoPeople;
+    case "viewer":
+      return IoEye;
     default:
       return IoEye;
   }

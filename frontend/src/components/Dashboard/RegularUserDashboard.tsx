@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,8 @@ export const RegularUserDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth0();
   const { role } = usePermission();
+  const isViewer = role === "viewer";
+  const canBrowseAllTasks = role === "reviewer" || role === "admin" || isViewer;
   const [isLoadingText, setIsLoadingText] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -69,6 +71,12 @@ export const RegularUserDashboard: React.FC = () => {
   const assignMeMutation = useAssignMe();
   const canClaimTasks =
     role === "annotator" || role === "reviewer" || role === "admin";
+
+  useEffect(() => {
+    if (isViewer) {
+      setActiveTab("all-tasks");
+    }
+  }, [isViewer]);
   const ITEMS_PER_PAGE = 10;
   const myWorkSkip = (myWorkPage - 1) * ITEMS_PER_PAGE;
   const sharedSkip = (sharedPage - 1) * ITEMS_PER_PAGE;
@@ -205,61 +213,67 @@ export const RegularUserDashboard: React.FC = () => {
         </div>
 
         <div className="flex-1 p-6 space-y-4">
-          <Button
-            size="lg"
-            className="w-full h-12 text-base font-medium"
-            onClick={handleStartWork}
-            disabled={startBusy}
-          >
-            {startBusy ? (
-              <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin" />
-            ) : (
-              <StartWorkIcon />
-            )}
-            <span className="ml-2">
-              {startBusy ? "Opening…" : "Continue work"}
-            </span>
-          </Button>
+          {!isViewer && (
+            <>
+              <Button
+                size="lg"
+                className="w-full h-12 text-base font-medium"
+                onClick={handleStartWork}
+                disabled={startBusy}
+              >
+                {startBusy ? (
+                  <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin" />
+                ) : (
+                  <StartWorkIcon />
+                )}
+                <span className="ml-2">
+                  {startBusy ? "Opening…" : "Continue work"}
+                </span>
+              </Button>
 
-          {canClaimTasks && (
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full h-12 text-base font-medium"
-              onClick={handleAssignMe}
-              disabled={assignBusy || !canAssignNewTask}
-              title={
-                hasTaskInProgress
-                  ? "Finish or continue your current task before claiming another"
-                  : undefined
-              }
-            >
-              {assignBusy ? (
-                <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin" />
-              ) : (
-                <StartWorkIcon />
+              {canClaimTasks && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full h-12 text-base font-medium"
+                  onClick={handleAssignMe}
+                  disabled={assignBusy || !canAssignNewTask}
+                  title={
+                    hasTaskInProgress
+                      ? "Finish or continue your current task before claiming another"
+                      : undefined
+                  }
+                >
+                  {assignBusy ? (
+                    <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <StartWorkIcon />
+                  )}
+                  <span className="ml-2">
+                    {assignBusy ? "Assigning…" : "Assign me"}
+                  </span>
+                </Button>
               )}
-              <span className="ml-2">
-                {assignBusy ? "Assigning…" : "Assign me"}
-              </span>
-            </Button>
+            </>
           )}
         </div>
       </div>
       <div className="flex-1 overflow-auto md:ml-0 ml-0">
         <div className="p-4 md:p-8 pt-20 md:pt-8">
-          {user && (role == "reviewer" || role == "admin") && (
+          {user && canBrowseAllTasks && (
             <div className="mb-6">
               <div className="inline-flex rounded-lg border border-border bg-card p-1">
-                <Button
-                  variant={activeTab === "my-work" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setActiveTab("my-work")}
-                  className="rounded-md"
-                >
-                  My Work
-                </Button>
-            
+                {!isViewer && (
+                  <Button
+                    variant={activeTab === "my-work" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab("my-work")}
+                    className="rounded-md"
+                  >
+                    My Work
+                  </Button>
+                )}
+
                 <Button
                   variant={activeTab === "all-tasks" ? "default" : "ghost"}
                   size="sm"
@@ -425,9 +439,13 @@ export const RegularUserDashboard: React.FC = () => {
                       <Button
                         size="sm"
                         className="ml-4 shrink-0"
-                        onClick={() => navigate(`/task/${text.id}`)}
+                        onClick={() =>
+                          navigate(`/task/${text.id}`, {
+                            state: isViewer ? { forceReadOnly: true } : undefined,
+                          })
+                        }
                       >
-                        Open & Edit
+                        {isViewer ? "View" : "Open & Edit"}
                       </Button>
                     </div>
                   ))}

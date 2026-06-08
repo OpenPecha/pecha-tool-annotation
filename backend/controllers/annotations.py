@@ -94,6 +94,17 @@ def read_my_annotations(
 
 def read_annotations_by_text(db: Session, current_user: User, text_id: int) -> List:
     """Get all annotations for a specific text."""
+    text = text_crud.get(db=db, text_id=text_id)
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Text not found",
+        )
+    if not text_crud.can_read_text(db, current_user.id, text, current_user.role.value):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to view this text",
+        )
     return annotation_crud.get_by_text(db=db, text_id=text_id)
 
 

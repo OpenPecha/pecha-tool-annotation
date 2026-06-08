@@ -72,7 +72,7 @@ function ActionButtons({
   const canSubmit = hasWritePermission;
   
   // Determine if user can only export (regular user)
-  const canOnlyExport = userRole === "user";
+  const canOnlyExport = userRole === "user" || userRole === "viewer";
 
   const handleRevert = () => {
     if (onRevertWork) {

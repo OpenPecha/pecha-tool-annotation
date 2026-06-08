@@ -77,7 +77,7 @@ def upsert_manual_user(
     if user_in.role == UserRole.USER:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Use a staff role (admin, reviewer, or annotator) for manual accounts",
+            detail="Use a staff role (admin, reviewer, annotator, or viewer) for manual accounts",
         )
 
     try:
