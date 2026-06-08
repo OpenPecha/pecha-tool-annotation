@@ -95,7 +95,7 @@ function ActionButtons({
   return (
     <div className="flex gap-2 flex-wrap flex-col">
       {/* Submit button - only show for annotator, reviewer, or admin */}
-      {canSubmit && (
+      {/* {canSubmit && (
         <Button
           onClick={handleSubmit}
           className="bg-green-600 h-20 hover:bg-green-700 text-white cursor-pointer"
@@ -114,7 +114,7 @@ function ActionButtons({
             return isCompletedTask ? "Update" : "Submit";
           })()}
         </Button>
-      )}
+      )} */}
 
       {/* Toggle diplomatic section: Add / Show / Hide */}
       {onToggleDiplomatic && (
