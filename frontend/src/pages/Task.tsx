@@ -193,7 +193,6 @@ const Index = () => {
         textData.annotator_id === currentUserId)
   );
 
-  console.log("isShareManager", currentUserId, textData?.uploaded_by, textData?.annotator_id, userRole);
 
   const { data: sharedPermissions = [] } = useTextPermissions(
     parsedTextId ?? 0,
