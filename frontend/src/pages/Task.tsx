@@ -105,13 +105,7 @@ const Index = () => {
     return textData?.annotations ? convertApiAnnotationsSync(textData.annotations) : [];
   }, [textData]);
 
-  const hasWritePermission =
-    textData?.current_user_permission === "write" ||
-    (currentUserId !== null &&
-      textData?.annotator_id === currentUserId &&
-      (textData.status === "progress" ||
-        textData.status === "annotated" ||
-        textData.status === "reviewed_needs_revision"));
+  const hasWritePermission = textData?.current_user_permission === "write";
   const forceReadOnlyFromNavigation = Boolean(
     (location.state as { forceReadOnly?: boolean } | null)?.forceReadOnly
   );
@@ -194,8 +188,13 @@ const Index = () => {
   const isShareManager = Boolean(
     textData &&
       currentUserId !== null &&
-      (textData.uploaded_by === currentUserId || userRole === "admin")
+      (textData.uploaded_by === currentUserId ||
+        userRole === "admin" ||
+        textData.annotator_id === currentUserId)
   );
+
+  console.log("isShareManager", currentUserId, textData?.uploaded_by, textData?.annotator_id, userRole);
+
   const { data: sharedPermissions = [] } = useTextPermissions(
     parsedTextId ?? 0,
     isShareManager

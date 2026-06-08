@@ -34,12 +34,14 @@ export function TextPermissionDialog({
   const [searchValue, setSearchValue] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserInfo | null>(null);
+  const [selectedPermission, setSelectedPermission] = useState<"read" | "write">("read");
 
   useEffect(() => {
     if (!isOpen) {
       setSearchValue("");
       setDebouncedQuery("");
       setSelectedUser(null);
+      setSelectedPermission("read");
       return;
     }
 
@@ -103,25 +105,29 @@ export function TextPermissionDialog({
   );
 
   const showSuggestions = searchValue.trim().length >= 2;
-  let submitLabel = "Grant edit access";
+  let submitLabel = selectedPermission === "write" ? "Grant edit access" : "Grant view access";
   if (existingPermission) {
     submitLabel = "Update access";
   }
   if (isSubmitting) {
     submitLabel = "Saving...";
   }
-  let selectedUserHelperText =
-    "This user will be added to the shared access list with edit access.";
-  if (existingPermission?.permission === "write") {
-    selectedUserHelperText = "This user already has edit access.";
-  } else if (existingPermission?.permission === "read") {
+  const permissionLabel = selectedPermission === "write" ? "edit" : "view";
+  let selectedUserHelperText = `This user will be given ${permissionLabel} access to this text.`;
+  if (existingPermission) {
+    const currentLabel =
+      existingPermission.permission === "write" ? "edit" : "view";
     selectedUserHelperText =
-      "This user currently has view access and will be upgraded to edit.";
+      existingPermission.permission === selectedPermission
+        ? `This user already has ${currentLabel} access.`
+        : `This will change their access from ${currentLabel} to ${permissionLabel}.`;
   }
 
   const handleSelectUser = (user: UserInfo) => {
     setSelectedUser(user);
     setSearchValue(user.email || user.username);
+    const existing = existingPermissions.find((entry) => entry.grantee_user_id === user.id);
+    setSelectedPermission(existing?.permission ?? "read");
   };
 
   const handleSearchChange = (value: string) => {
@@ -131,13 +137,16 @@ export function TextPermissionDialog({
         currentSelectedUser &&
         value.trim().toLowerCase() ===
           (currentSelectedUser.email || currentSelectedUser.username).toLowerCase();
+      if (!matchesCurrentSelection) {
+        setSelectedPermission("read");
+      }
       return matchesCurrentSelection ? currentSelectedUser : null;
     });
   };
 
   const handleSubmit = () => {
     if (!selectedUser) return;
-    onSubmit({ granteeUserId: selectedUser.id, permission: "write" });
+    onSubmit({ granteeUserId: selectedUser.id, permission: selectedPermission });
   };
 
   const handleSelectExistingPermission = (entry: TextPermissionResponse) => {
@@ -149,6 +158,7 @@ export function TextPermissionDialog({
     };
     setSelectedUser(user);
     setSearchValue(user.email || user.username);
+    setSelectedPermission(entry.permission);
   };
 
   if (!isOpen) return null;
@@ -166,7 +176,7 @@ export function TextPermissionDialog({
               Share Text
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Manage who can edit this text. Everyone else remains view-only.
+              Grant view or edit access per person. Access is specific to this text only.
             </p>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} disabled={isSubmitting}>
@@ -264,9 +274,39 @@ export function TextPermissionDialog({
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Search by email with debounce. Sharing grants edit access by default.
+              Search by email with debounce, then choose view or edit access.
             </p>
           </div>
+
+          {selectedUser && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">Permission</p>
+              <div className="inline-flex rounded-lg border border-border bg-muted/30 p-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPermission("read")}
+                  className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                    selectedPermission === "read"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  View only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPermission("write")}
+                  className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                    selectedPermission === "write"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Can edit
+                </button>
+              </div>
+            </div>
+          )}
 
           {selectedUser && (
             <div className="rounded-lg border border-border bg-muted/30 p-3">
@@ -338,7 +378,9 @@ export function TextPermissionDialog({
                         </div>
                         {currentPermissionForUser && (
                           <span className="shrink-0 rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
-                            {currentPermissionForUser.permission}
+                            {currentPermissionForUser.permission === "write"
+                              ? "Can edit"
+                              : "Can view"}
                           </span>
                         )}
                       </button>

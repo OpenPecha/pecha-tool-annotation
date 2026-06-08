@@ -60,7 +60,7 @@ def read_texts(
             detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}",
         )
 
-    return text_crud.get_multi(
+    texts = text_crud.get_multi(
         db=db,
         skip=skip,
         limit=limit,
@@ -69,6 +69,19 @@ def read_texts(
         reviewer_id=reviewer_id,
         uploaded_by=uploaded_by,
     )
+    accessible_texts = []
+    for text in texts:
+        permission = text_crud.get_effective_text_permission(
+            db=db,
+            user_id=current_user.id,
+            text=text,
+            role=current_user.role.value,
+        )
+        if permission is None:
+            continue
+        setattr(text, "current_user_permission", permission)
+        accessible_texts.append(text)
+    return accessible_texts
 
 
 def create_text(db: Session, current_user: User, text_in: TextCreate):
@@ -646,7 +659,20 @@ def search_texts(
     db: Session, current_user: User, q: str, skip: int = 0, limit: int = 100
 ) -> List:
     """Search texts by title or content."""
-    return text_crud.search(db=db, query=q, skip=skip, limit=limit)
+    texts = text_crud.search(db=db, query=q, skip=skip, limit=limit)
+    accessible_texts = []
+    for text in texts:
+        permission = text_crud.get_effective_text_permission(
+            db=db,
+            user_id=current_user.id,
+            text=text,
+            role=current_user.role.value,
+        )
+        if permission is None:
+            continue
+        setattr(text, "current_user_permission", permission)
+        accessible_texts.append(text)
+    return accessible_texts
 
 
 def _ensure_text_read_access(db: Session, current_user: User, text) -> str:
@@ -798,11 +824,14 @@ def soft_delete_my_text(db: Session, current_user: User, text_id: int):
 def _ensure_share_manager(current_user: User, text) -> None:
     if current_user.role.value == "admin":
         return
-    if text.uploaded_by != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only text owner can manage sharing permissions",
-        )
+    if text.uploaded_by == current_user.id:
+        return
+    if text.annotator_id == current_user.id:
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Only the text owner, assigned annotator, or an admin can manage sharing",
+    )
 
 
 def upsert_text_permission(

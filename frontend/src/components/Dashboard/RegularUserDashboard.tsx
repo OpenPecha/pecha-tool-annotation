@@ -103,7 +103,7 @@ export const RegularUserDashboard: React.FC = () => {
   const hasNextSharedPage = sharedTexts.length === ITEMS_PER_PAGE;
   const hasPreviousAllTasksPage = allTasksPage > 1;
   const hasNextAllTasksPage = paginatedTexts.length === ITEMS_PER_PAGE;
-  const openSharedText = (text: TextResponse) => {
+  const openTextWithPermission = (text: TextResponse) => {
     if (text.current_user_permission === "write") {
       navigate(`/task/${text.id}`);
       return;
@@ -113,6 +113,9 @@ export const RegularUserDashboard: React.FC = () => {
       state: { forceReadOnly: true },
     });
   };
+
+  const getOpenButtonLabel = (text: TextResponse) =>
+    text.current_user_permission === "write" ? "Open & Edit" : "View";
 
   const handleStartWork = () => {
     setIsLoadingText(true);
@@ -260,7 +263,7 @@ export const RegularUserDashboard: React.FC = () => {
       </div>
       <div className="flex-1 overflow-auto md:ml-0 ml-0">
         <div className="p-4 md:p-8 pt-20 md:pt-8">
-          {user && canBrowseAllTasks && (
+          {user && (
             <div className="mb-6">
               <div className="inline-flex rounded-lg border border-border bg-card p-1">
                 {!isViewer && (
@@ -275,13 +278,24 @@ export const RegularUserDashboard: React.FC = () => {
                 )}
 
                 <Button
-                  variant={activeTab === "all-tasks" ? "default" : "ghost"}
+                  variant={activeTab === "shared" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setActiveTab("all-tasks")}
+                  onClick={() => setActiveTab("shared")}
                   className="rounded-md"
                 >
-                  All Tasks
+                  Shared with me
                 </Button>
+
+                {canBrowseAllTasks && (
+                  <Button
+                    variant={activeTab === "all-tasks" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab("all-tasks")}
+                    className="rounded-md"
+                  >
+                    All Tasks
+                  </Button>
+                )}
               </div>
             </div>
           )}
@@ -393,7 +407,89 @@ export const RegularUserDashboard: React.FC = () => {
             </div>
           )}
 
-      
+          {user && activeTab === "shared" && (
+            <div className="mb-8">
+              <div className="mb-4">
+                <h2 className="font-display text-lg font-semibold text-foreground">
+                  Shared with me
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Texts others have shared with you. Access is view or edit per text.
+                </p>
+              </div>
+              {isLoadingSharedTexts && (
+                <div className="text-center py-6">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4" />
+                  <p className="text-muted-foreground">Loading shared texts...</p>
+                </div>
+              )}
+              {!isLoadingSharedTexts && sharedTexts.length > 0 && (
+                <div className="space-y-3">
+                  {sharedTexts.map((text) => (
+                    <div
+                      key={text.id}
+                      className="flex w-full items-center justify-between px-4 py-3 border border-border rounded-lg bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">
+                          {text.title}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="text-[10px]">
+                              {getInitials(text.uploader?.full_name || text.uploader?.username || "System")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <p className="text-xs text-muted-foreground truncate">
+                            Owner: {text.uploader?.full_name || text.uploader?.username || "System"}
+                          </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {text.current_user_permission === "write" ? "Can edit" : "View only"} •{" "}
+                          Status: {text.status} • {formatDate(text.updated_at || text.created_at)}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="ml-4 shrink-0"
+                        onClick={() => openTextWithPermission(text)}
+                      >
+                        {getOpenButtonLabel(text)}
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between pt-2">
+                    <p className="text-sm text-muted-foreground">Page {sharedPage}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSharedPage((p) => Math.max(1, p - 1))}
+                        disabled={!hasPreviousSharedPage}
+                      >
+                        <IoChevronBack className="w-4 h-4 mr-1" />
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSharedPage((p) => p + 1)}
+                        disabled={!hasNextSharedPage}
+                      >
+                        Next
+                        <IoChevronForward className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!isLoadingSharedTexts && sharedTexts.length === 0 && (
+                <div className="text-center py-6 border border-dashed border-border rounded-lg bg-muted/30">
+                  <p className="text-muted-foreground">No texts have been shared with you yet.</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {user && activeTab === "all-tasks" && (
             <div className="mb-8">
@@ -439,13 +535,9 @@ export const RegularUserDashboard: React.FC = () => {
                       <Button
                         size="sm"
                         className="ml-4 shrink-0"
-                        onClick={() =>
-                          navigate(`/task/${text.id}`, {
-                            state: isViewer ? { forceReadOnly: true } : undefined,
-                          })
-                        }
+                        onClick={() => openTextWithPermission(text)}
                       >
-                        {isViewer ? "View" : "Open & Edit"}
+                        {getOpenButtonLabel(text)}
                       </Button>
                     </div>
                   ))}

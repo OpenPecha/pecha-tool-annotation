@@ -212,10 +212,10 @@ def search_users(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Text not found",
         )
-    if text.uploaded_by != current_user.id:
+    if text.uploaded_by != current_user.id and text.annotator_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the text owner or an admin can search users for sharing",
+            detail="Only the text owner, assigned annotator, or an admin can search users for sharing",
         )
     return user_crud.search_share_candidates(
         db=db,

@@ -72,8 +72,6 @@ class TextCRUD:
     ) -> Optional[str]:
         if role == "admin":
             return TEXT_PERMISSION_WRITE
-        if role == "viewer":
-            return TEXT_PERMISSION_READ
         if text.uploaded_by == user_id:
             return TEXT_PERMISSION_WRITE
         if text.annotator_id == user_id and text.status in (
@@ -93,8 +91,6 @@ class TextCRUD:
         )
         if shared:
             return shared.permission
-        if role in ("annotator", "reviewer"):
-            return TEXT_PERMISSION_READ
         return None
 
     def can_read_text(self, db: Session, user_id: int, text: Text, role: str) -> bool:
