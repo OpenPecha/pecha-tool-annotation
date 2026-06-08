@@ -40,7 +40,14 @@ export function useUserManagement() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedRole, setSelectedRole] = useState<RoleFilter>("all");
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("all");
+  const [showDefaultUsers, setShowDefaultUsers] = useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+
+  useEffect(() => {
+    if (!showDefaultUsers && selectedRole === "user") {
+      setSelectedRole("all");
+    }
+  }, [showDefaultUsers, selectedRole]);
 
   useEffect(() => {
     const timer = globalThis.setTimeout(() => {
@@ -55,7 +62,8 @@ export function useUserManagement() {
   const usersQuery = useUsers(
     {
       role: selectedRole === "all" ? undefined : selectedRole,
-      exclude_role: "user",
+      exclude_role:
+        !showDefaultUsers && selectedRole === "all" ? "user" : undefined,
       is_active:
         selectedStatus === "all" ? undefined : selectedStatus === "active",
     },
@@ -72,14 +80,13 @@ export function useUserManagement() {
     const raw = isSearchActive
       ? (searchQueryResult.data ?? [])
       : (usersQuery.data ?? []);
-    const list = isSearchActive ? raw : filterStaffUsers(raw);
-    return isSearchActive
-      ? applyListFilters(list, selectedRole, selectedStatus)
-      : list;
+    const list = showDefaultUsers ? raw : filterStaffUsers(raw);
+    return applyListFilters(list, selectedRole, selectedStatus);
   }, [
     isSearchActive,
     searchQueryResult.data,
     usersQuery.data,
+    showDefaultUsers,
     selectedRole,
     selectedStatus,
   ]);
@@ -165,6 +172,8 @@ export function useUserManagement() {
     setSelectedRole,
     selectedStatus,
     setSelectedStatus,
+    showDefaultUsers,
+    setShowDefaultUsers,
     displayUsers,
     isListLoading,
     listError,

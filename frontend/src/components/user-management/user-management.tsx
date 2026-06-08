@@ -24,6 +24,8 @@ export function UserManagement({ className }: UserManagementProps) {
     setSelectedRole,
     selectedStatus,
     setSelectedStatus,
+    showDefaultUsers,
+    setShowDefaultUsers,
     displayUsers,
     isListLoading,
     listError,
@@ -67,7 +69,7 @@ export function UserManagement({ className }: UserManagementProps) {
           </div>
           <p className="text-sm text-muted-foreground">
             Admin, reviewer, and annotator accounts are listed by default.
-            Search to find any user, including regular accounts.
+            Use the toggle below to include regular user accounts.
           </p>
         </div>
         <Button type="button" onClick={() => setIsAddUserOpen(true)}>
@@ -88,9 +90,11 @@ export function UserManagement({ className }: UserManagementProps) {
           searchQuery={searchQuery}
           selectedRole={selectedRole}
           selectedStatus={selectedStatus}
+          showDefaultUsers={showDefaultUsers}
           onSearchChange={setSearchQuery}
           onRoleChange={setSelectedRole}
           onStatusChange={setSelectedStatus}
+          onShowDefaultUsersChange={setShowDefaultUsers}
         />
       </div>
 

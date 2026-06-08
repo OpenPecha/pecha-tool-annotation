@@ -1,5 +1,6 @@
 import { IoSearch } from "react-icons/io5";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import {
@@ -18,21 +19,30 @@ type UsersFiltersProps = Readonly<{
   searchQuery: string;
   selectedRole: RoleFilter;
   selectedStatus: StatusFilter;
+  showDefaultUsers: boolean;
   onSearchChange: (value: string) => void;
   onRoleChange: (role: RoleFilter) => void;
   onStatusChange: (status: StatusFilter) => void;
+  onShowDefaultUsersChange: (show: boolean) => void;
 }>;
 
 export function UsersFilters({
   searchQuery,
   selectedRole,
   selectedStatus,
+  showDefaultUsers,
   onSearchChange,
   onRoleChange,
   onStatusChange,
+  onShowDefaultUsersChange,
 }: UsersFiltersProps) {
+  const roleOptions = showDefaultUsers
+    ? [...STAFF_FILTER_ROLES, "user" as const]
+    : STAFF_FILTER_ROLES;
+
   return (
-    <div className="flex flex-col gap-4 md:flex-row">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 md:flex-row">
       <div className="relative flex-1">
         <IoSearch
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -57,8 +67,10 @@ export function UsersFilters({
         className={cn(selectClassName, "md:w-44")}
         aria-label="Filter by role"
       >
-        <option value="all">All staff roles</option>
-        {STAFF_FILTER_ROLES.map((role) => (
+        <option value="all">
+          {showDefaultUsers ? "All roles" : "All staff roles"}
+        </option>
+        {roleOptions.map((role) => (
           <option key={role} value={role}>
             {ROLE_LABELS[role]}
           </option>
@@ -74,6 +86,19 @@ export function UsersFilters({
         <option value="active">Active</option>
         <option value="inactive">Inactive</option>
       </select>
+      </div>
+
+      <div>
+        <Button
+          type="button"
+          size="sm"
+          variant={showDefaultUsers ? "default" : "outline"}
+          onClick={() => onShowDefaultUsersChange(!showDefaultUsers)}
+          aria-pressed={showDefaultUsers}
+        >
+          {showDefaultUsers ? "Hide regular users" : "Show regular users"}
+        </Button>
+      </div>
     </div>
   );
 }
