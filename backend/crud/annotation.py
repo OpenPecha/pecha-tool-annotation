@@ -405,7 +405,8 @@ class AnnotationCRUD:
 
         custom_label_filters = (
             Annotation.annotator_id.isnot(None),
-            Text.annotation_type_id.isnot(None),
+            Annotation.annotation_type.isnot(None),
+            func.trim(Annotation.annotation_type) != "",
             Annotation.label.isnot(None),
             func.trim(Annotation.label) != "",
             AnnotationList.id.is_(None),
@@ -414,24 +415,24 @@ class AnnotationCRUD:
         ranked_creators = (
             db.query(
                 normalized_label.label("norm_label"),
-                Text.annotation_type_id.label("annotation_type_id"),
+                Annotation.annotation_type.label("annotation_type"),
                 Annotation.annotator_id.label("first_created_by_user_id"),
                 User.username.label("first_created_by_username"),
                 User.full_name.label("first_created_by_full_name"),
                 func.row_number()
                 .over(
-                    partition_by=[normalized_label, Text.annotation_type_id],
+                    partition_by=[normalized_label, Annotation.annotation_type],
                     order_by=Annotation.created_at.asc(),
                 )
                 .label("rn"),
             )
             .join(Text, Text.id == Annotation.text_id)
             .join(User, User.id == Annotation.annotator_id)
-            .outerjoin(AnnotationType, AnnotationType.id == Text.annotation_type_id)
+            .outerjoin(AnnotationType, AnnotationType.name == Annotation.annotation_type)
             .outerjoin(
                 AnnotationList,
                 and_(
-                    AnnotationList.type_id == Text.annotation_type_id,
+                    AnnotationList.type_id == AnnotationType.id,
                     normalized_title == normalized_label,
                 ),
             )
@@ -445,8 +446,10 @@ class AnnotationCRUD:
         rows = (
             db.query(
                 func.min(Annotation.label).label("label"),
-                Text.annotation_type_id.label("annotation_type_id"),
-                AnnotationType.name.label("annotation_type_name"),
+                AnnotationType.id.label("annotation_type_id"),
+                func.coalesce(AnnotationType.name, Annotation.annotation_type).label(
+                    "annotation_type_name"
+                ),
                 func.count(Annotation.id).label("usage_count"),
                 func.count(func.distinct(Annotation.annotator_id)).label("user_count"),
                 func.count(func.distinct(Annotation.text_id)).label("text_count"),
@@ -461,11 +464,11 @@ class AnnotationCRUD:
             )
             .join(Text, Text.id == Annotation.text_id)
             .join(User, User.id == Annotation.annotator_id)
-            .outerjoin(AnnotationType, AnnotationType.id == Text.annotation_type_id)
+            .outerjoin(AnnotationType, AnnotationType.name == Annotation.annotation_type)
             .outerjoin(
                 AnnotationList,
                 and_(
-                    AnnotationList.type_id == Text.annotation_type_id,
+                    AnnotationList.type_id == AnnotationType.id,
                     normalized_title == normalized_label,
                 ),
             )
@@ -473,13 +476,14 @@ class AnnotationCRUD:
                 first_creators,
                 and_(
                     first_creators.c.norm_label == normalized_label,
-                    first_creators.c.annotation_type_id == Text.annotation_type_id,
+                    first_creators.c.annotation_type == Annotation.annotation_type,
                 ),
             )
             .filter(*custom_label_filters)
             .group_by(
                 normalized_label,
-                Text.annotation_type_id,
+                Annotation.annotation_type,
+                AnnotationType.id,
                 AnnotationType.name,
                 first_creators.c.first_created_by_user_id,
                 first_creators.c.first_created_by_username,
