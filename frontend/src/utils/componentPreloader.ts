@@ -3,6 +3,8 @@ export const preloadDashboardComponents = () => {
   import("@/components/Dashboard/AdminTaskSection");
   import("@/components/Dashboard/AdminStatisticsSection");
   import("@/components/Dashboard/AdminUsersSection");
+  import("@/components/Dashboard/AdminAnnotationRecordsSection");
+  import("@/components/Dashboard/AdminCustomAnnotationsSection");
 };
 
 export const preloadUserDashboard = () => {
@@ -34,4 +36,6 @@ export const preloadAllDashboardComponents = () => {
   import("@/components/Dashboard/AdminTaskSection");
   import("@/components/Dashboard/AdminStatisticsSection");
   import("@/components/Dashboard/AdminUsersSection");
+  import("@/components/Dashboard/AdminAnnotationRecordsSection");
+  import("@/components/Dashboard/AdminCustomAnnotationsSection");
 };

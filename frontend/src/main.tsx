@@ -7,6 +7,20 @@ import App from "./App.tsx";
 import { Auth0Provider } from "@auth0/auth0-react";
 import { AccessTokenFetchBridge } from "./components/AccessTokenFetchBridge";
 
+const CHUNK_RELOAD_KEY = "vite-chunk-reload";
+
+window.addEventListener("vite:preloadError", (event) => {
+  event.preventDefault();
+  if (!sessionStorage.getItem(CHUNK_RELOAD_KEY)) {
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
+    window.location.reload();
+  }
+});
+
+window.addEventListener("load", () => {
+  sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+});
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {

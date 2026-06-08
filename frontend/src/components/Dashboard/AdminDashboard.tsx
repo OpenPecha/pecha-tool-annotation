@@ -5,6 +5,7 @@ import {
   ADMIN_VIEW_PARAM,
   viewParamToAdminTab,
 } from "./AdminSidebar";
+import { AdminAnnotationRecordsSection } from "./AdminAnnotationRecordsSection";
 import { Loading } from "@/components/ui/loading";
 
 const AdminTaskSection = React.lazy(() =>
@@ -20,11 +21,6 @@ const AdminStatisticsSection = React.lazy(() =>
 const AdminUsersSection = React.lazy(() =>
   import("./AdminUsersSection").then((module) => ({
     default: module.AdminUsersSection,
-  }))
-);
-const AdminAnnotationRecordsSection = React.lazy(() =>
-  import("./AdminAnnotationRecordsSection").then((module) => ({
-    default: module.AdminAnnotationRecordsSection,
   }))
 );
 const AdminCustomAnnotationsSection = React.lazy(() =>
@@ -43,7 +39,6 @@ export const AdminDashboard: React.FC = () => {
       import("./AdminTaskSection");
       import("./AdminStatisticsSection");
       import("./AdminUsersSection");
-      import("./AdminAnnotationRecordsSection");
       import("./AdminCustomAnnotationsSection");
     }, 100);
     return () => clearTimeout(timeoutId);
