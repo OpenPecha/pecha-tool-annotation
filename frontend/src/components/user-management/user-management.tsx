@@ -51,13 +51,10 @@ export function UserManagement({ className }: UserManagementProps) {
 
   return (
     <section
-      className={cn(
-        "flex h-[calc(100dvh-100px)] flex-col p-4",
-        className
-      )}
+      className={cn("flex h-full min-h-0 flex-col p-4", className)}
       aria-labelledby="user-management-heading"
     >
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <header className="mb-6 flex shrink-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="mb-1 flex items-center gap-2">
             <IoPeople className="h-5 w-5" aria-hidden />
@@ -86,16 +83,18 @@ export function UserManagement({ className }: UserManagementProps) {
         onSubmit={handleAddUser}
       />
 
-      <UsersFilters
-        searchQuery={searchQuery}
-        selectedRole={selectedRole}
-        selectedStatus={selectedStatus}
-        onSearchChange={setSearchQuery}
-        onRoleChange={setSelectedRole}
-        onStatusChange={setSelectedStatus}
-      />
+      <div className="shrink-0">
+        <UsersFilters
+          searchQuery={searchQuery}
+          selectedRole={selectedRole}
+          selectedStatus={selectedStatus}
+          onSearchChange={setSearchQuery}
+          onRoleChange={setSelectedRole}
+          onStatusChange={setSelectedStatus}
+        />
+      </div>
 
-      <div className="mt-6 min-h-0 flex-1 overflow-y-auto">
+      <div className="mt-6 min-h-0 flex-1 overflow-y-auto pr-1">
         {isListLoading ? (
           <Loading message="Loading users…" />
         ) : (
