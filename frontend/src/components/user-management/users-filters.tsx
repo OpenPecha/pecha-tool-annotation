@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import {
+  JOINED_FILTER_LABELS,
   ROLE_LABELS,
   STAFF_FILTER_ROLES,
+  type JoinedFilter,
   type RoleFilter,
   type StatusFilter,
 } from "./constants";
@@ -19,10 +21,12 @@ type UsersFiltersProps = Readonly<{
   searchQuery: string;
   selectedRole: RoleFilter;
   selectedStatus: StatusFilter;
+  selectedJoined: JoinedFilter;
   showDefaultUsers: boolean;
   onSearchChange: (value: string) => void;
   onRoleChange: (role: RoleFilter) => void;
   onStatusChange: (status: StatusFilter) => void;
+  onJoinedChange: (joined: JoinedFilter) => void;
   onShowDefaultUsersChange: (show: boolean) => void;
 }>;
 
@@ -30,10 +34,12 @@ export function UsersFilters({
   searchQuery,
   selectedRole,
   selectedStatus,
+  selectedJoined,
   showDefaultUsers,
   onSearchChange,
   onRoleChange,
   onStatusChange,
+  onJoinedChange,
   onShowDefaultUsersChange,
 }: UsersFiltersProps) {
   const roleOptions = showDefaultUsers
@@ -85,6 +91,18 @@ export function UsersFilters({
         <option value="all">All status</option>
         <option value="active">Active</option>
         <option value="inactive">Inactive</option>
+      </select>
+      <select
+        value={selectedJoined}
+        onChange={(e) => onJoinedChange(e.target.value as JoinedFilter)}
+        className={cn(selectClassName, "md:w-44")}
+        aria-label="Filter by join date"
+      >
+        {(Object.keys(JOINED_FILTER_LABELS) as JoinedFilter[]).map((key) => (
+          <option key={key} value={key}>
+            {JOINED_FILTER_LABELS[key]}
+          </option>
+        ))}
       </select>
       </div>
 

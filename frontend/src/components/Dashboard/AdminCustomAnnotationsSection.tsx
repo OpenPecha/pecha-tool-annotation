@@ -19,11 +19,6 @@ const formatDateTime = (iso: string) => {
   return date.toLocaleString();
 };
 
-const escapeCsvValue = (value: string) => {
-  const escaped = value.replaceAll('"', '""');
-  return `"${escaped}"`;
-};
-
 const formatCreatorName = (item: {
   first_created_by_full_name?: string;
   first_created_by_username?: string;
@@ -89,49 +84,34 @@ export const AdminCustomAnnotationsSection: React.FC = () => {
     setAppliedType("all");
   };
 
-  const handleExportCsv = () => {
-    const header = [
-      "label",
-      "annotation_type",
-      "first_created_by_user_id",
-      "first_created_by_username",
-      "first_created_by_full_name",
-      "creator_usernames",
-      "usage_count",
-      "user_count",
-      "text_count",
-      "first_seen_at",
-      "last_seen_at",
-    ];
+  const handleExportJson = () => {
+    const grouped: Record<string, string[]> = {};
 
-    const rows = filteredRows.map((item) => [
-      item.label,
-      item.annotation_type_name || "",
-      item.first_created_by_user_id != null
-        ? String(item.first_created_by_user_id)
-        : "",
-      item.first_created_by_username || "",
-      item.first_created_by_full_name || "",
-      item.creator_usernames || "",
-      String(item.usage_count),
-      String(item.user_count),
-      String(item.text_count),
-      item.first_seen_at,
-      item.last_seen_at,
-    ]);
+    for (const item of filteredRows) {
+      const typeName = item.annotation_type_name?.trim() || "Unknown";
+      if (!grouped[typeName]) {
+        grouped[typeName] = [];
+      }
+      grouped[typeName].push(item.label);
+    }
 
-    const csvLines = [
-      header.map(escapeCsvValue).join(","),
-      ...rows.map((row) => row.map((value) => escapeCsvValue(value)).join(",")),
-    ];
-    const csvContent = `\uFEFF${csvLines.join("\n")}`;
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    for (const typeName of Object.keys(grouped)) {
+      grouped[typeName].sort((a, b) => a.localeCompare(b));
+    }
+
+    const sortedGrouped = Object.fromEntries(
+      Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b))
+    );
+
+    const blob = new Blob([JSON.stringify(sortedGrouped, null, 2)], {
+      type: "application/json;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `custom-annotations-${new Date().toISOString().slice(0, 10)}.csv`
+      `custom-annotations-${new Date().toISOString().slice(0, 10)}.json`
     );
     document.body.appendChild(link);
     link.click();
@@ -310,11 +290,11 @@ export const AdminCustomAnnotationsSection: React.FC = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={handleExportCsv}
+            onClick={handleExportJson}
             disabled={filteredRows.length === 0}
             className="w-full md:w-auto"
           >
-            Export CSV
+            Export JSON
           </Button>
         </div>
 

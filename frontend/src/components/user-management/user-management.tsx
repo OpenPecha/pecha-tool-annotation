@@ -24,6 +24,8 @@ export function UserManagement({ className }: UserManagementProps) {
     setSelectedRole,
     selectedStatus,
     setSelectedStatus,
+    selectedJoined,
+    setSelectedJoined,
     showDefaultUsers,
     setShowDefaultUsers,
     displayUsers,
@@ -90,10 +92,12 @@ export function UserManagement({ className }: UserManagementProps) {
           searchQuery={searchQuery}
           selectedRole={selectedRole}
           selectedStatus={selectedStatus}
+          selectedJoined={selectedJoined}
           showDefaultUsers={showDefaultUsers}
           onSearchChange={setSearchQuery}
           onRoleChange={setSelectedRole}
           onStatusChange={setSelectedStatus}
+          onJoinedChange={setSelectedJoined}
           onShowDefaultUsersChange={setShowDefaultUsers}
         />
       </div>

@@ -10,15 +10,22 @@ import {
   useUsers,
 } from "@/hooks";
 
-import type { RoleFilter, StatusFilter } from "./constants";
+import {
+  JOINED_FILTER_DAYS,
+  type JoinedFilter,
+  type RoleFilter,
+  type StatusFilter,
+} from "./constants";
 import { filterStaffUsers } from "./utils";
 
 const SEARCH_DEBOUNCE_MS = 300;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function applyListFilters(
   users: UserResponse[],
   selectedRole: RoleFilter,
-  selectedStatus: StatusFilter
+  selectedStatus: StatusFilter,
+  selectedJoined: JoinedFilter
 ): UserResponse[] {
   let filtered = users;
   if (selectedRole !== "all") {
@@ -27,6 +34,12 @@ function applyListFilters(
   if (selectedStatus !== "all") {
     const wantActive = selectedStatus === "active";
     filtered = filtered.filter((user) => user.is_active === wantActive);
+  }
+  if (selectedJoined !== "all") {
+    const cutoff = Date.now() - JOINED_FILTER_DAYS[selectedJoined] * MS_PER_DAY;
+    filtered = filtered.filter(
+      (user) => new Date(user.created_at).getTime() >= cutoff
+    );
   }
   return filtered;
 }
@@ -40,6 +53,7 @@ export function useUserManagement() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedRole, setSelectedRole] = useState<RoleFilter>("all");
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("all");
+  const [selectedJoined, setSelectedJoined] = useState<JoinedFilter>("all");
   const [showDefaultUsers, setShowDefaultUsers] = useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 
@@ -81,7 +95,7 @@ export function useUserManagement() {
       ? (searchQueryResult.data ?? [])
       : (usersQuery.data ?? []);
     const list = showDefaultUsers ? raw : filterStaffUsers(raw);
-    return applyListFilters(list, selectedRole, selectedStatus);
+    return applyListFilters(list, selectedRole, selectedStatus, selectedJoined);
   }, [
     isSearchActive,
     searchQueryResult.data,
@@ -89,6 +103,7 @@ export function useUserManagement() {
     showDefaultUsers,
     selectedRole,
     selectedStatus,
+    selectedJoined,
   ]);
 
   const isListLoading = isSearchActive
@@ -172,6 +187,8 @@ export function useUserManagement() {
     setSelectedRole,
     selectedStatus,
     setSelectedStatus,
+    selectedJoined,
+    setSelectedJoined,
     showDefaultUsers,
     setShowDefaultUsers,
     displayUsers,
