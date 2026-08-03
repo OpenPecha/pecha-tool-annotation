@@ -1,7 +1,6 @@
 // Component preloader utility for better performance
 export const preloadDashboardComponents = () => {
   import("@/components/Dashboard/AdminTaskSection");
-  import("@/components/Dashboard/AdminStatisticsSection");
   import("@/components/Dashboard/AdminUsersSection");
   import("@/components/Dashboard/AdminAnnotationRecordsSection");
   import("@/components/Dashboard/AdminCustomAnnotationsSection");
@@ -34,7 +33,6 @@ export const preloadAllDashboardComponents = () => {
   import("@/components/Dashboard/AdminDashboard");
   import("@/components/Dashboard/RegularUserDashboard");
   import("@/components/Dashboard/AdminTaskSection");
-  import("@/components/Dashboard/AdminStatisticsSection");
   import("@/components/Dashboard/AdminUsersSection");
   import("@/components/Dashboard/AdminAnnotationRecordsSection");
   import("@/components/Dashboard/AdminCustomAnnotationsSection");

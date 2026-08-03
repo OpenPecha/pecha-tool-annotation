@@ -239,6 +239,11 @@ def delete_my_annotations_for_text(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Text not found",
         )
+    if not text_crud.can_write_text(db, current_user.id, text, current_user.role.value):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have write permission for this text",
+        )
     deleted_count = annotation_crud.delete_user_annotations(
         db=db, text_id=text_id, annotator_id=current_user.id
     )

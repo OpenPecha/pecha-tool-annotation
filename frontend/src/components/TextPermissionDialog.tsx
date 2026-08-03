@@ -14,11 +14,16 @@ type TextPermissionDialogProps = Readonly<{
   existingPermissions: TextPermissionResponse[];
   onClose: () => void;
   onSubmit: (payload: {
-    granteeUserId: number;
+    granteeUserId?: number;
+    granteeIdentifier?: string;
     permission: "read" | "write";
   }) => void;
   onRevoke: (granteeUserId: number) => void;
 }>;
+
+/** The admin users table shows usernames as "@name", so accept that form too. */
+const normalizeIdentifier = (value: string) =>
+  value.trim().replace(/^@+/, "").trim().toLowerCase();
 
 export function TextPermissionDialog({
   isOpen,
@@ -52,7 +57,7 @@ export function TextPermissionDialog({
     if (!isOpen) return;
 
     const timer = globalThis.setTimeout(() => {
-      setDebouncedQuery(searchValue.trim());
+      setDebouncedQuery(normalizeIdentifier(searchValue));
     }, 300);
 
     return () => globalThis.clearTimeout(timer);
@@ -104,7 +109,26 @@ export function TextPermissionDialog({
     [existingPermissions]
   );
 
-  const showSuggestions = searchValue.trim().length >= 2;
+  const typedIdentifier = normalizeIdentifier(searchValue);
+
+  // Typing a full address and pressing the button should work without clicking a suggestion.
+  useEffect(() => {
+    if (selectedUser || !typedIdentifier) return;
+    const exactMatch = suggestions.find(
+      (user) =>
+        normalizeIdentifier(user.email ?? "") === typedIdentifier ||
+        normalizeIdentifier(user.username) === typedIdentifier
+    );
+    if (exactMatch) {
+      setSelectedUser(exactMatch);
+      const existing = existingPermissions.find(
+        (entry) => entry.grantee_user_id === exactMatch.id
+      );
+      setSelectedPermission(existing?.permission ?? "read");
+    }
+  }, [suggestions, typedIdentifier, selectedUser, existingPermissions]);
+
+  const showSuggestions = typedIdentifier.length >= 2;
   let submitLabel = selectedPermission === "write" ? "Grant edit access" : "Grant view access";
   if (existingPermission) {
     submitLabel = "Update access";
@@ -135,8 +159,10 @@ export function TextPermissionDialog({
     setSelectedUser((currentSelectedUser) => {
       const matchesCurrentSelection =
         currentSelectedUser &&
-        value.trim().toLowerCase() ===
-          (currentSelectedUser.email || currentSelectedUser.username).toLowerCase();
+        normalizeIdentifier(value) ===
+          normalizeIdentifier(
+            currentSelectedUser.email || currentSelectedUser.username
+          );
       if (!matchesCurrentSelection) {
         setSelectedPermission("read");
       }
@@ -145,8 +171,16 @@ export function TextPermissionDialog({
   };
 
   const handleSubmit = () => {
-    if (!selectedUser) return;
-    onSubmit({ granteeUserId: selectedUser.id, permission: selectedPermission });
+    if (selectedUser) {
+      onSubmit({ granteeUserId: selectedUser.id, permission: selectedPermission });
+      return;
+    }
+    if (typedIdentifier) {
+      onSubmit({
+        granteeIdentifier: typedIdentifier,
+        permission: selectedPermission,
+      });
+    }
   };
 
   const handleSelectExistingPermission = (entry: TextPermissionResponse) => {
@@ -259,7 +293,7 @@ export function TextPermissionDialog({
               htmlFor="share-user-email"
               className="text-sm font-medium text-foreground"
             >
-              User email
+              Email address or username
             </label>
             <div className="relative">
               <IoSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -269,16 +303,18 @@ export function TextPermissionDialog({
                 type="text"
                 value={searchValue}
                 onChange={(event) => handleSearchChange(event.target.value)}
-                placeholder="Start typing an email address..."
+                placeholder="e.g. name@gmail.com"
                 className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/40"
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Search by email with debounce, then choose view or edit access.
+              Type the person&apos;s full email address (or their username, with or
+              without the leading @), then pick view or edit access. They must have
+              signed in to this tool at least once before you can share with them.
             </p>
           </div>
 
-          {selectedUser && (
+          {(selectedUser || typedIdentifier) && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Permission</p>
               <div className="inline-flex rounded-lg border border-border bg-muted/30 p-1">
@@ -348,7 +384,9 @@ export function TextPermissionDialog({
 
                 {!isFetching && !error && suggestions.length === 0 && debouncedQuery.length >= 2 && (
                   <div className="px-4 py-4 text-sm text-muted-foreground">
-                    No matching users found.
+                    No matching users found. If you are sure the address is right,
+                    you can still grant access &mdash; we will tell you if no
+                    account exists for it yet.
                   </div>
                 )}
 
@@ -395,7 +433,10 @@ export function TextPermissionDialog({
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!selectedUser || isSubmitting}>
+          <Button
+            onClick={handleSubmit}
+            disabled={(!selectedUser && !typedIdentifier) || isSubmitting}
+          >
             {submitLabel}
           </Button>
         </div>

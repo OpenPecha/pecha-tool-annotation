@@ -85,6 +85,8 @@ interface AnnotationSidebarProps {
   onAnnotationClick?: (annotation: Annotation) => void;
   onApplyToAll?: (annotation: Annotation) => void;
   onRemoveFromAll?: (annotation: Annotation) => void;
+  /** When false, the sidebar hides every control that would change an annotation. */
+  canEdit?: boolean;
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -98,6 +100,7 @@ interface GroupHeaderProps {
   getAnnotationStyle: (annotation: Annotation) => React.CSSProperties;
   onApplyToAll?: (annotation: Annotation) => void;
   onRemoveFromAll?: (annotation: Annotation) => void;
+  canEdit: boolean;
 }
 
 function GroupHeader({
@@ -109,11 +112,12 @@ function GroupHeader({
   getAnnotationStyle,
   onApplyToAll,
   onRemoveFromAll,
+  canEdit,
 }: GroupHeaderProps) {
   const first = group.items[0];
   if (!first) return null;
   const hasAgreed = group.items.some((a) => a.is_agreed);
-  const canModify = !hasAgreed;
+  const canModify = !hasAgreed && canEdit;
 
   return (
     <div className="flex flex-col items-stretch gap-1 p-2 rounded-md border border-gray-200 bg-gray-50/80 hover:bg-gray-100/80 transition-colors">
@@ -204,6 +208,7 @@ interface PositionRowProps {
   onAnnotationClick?: (annotation: Annotation) => void;
   onRemoveAnnotation: (id: string) => void;
   isAgreed: boolean;
+  canEdit: boolean;
 }
 
 function PositionRow({
@@ -212,6 +217,7 @@ function PositionRow({
   onAnnotationClick,
   onRemoveAnnotation,
   isAgreed,
+  canEdit,
 }: PositionRowProps) {
   const lineWithHighlight =
     fullText != null
@@ -252,7 +258,7 @@ function PositionRow({
       >
         {content}
       </button>
-      {!isAgreed && (
+      {!isAgreed && canEdit && (
         <Button
           variant="ghost"
           size="sm"
@@ -279,6 +285,7 @@ export const AnnotationSidebar = ({
   onAnnotationClick,
   onApplyToAll,
   onRemoveFromAll,
+  canEdit = true,
   isOpen,
   onToggle,
 }: AnnotationSidebarProps) => {
@@ -390,6 +397,7 @@ export const AnnotationSidebar = ({
                             getAnnotationStyle={getAnnotationStyle}
                             onApplyToAll={onApplyToAll}
                             onRemoveFromAll={onRemoveFromAll}
+                            canEdit={canEdit}
                           />
                           {expandedGroups.has(group.groupKey) && (
                             <div className="space-y-0.5 pt-0.5">
@@ -401,6 +409,7 @@ export const AnnotationSidebar = ({
                                   onAnnotationClick={onAnnotationClick}
                                   onRemoveAnnotation={onRemoveAnnotation}
                                   isAgreed={!!ann.is_agreed}
+                                  canEdit={canEdit}
                                 />
                               ))}
                             </div>

@@ -25,6 +25,30 @@ const COLORS = {
   heavily_rejected: "#F97316", // orange
 };
 
+function Metric({
+  label,
+  description,
+  value,
+  emphasis = "text-lg font-semibold text-slate-700",
+}: Readonly<{
+  label: string;
+  description?: string;
+  value: number | string;
+  emphasis?: string;
+}>) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <p className="text-gray-600">{label}</p>
+        {description && (
+          <p className="text-xs text-gray-400">{description}</p>
+        )}
+      </div>
+      <span className={`shrink-0 ${emphasis}`}>{value}</span>
+    </div>
+  );
+}
+
 export function AdminStatisticsCharts({
   statistics,
 }: Readonly<AdminStatisticsChartsProps>) {
@@ -41,6 +65,8 @@ export function AdminStatisticsCharts({
   };
   const staffDetails = statistics.staff_details ?? [];
   const totalStaffUsers = statistics.total_staff_users ?? 0;
+  const contributingUsers = statistics.contributing_users ?? 0;
+  const totalActiveUsers = statistics.total_active_users ?? 0;
   const completionRate = statistics.completion_rate ?? 0;
   const rejectionRate = statistics.rejection_rate ?? 0;
   const avgRejectionsPerText = statistics.avg_rejections_per_text ?? 0;
@@ -165,9 +191,14 @@ export function AdminStatisticsCharts({
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Text Status Distribution */}
       <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-1">
           📊 Text Status Distribution
         </h3>
+        <p className="text-sm text-gray-500 mb-4">
+          Where every text currently sits. &ldquo;Available&rdquo; means nobody has
+          claimed it yet; &ldquo;Heavily Rejected&rdquo; means at least half the
+          project&apos;s annotators skipped it, so it needs attention.
+        </p>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
@@ -197,9 +228,13 @@ export function AdminStatisticsCharts({
 
       {/* Overall Progress Bar Chart */}
       <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-1">
           📈 Overall Progress
         </h3>
+        <p className="text-sm text-gray-500 mb-4">
+          The same texts counted against the corpus total, so you can see how much
+          is done versus outstanding.
+        </p>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={progressData}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -219,9 +254,14 @@ export function AdminStatisticsCharts({
 
       {/* Rejection Statistics */}
       <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-1">
           ❌ Rejection Statistics
         </h3>
+        <p className="text-sm text-gray-500 mb-4">
+          A rejection is someone skipping a text they were offered. &ldquo;Total
+          Rejections&rdquo; counts every skip; &ldquo;Unique Rejected Texts&rdquo;
+          counts the distinct texts involved.
+        </p>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={rejectionData} layout="horizontal">
             <CartesianGrid strokeDasharray="3 3" />
@@ -235,70 +275,77 @@ export function AdminStatisticsCharts({
 
       {/* Key Metrics Summary */}
       <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-1">
           🔢 Key Metrics
         </h3>
+        <p className="text-sm text-gray-500 mb-4">
+          People counts cover this project only &mdash; everyone who has uploaded,
+          annotated, reviewed, or been given access to a text here.
+        </p>
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Active Staff Users</span>
-            <span className="text-2xl font-bold text-blue-600">
-              {totalStaffUsers}
-            </span>
-          </div>
+          <Metric
+            label="People on this project"
+            description="Accounts that have worked on at least one text here."
+            value={contributingUsers}
+            emphasis="text-2xl font-bold text-blue-600"
+          />
+          <Metric
+            label="Active staff accounts"
+            description="Admin, reviewer, and annotator accounts that can be assigned work."
+            value={totalStaffUsers}
+          />
           {staffRoleData.map((roleStat) => (
-            <div key={roleStat.name} className="flex justify-between items-center">
-              <span className="text-gray-600">{roleStat.name}</span>
-              <span className="text-lg font-semibold text-slate-700">
-                {roleStat.value}
-              </span>
-            </div>
+            <Metric
+              key={roleStat.name}
+              label={roleStat.name}
+              value={roleStat.value}
+            />
           ))}
+          <Metric
+            label="All registered accounts"
+            description="Everyone who has ever signed in, including people outside this project."
+            value={totalActiveUsers}
+          />
           <div className="border-t border-gray-200 pt-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Staff Uploaded Files</span>
-              <span className="text-lg font-semibold text-slate-700">
-                {staffWorkTotals.uploaded_files}
-              </span>
-            </div>
+            <Metric
+              label="Staff uploaded files"
+              description="Texts uploaded by staff accounts."
+              value={staffWorkTotals.uploaded_files}
+            />
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Staff Texts Annotated</span>
-            <span className="text-lg font-semibold text-slate-700">
-              {staffWorkTotals.texts_annotated}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Staff Reviews Completed</span>
-            <span className="text-lg font-semibold text-slate-700">
-              {staffWorkTotals.reviews_completed}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Staff Work In Progress</span>
-            <span className="text-lg font-semibold text-slate-700">
-              {staffWorkTotals.work_in_progress}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Completion Rate</span>
-            <span className="text-2xl font-bold text-green-600">
-              {completionRate}
-              %
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Rejection Rate</span>
-            <span className="text-2xl font-bold text-red-600">
-              {rejectionRate}
-              %
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Avg Rejections per Text</span>
-            <span className="text-2xl font-bold text-orange-600">
-              {avgRejectionsPerText}
-            </span>
-          </div>
+          <Metric
+            label="Staff texts annotated"
+            description="Texts a staff member finished annotating."
+            value={staffWorkTotals.texts_annotated}
+          />
+          <Metric
+            label="Staff reviews completed"
+            description="Texts a staff member reviewed and marked done."
+            value={staffWorkTotals.reviews_completed}
+          />
+          <Metric
+            label="Staff work in progress"
+            description="Texts currently claimed and being annotated."
+            value={staffWorkTotals.work_in_progress}
+          />
+          <Metric
+            label="Completion rate"
+            description="Share of all texts that have been reviewed."
+            value={`${completionRate}%`}
+            emphasis="text-2xl font-bold text-green-600"
+          />
+          <Metric
+            label="Rejection rate"
+            description="Share of all texts that at least one person skipped."
+            value={`${rejectionRate}%`}
+            emphasis="text-2xl font-bold text-red-600"
+          />
+          <Metric
+            label="Avg rejections per text"
+            description="Among skipped texts, how many people skipped each one."
+            value={avgRejectionsPerText}
+            emphasis="text-2xl font-bold text-orange-600"
+          />
         </div>
       </div>
 

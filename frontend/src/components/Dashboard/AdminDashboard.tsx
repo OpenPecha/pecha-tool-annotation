@@ -13,11 +13,7 @@ const AdminTaskSection = React.lazy(() =>
     default: module.AdminTaskSection,
   }))
 );
-const AdminStatisticsSection = React.lazy(() =>
-  import("./AdminStatisticsSection").then((module) => ({
-    default: module.AdminStatisticsSection,
-  }))
-);
+
 const AdminUsersSection = React.lazy(() =>
   import("./AdminUsersSection").then((module) => ({
     default: module.AdminUsersSection,
@@ -37,7 +33,6 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       import("./AdminTaskSection");
-      import("./AdminStatisticsSection");
       import("./AdminUsersSection");
       import("./AdminCustomAnnotationsSection");
     }, 100);
@@ -47,9 +42,7 @@ export const AdminDashboard: React.FC = () => {
   const renderActiveTab = () => {
     let section: ReactNode;
     switch (activeAdminTab) {
-      case "statistics":
-        section = <AdminStatisticsSection />;
-        break;
+   
       case "tasks":
         section = <AdminTaskSection />;
         break;
@@ -63,7 +56,7 @@ export const AdminDashboard: React.FC = () => {
         section = <AdminCustomAnnotationsSection />;
         break;
       default:
-        section = <AdminStatisticsSection />;
+        section = <AdminTaskSection />;
     }
     return <Suspense fallback={<Loading />}>{section}</Suspense>;
   };

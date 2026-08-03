@@ -115,6 +115,10 @@ const Index = () => {
     !hasWritePermission ||
     allAnnotationsAccepted ||
     !textData;
+  // Read-only specifically because of permissions, rather than because the task
+  // is finished or still loading — this is what the viewer needs told upfront.
+  const isViewOnly =
+    Boolean(textData) && (forceReadOnlyFromNavigation || !hasWritePermission);
 
   const notifyNoWritePermission = useCallback(() => {
     toast.error(TOAST_MESSAGES.NO_WRITE_PERMISSION, {
@@ -298,13 +302,19 @@ const Index = () => {
 
   const handleSubmitSharePermission = ({
     granteeUserId,
+    granteeIdentifier,
     permission,
   }: {
-    granteeUserId: number;
+    granteeUserId?: number;
+    granteeIdentifier?: string;
     permission: "read" | "write";
   }) => {
     upsertTextPermissionMutation.mutate(
-      { grantee_user_id: granteeUserId, permission },
+      {
+        grantee_user_id: granteeUserId,
+        grantee_identifier: granteeIdentifier,
+        permission,
+      },
       {
         onSuccess: () => {
           toast.success("Permission updated");
@@ -424,7 +434,7 @@ const Index = () => {
 
           {/* Main Content Area: Diplomatic panel (top) + Text Annotator */}
           <div
-            className={`flex-1 flex flex-col gap-3 mt-4 mb-4 transition-all duration-300 ease-in-out min-w-0 ${
+            className={`flex-1 flex flex-col gap-3 mt-4 mb-4 transition-all duration-300 ease-in-out min-w-0 min-h-0 ${
               sidebarOpen ? "mr-3" : "mr-0"
             }`}
             style={{
@@ -485,6 +495,15 @@ const Index = () => {
 
         {/* Right Sidebar: Action Buttons + Annotation List */}
         <div className="w-80 flex flex-col gap-4 h-[90vh] mt-4 mb-4 overflow-y-hidden">
+          {isViewOnly && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2">
+              <p className="text-sm font-medium text-amber-900">View only</p>
+              <p className="mt-0.5 text-xs text-amber-800">
+                You can read, search, and export this text, but not add or change
+                annotations. Ask the owner for edit access if you need it.
+              </p>
+            </div>
+          )}
           <ActionButtons
             annotations={annotationsForUI}
             onSubmitTask={handleSubmitTask}
@@ -505,6 +524,7 @@ const Index = () => {
             userRole={userRole}
             userAnnotationsCount={getUserAnnotationsCount()}
             hasWritePermission={hasWritePermission}
+            isReadOnly={isReadOnly}
             canManagePermissions={isShareManager}
             sharedPermissions={sharedPermissions}
             onSharePermission={handleSharePermission}
@@ -520,6 +540,7 @@ const Index = () => {
             onAnnotationClick={handleAnnotationClick}
             onApplyToAll={guardedApplyAnnotationToAll}
             onRemoveFromAll={guardedRemoveAnnotationFromAll}
+            canEdit={!isReadOnly}
             isOpen={sidebarOpen}
             onToggle={toggleSidebar}
           />

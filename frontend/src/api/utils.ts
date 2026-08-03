@@ -41,6 +41,22 @@ export async function getAuthToken(): Promise<string> {
   )
 }
 
+/**
+ * FastAPI sends `detail` as a string for raised HTTPExceptions but as an array of
+ * issues for request-validation failures; flatten both into something readable.
+ */
+function extractErrorMessage(errorData: unknown, status: number): string {
+  const detail = (errorData as { detail?: unknown } | null)?.detail
+  if (typeof detail === "string" && detail) return detail
+  if (Array.isArray(detail)) {
+    const messages = detail
+      .map((issue) => (issue as { msg?: unknown })?.msg)
+      .filter((msg): msg is string => typeof msg === "string" && msg.length > 0)
+    if (messages.length > 0) return messages.join(", ")
+  }
+  return `HTTP error! status: ${status}`
+}
+
 function buildQueryString(
   params: Record<string, string | number | boolean | undefined>
 ): string {
@@ -78,11 +94,10 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        const message =
-          typeof errorData.detail === "string"
-            ? errorData.detail
-            : `HTTP error! status: ${response.status}`
-        throw new ApiError(message, response.status)
+        throw new ApiError(
+          extractErrorMessage(errorData, response.status),
+          response.status
+        )
       }
 
       if (response.status === 204) return {} as T
@@ -116,11 +131,10 @@ class ApiClient {
         })
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}))
-          const message =
-            typeof errorData.detail === "string"
-              ? errorData.detail
-              : `HTTP error! status: ${response.status}`
-          throw new ApiError(message, response.status)
+          throw new ApiError(
+            extractErrorMessage(errorData, response.status),
+            response.status
+          )
         }
         if (response.status === 204) return {} as T
         return await response.json()

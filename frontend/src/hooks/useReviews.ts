@@ -20,10 +20,14 @@ import type {
 /**
  * Get texts that are ready for review
  */
-export const useTextsForReview = (filters?: { skip?: number; limit?: number }) => {
+export const useTextsForReview = (
+  filters?: { skip?: number; limit?: number },
+  enabled = true
+) => {
   return useQuery<TextForReview[]>({
     queryKey: [...queryKeys.reviews.forReview, filters],
     queryFn: () => reviewApi.getTextsForReview(filters),
+    enabled,
     staleTime: 1000 * 60, // 1 minute
   });
 };

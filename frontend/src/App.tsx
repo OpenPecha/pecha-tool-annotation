@@ -1,10 +1,11 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { FullScreenLoading, AppLoading } from "@/components/ui/loading";
 import { useAnnotationColors } from "./hooks/use-annotation-colors";
+import { useRequireLogin } from "./hooks/useRequireLogin";
 
 import { UserbackProvider } from "./providers/UserbackProvider";
 import { Welcome } from "./components/Welcome";
@@ -21,21 +22,26 @@ import { useAuth0 } from "@auth0/auth0-react";
 import type { RegisterUserData } from "./api/types";
 // Lazy load page components
 const Task = lazy(() => import("./pages/Task"));
-
-/** Old review URLs open the annotation task view instead. */
-function ReviewToTaskRedirect() {
-  const { textId } = useParams<{ textId: string }>();
-  return <Navigate to={textId ? `/task/${textId}` : "/dashboard"} replace />;
-}
+const Review = lazy(() => import("./pages/Review"));
 
 const queryClient = new QueryClient();
 
 
 function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { user,isAuthenticated } = useAuth0();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth0();
+  const requireLogin = useRequireLogin();
   const [isUserSynced, setIsUserSynced] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const { isLoaded: colorsLoaded } = useAnnotationColors();
+
+  // Without a session every API call answers "Not authenticated", so send the
+  // user back through login rather than leaving them on a spinner.
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      requireLogin();
+    }
+  }, [isAuthLoading, isAuthenticated, requireLogin]);
+
   // Ensure user exists in DB before loading protected content
   useEffect(() => {
     if (!isAuthenticated || !user?.sub) {
@@ -69,6 +75,14 @@ function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
 
   
 
+  if (!isAuthenticated) {
+    return (
+      <AppLoading
+        message={isAuthLoading ? "Signing you in..." : "Redirecting to sign in..."}
+      />
+    );
+  }
+
   if (!isUserSynced) {
     if (syncError) {
       return (
@@ -94,6 +108,14 @@ function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 function AppContent() {
+  const { isLoading } = useAuth0();
+
+  // Rendering routes before Auth0 restores the session would fire API calls
+  // without a Bearer token, which the backend rejects with "Not authenticated".
+  if (isLoading) {
+    return <AppLoading message="Signing you in..." />;
+  }
+
   return (
     <Routes>
       <Route path="/" element={<Home /> } />
@@ -130,7 +152,14 @@ function AppContent() {
           </Suspense>
         }
       />
-      <Route path="/review/:textId" element={<ReviewToTaskRedirect />} />
+      <Route
+        path="/review/:textId"
+        element={
+          <Suspense fallback={<AppLoading message="Loading Review..." />}>
+            <Review />
+          </Suspense>
+        }
+      />
     </Routes>
   );
 }

@@ -5,6 +5,13 @@ from models.user import User, UserRole
 from schemas.user import UserCreate, UserUpdate
 
 
+def normalize_user_identifier(identifier: Optional[str]) -> str:
+    """Lowercase and trim an email/username, dropping the "@" the UI prefixes usernames with."""
+    if not identifier:
+        return ""
+    return identifier.strip().lstrip("@").strip().lower()
+
+
 class UserCRUD:
     def create(self, db: Session, obj_in: UserCreate) -> User:
         """Create a new user."""
@@ -147,6 +154,27 @@ class UserCRUD:
         )
         return db.query(User).filter(search_filter).offset(skip).limit(limit).all()
 
+    def get_by_identifier(self, db: Session, identifier: str) -> Optional[User]:
+        """Get an active user by email or username, case-insensitively.
+
+        Accepts a leading "@" because the admin users table displays usernames
+        in that form.
+        """
+        normalized = normalize_user_identifier(identifier)
+        if not normalized:
+            return None
+        return (
+            db.query(User)
+            .filter(User.is_active == True)
+            .filter(
+                or_(
+                    func.lower(User.email) == normalized,
+                    func.lower(User.username) == normalized,
+                )
+            )
+            .first()
+        )
+
     def search_share_candidates(
         self,
         db: Session,
@@ -155,8 +183,8 @@ class UserCRUD:
         limit: int = 10,
         exclude_user_id: Optional[int] = None,
     ) -> List[User]:
-        """Search active users with email addresses for sharing suggestions."""
-        normalized_query = query.strip()
+        """Search active users for sharing suggestions by email, username, or name."""
+        normalized_query = normalize_user_identifier(query)
         search_filter = or_(
             User.username.ilike(f"%{normalized_query}%"),
             User.email.ilike(f"%{normalized_query}%"),
@@ -165,12 +193,16 @@ class UserCRUD:
         db_query = (
             db.query(User)
             .filter(User.is_active == True)
-            .filter(User.email.isnot(None))
             .filter(search_filter)
         )
         if exclude_user_id is not None:
             db_query = db_query.filter(User.id != exclude_user_id)
-        return db_query.order_by(User.email.asc()).offset(skip).limit(limit).all()
+        return (
+            db_query.order_by(func.coalesce(User.email, User.username).asc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     def is_username_taken(self, db: Session, username: str, exclude_user_id: Optional[int] = None) -> bool:
         """Check if username is already taken."""

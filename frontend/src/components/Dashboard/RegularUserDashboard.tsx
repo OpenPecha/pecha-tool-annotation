@@ -11,12 +11,15 @@ import {
   useMyWorkInProgress,
   usePermission,
   useSharedTexts,
+  useStartReviewing,
   useTexts,
+  useTextsForReviewList,
 } from "@/hooks";
-import { ListTodo } from "lucide-react";
+import { ClipboardCheck, ListTodo } from "lucide-react";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { TextStatus, type TextResponse } from "@/api/types";
+import { TextStatus, type TextResponse, type UserRole } from "@/api/types";
+import { ROLE_LABELS } from "@/components/user-management/constants";
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("en-US", {
@@ -62,15 +65,20 @@ export const RegularUserDashboard: React.FC = () => {
   const [isLoadingText, setIsLoadingText] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"my-work" | "shared" | "all-tasks">("my-work");
+  const [activeTab, setActiveTab] = useState<
+    "my-work" | "shared" | "all-tasks" | "to-review"
+  >("my-work");
   const [myWorkPage, setMyWorkPage] = useState(1);
   const [sharedPage, setSharedPage] = useState(1);
   const [allTasksPage, setAllTasksPage] = useState(1);
+  const [reviewPage, setReviewPage] = useState(1);
 
   const startWorkMutation = useStartWork();
   const assignMeMutation = useAssignMe();
+  const startReviewingMutation = useStartReviewing();
   const canClaimTasks =
     role === "annotator" || role === "reviewer" || role === "admin";
+  const canReview = role === "reviewer" || role === "admin";
 
   useEffect(() => {
     if (isViewer) {
@@ -81,6 +89,7 @@ export const RegularUserDashboard: React.FC = () => {
   const myWorkSkip = (myWorkPage - 1) * ITEMS_PER_PAGE;
   const sharedSkip = (sharedPage - 1) * ITEMS_PER_PAGE;
   const allTasksSkip = (allTasksPage - 1) * ITEMS_PER_PAGE;
+  const reviewSkip = (reviewPage - 1) * ITEMS_PER_PAGE;
 
   const { data: workInProgress = [], isLoading: isLoadingWorkInProgress } = useMyWorkInProgress({
     skip: myWorkSkip,
@@ -97,6 +106,11 @@ export const RegularUserDashboard: React.FC = () => {
     },
     { enabled: activeTab === "all-tasks" }
   );
+  const { data: textsForReview = [], isLoading: isLoadingReviewQueue } =
+    useTextsForReviewList(
+      { skip: reviewSkip, limit: ITEMS_PER_PAGE },
+      canReview
+    );
   const hasPreviousMyWorkPage = myWorkPage > 1;
   const hasNextMyWorkPage = workInProgress.length === ITEMS_PER_PAGE;
   const hasPreviousSharedPage = sharedPage > 1;
@@ -173,6 +187,22 @@ export const RegularUserDashboard: React.FC = () => {
     });
   };
 
+  const handleStartReviewing = () => {
+    startReviewingMutation.mutate(1, {
+      onSuccess: (text) => {
+        navigate(`/review/${text.id}`);
+      },
+      onError: (error) => {
+        toast.info("Nothing to review right now", {
+          description:
+            error instanceof Error
+              ? error.message
+              : "No annotated texts are waiting for review.",
+        });
+      },
+    });
+  };
+
   const hasTaskInProgress = workInProgress.some(
     (text) => text.status === TextStatus.ANNOTATION_IN_PROGRESS
   );
@@ -213,6 +243,11 @@ export const RegularUserDashboard: React.FC = () => {
           <h1 className="font-display text-xl font-semibold text-foreground">
             Welcome, {user?.name}
           </h1>
+          {role && (
+            <p className="mt-1 text-sm text-muted-foreground">
+             {ROLE_LABELS[role as UserRole] ?? role}
+            </p>
+          )}
         </div>
 
         <div className="flex-1 p-6 space-y-4">
@@ -257,6 +292,28 @@ export const RegularUserDashboard: React.FC = () => {
                   </span>
                 </Button>
               )}
+
+              {canReview && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full h-12 text-base font-medium"
+                  onClick={handleStartReviewing}
+                  disabled={startReviewingMutation.isPending}
+                  title="Open the next text waiting for review"
+                >
+                  {startReviewingMutation.isPending ? (
+                    <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <ClipboardCheck className="w-5 h-5" />
+                  )}
+                  <span className="ml-2">
+                    {startReviewingMutation.isPending
+                      ? "Opening…"
+                      : "Start reviewing"}
+                  </span>
+                </Button>
+              )}
             </>
           )}
         </div>
@@ -277,14 +334,27 @@ export const RegularUserDashboard: React.FC = () => {
                   </Button>
                 )}
 
-                <Button
-                  variant={activeTab === "shared" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setActiveTab("shared")}
-                  className="rounded-md"
-                >
-                  Shared with me
-                </Button>
+                {!isViewer && (
+                  <Button
+                    variant={activeTab === "shared" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab("shared")}
+                    className="rounded-md"
+                  >
+                    Shared with me
+                  </Button>
+                )}
+
+                {canReview && (
+                  <Button
+                    variant={activeTab === "to-review" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab("to-review")}
+                    className="rounded-md"
+                  >
+                    To review
+                  </Button>
+                )}
 
                 {canBrowseAllTasks && (
                   <Button
@@ -486,6 +556,94 @@ export const RegularUserDashboard: React.FC = () => {
               {!isLoadingSharedTexts && sharedTexts.length === 0 && (
                 <div className="text-center py-6 border border-dashed border-border rounded-lg bg-muted/30">
                   <p className="text-muted-foreground">No texts have been shared with you yet.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {user && activeTab === "to-review" && (
+            <div className="mb-8">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <ClipboardCheck className="w-5 h-5 text-muted-foreground" />
+                  <h2 className="font-display text-lg font-semibold text-foreground">
+                    To review
+                  </h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Annotated texts waiting for a reviewer. Opening one assigns it
+                  to you. You agree or disagree with every annotation, and a
+                  disagreement sends the text back to the annotator.
+                </p>
+              </div>
+              {isLoadingReviewQueue && (
+                <div className="text-center py-6">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4" />
+                  <p className="text-muted-foreground">Loading review queue...</p>
+                </div>
+              )}
+              {!isLoadingReviewQueue && textsForReview.length > 0 && (
+                <div className="space-y-3">
+                  {textsForReview.map((text) => (
+                    <div
+                      key={text.id}
+                      className="flex w-full items-center justify-between px-4 py-3 border border-border rounded-lg bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">
+                          {text.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {text.annotation_count}{" "}
+                          {text.annotation_count === 1
+                            ? "annotation"
+                            : "annotations"}{" "}
+                          to check • {formatDate(text.updated_at || text.created_at)}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="ml-4 shrink-0"
+                        onClick={() => navigate(`/review/${text.id}`)}
+                      >
+                        Review
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between pt-2">
+                    <p className="text-sm text-muted-foreground">Page {reviewPage}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setReviewPage((p) => Math.max(1, p - 1))}
+                        disabled={reviewPage <= 1}
+                      >
+                        <IoChevronBack className="w-4 h-4 mr-1" />
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setReviewPage((p) => p + 1)}
+                        disabled={textsForReview.length < ITEMS_PER_PAGE}
+                      >
+                        Next
+                        <IoChevronForward className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!isLoadingReviewQueue && textsForReview.length === 0 && (
+                <div className="text-center py-6 border border-dashed border-border rounded-lg bg-muted/30">
+                  <p className="text-muted-foreground">
+                    Nothing is waiting for review.
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Texts appear here once an annotator submits them. You cannot
+                    review your own annotations.
+                  </p>
                 </div>
               )}
             </div>

@@ -10,6 +10,7 @@ import {
   isStructuralAnnotationType,
   type StructuralAnnotationType,
 } from "@/config/structural-annotations";
+import { allowsCustomValues } from "@/config/custom-annotation-values";
 import { useAnnotationStore } from "@/store/annotation";
 import type { CategoryOutput } from "@/api/annotation_list";
 import type { AnnotationType } from "@/api/annotation_types";
@@ -178,6 +179,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   const customErrorOptions = useMemo((): CategoryWithBreadcrumb[] => {
     const listTypeId = selectedBubbleAnnotationType?.id || selectedAnnotationListType;
     if (!listTypeId || effectiveMode !== "error-list") return [];
+    if (!allowsCustomValues(selectedBubbleAnnotationType?.name)) return [];
     const opts = getCustomOptions(listTypeId);
     return opts.map((o) => ({
       id: o.id,
@@ -186,7 +188,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
       mnemonic: "",
       level: 0,
     }));
-  }, [selectedBubbleAnnotationType?.id, selectedAnnotationListType, effectiveMode, customOptionsByListType]);
+  }, [selectedBubbleAnnotationType?.id, selectedBubbleAnnotationType?.name, selectedAnnotationListType, effectiveMode, customOptionsByListType]);
 
   // Step 1 in error-list: show annotation types. Step 2: show categories for selected type.
   const filteredAnnotationTypes = useMemo(() => {
@@ -288,9 +290,8 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
     effectiveModeForCursor === "table-of-contents"
       ? selectedStructuralType !== null
       : selectedBubbleAnnotationType !== null && selectedErrorCategory !== null;
-      const disableOtherOptionsFrom=['animacy', 'pos', 'semantic roles  features']
-      const disableOtherOptions = !disableOtherOptionsFrom.includes(selectedBubbleAnnotationType?.name.toLowerCase() || '');
-      console.log(selectedBubbleAnnotationType?.name.toLowerCase())
+  const canAddCustomValue = allowsCustomValues(selectedBubbleAnnotationType?.name);
+
   const modalContent = (
     <div
       className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50 w-[380px] max-w-[90vw] overflow-hidden"
@@ -388,7 +389,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
                   </p>
                 )}
               {/* Add your own annotation - error-list mode */}
-              {disableOtherOptions &&effectiveModeForCursor === "error-list" && selectedBubbleAnnotationType && !isCreatingAnnotation && (
+              {canAddCustomValue && effectiveModeForCursor === "error-list" && selectedBubbleAnnotationType && !isCreatingAnnotation && (
                 <div className="mt-2 flex gap-2">
                   <input
                     type="text"

@@ -121,17 +121,15 @@ const Review = () => {
           newSet.delete(annotationId);
           return newSet;
         });
+        setSavingComments((prev) => new Set(prev).add(annotationId));
+        setSavedComments((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(annotationId);
+          return newSet;
+        });
         autoSaveReviewMutation.mutate(
           { annotationId, decision, comment },
           {
-            onMutate: () => {
-              setSavingComments((prev) => new Set(prev).add(annotationId));
-              setSavedComments((prev) => {
-                const newSet = new Set(prev);
-                newSet.delete(annotationId);
-                return newSet;
-              });
-            },
             onSuccess: () => {
               setSavingComments((prev) => {
                 const newSet = new Set(prev);
@@ -268,17 +266,9 @@ const Review = () => {
     }));
   };
 
-  // Handle header click in TOC - don't auto-scroll
-  const handleHeaderClick = (annotation: Annotation) => {
-    // Don't auto-scroll when clicking on table of contents items
-    // User can manually navigate if needed
-  };
-
-  // Handle annotation removal from TOC (disabled in review mode)
-  const handleRemoveAnnotation = (id: string) => {
-    // In review mode, we don't allow removing annotations
-    // This function is required by TableOfContents but we'll make it a no-op
-  };
+  /** The table of contents is navigation only here, so both handlers are no-ops. */
+  const handleHeaderClick = () => {};
+  const handleRemoveAnnotation = () => {};
 
   const renderAnnotationInText = (
     text: string,

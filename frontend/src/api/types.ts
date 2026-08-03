@@ -262,7 +262,9 @@ export interface TextWithAnnotations extends TextResponse {
 }
 
 export interface TextPermissionUpsertRequest {
-  grantee_user_id: number;
+  grantee_user_id?: number;
+  /** Email or username, used when the grantee was typed rather than picked from suggestions. */
+  grantee_identifier?: string;
   permission: "read" | "write";
 }
 
@@ -356,8 +358,11 @@ export interface AdminTextStatistics {
   total_rejections: number;
   unique_rejected_texts: number;
   heavily_rejected_texts: number;
+  /** Every account that has ever signed in, including people outside this project. */
   total_active_users: number;
   total_staff_users: number;
+  /** Accounts that have uploaded, annotated, reviewed, or been given access to a text here. */
+  contributing_users: number;
   staff_role_counts: AdminStaffRoleCounts;
   staff_work_totals: AdminStaffWorkTotals;
   staff_details: AdminStaffDetail[];

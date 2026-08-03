@@ -150,12 +150,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         </div>
 
         <nav className="flex flex-1 flex-col gap-1.5">
-          {navBtn(
-            "statistics",
-            <IoBarChart className="h-4 w-4" />,
-            "Statistics",
-            "Corpus status and charts"
-          )}
+         
           {navBtn(
             "tasks",
             <IoList className="h-4 w-4" />,
@@ -172,7 +167,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             "annotation-records",
             <IoDocumentText className="h-4 w-4" />,
             "Annotation List",
-            "Filter by creator, date, and type"
+            "Browse by creator, date, and type"
           )}
           {navBtn(
             "custom-annotations",

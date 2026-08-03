@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 import "./diplomatic_style.css";
 import App from "./App.tsx";
-import { Auth0Provider } from "@auth0/auth0-react";
+import { Auth0Provider, type AppState } from "@auth0/auth0-react";
 import { AccessTokenFetchBridge } from "./components/AccessTokenFetchBridge";
 
 const CHUNK_RELOAD_KEY = "vite-chunk-reload";
@@ -32,6 +32,16 @@ const queryClient = new QueryClient({
   },
 });
 
+/** Drop the `code`/`state` params and return the user to the page that required login. */
+const onRedirectCallback = (appState?: AppState) => {
+  const returnTo = appState?.returnTo;
+  if (returnTo && returnTo !== window.location.pathname) {
+    window.location.replace(returnTo);
+    return;
+  }
+  window.history.replaceState({}, document.title, window.location.pathname);
+};
+
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Failed to find the root element");
 
@@ -50,6 +60,7 @@ root.render(
       cacheLocation='localstorage'
       useRefreshTokens={true}
       useRefreshTokensFallback={true}
+      onRedirectCallback={onRedirectCallback}
     >
       <AccessTokenFetchBridge />
       <QueryClientProvider client={queryClient}>

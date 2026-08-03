@@ -91,7 +91,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
       hasTranslation && translation && showTranslation;
     const textContent=text
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex h-full min-h-0 flex-col">
         {/* Header with Search Bar and Translation Toggle */}
             <SearchComponent
               text={text}
@@ -124,15 +124,15 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
         {/* Content Area */}
         {shouldShowSplitView ? (
           // Split view: Original text (with annotations) on left, Translation on right
-          <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 min-h-0 overflow-hidden">
             {/* Original Text with Annotations */}
-            <div className="flex-1 border-r border-gray-200">
-              <div className="p-2 bg-blue-50 border-b border-gray-200">
+            <div className="flex flex-1 min-w-0 flex-col border-r border-gray-200">
+              <div className="shrink-0 p-2 bg-blue-50 border-b border-gray-200">
                 <h3 className="text-sm font-medium text-blue-800">
                   Translation
                 </h3>
               </div>
-              <div className="h-full overflow-hidden">
+              <div className="flex flex-1 min-h-0 overflow-hidden">
                 <Editor
                   ref={editorRef}
                   text={textContent}
@@ -156,11 +156,11 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
             </div>
 
             {/* Translation Text (Read-only) */}
-            <div className="flex-1">
-              <div className="p-2 bg-green-50 border-b border-gray-200">
+            <div className="flex flex-1 min-w-0 flex-col">
+              <div className="shrink-0 p-2 bg-green-50 border-b border-gray-200">
                 <h3 className="text-sm font-medium text-green-800">Original</h3>
               </div>
-              <div className="h-full overflow-hidden">
+              <div className="flex flex-1 min-h-0 overflow-hidden">
                 <Editor
                   ref={null}
                   text={translation}
@@ -183,7 +183,7 @@ export const TextAnnotator = forwardRef<TextAnnotatorRef, TextAnnotatorProps>(
           </div>
         ) : (
           // Single view: Just the original text (full width)
-          <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 min-h-0 overflow-hidden">
             <Editor
               ref={editorRef}
               text={textContent}

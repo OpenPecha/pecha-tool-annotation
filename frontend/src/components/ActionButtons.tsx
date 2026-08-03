@@ -31,6 +31,8 @@ type ActionButtonsProps = {
   readonly hasDiplomatic?: boolean;
   readonly userAnnotationsCount?: number;
   readonly hasWritePermission?: boolean;
+  /** True when the task is open for viewing only, for any reason. */
+  readonly isReadOnly?: boolean;
   readonly canManagePermissions?: boolean;
   readonly sharedPermissions?: TextPermissionResponse[];
   readonly onSharePermission?: () => void;
@@ -56,6 +58,7 @@ function ActionButtons({
   userRole,
   userAnnotationsCount = 0,
   hasWritePermission = false,
+  isReadOnly = false,
   canManagePermissions = false,
   sharedPermissions = [],
   onSharePermission,
@@ -69,7 +72,7 @@ function ActionButtons({
   const navigate = useNavigate();
 
   // Determine if user can submit (annotator, reviewer, or admin)
-  const canSubmit = hasWritePermission;
+  const canSubmit = hasWritePermission && !isReadOnly;
   
   // Determine if user can only export (regular user)
   const canOnlyExport = userRole === "user" || userRole === "viewer";

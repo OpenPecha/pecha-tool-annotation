@@ -150,6 +150,10 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           if (annotation.is_agreed) {
             return;
           }
+          // View-only users cannot edit or delete existing annotations.
+          if (readOnly) {
+            return;
+          }
 
           // Handle annotation label click (same as clicking on annotation mark)
           {
@@ -211,6 +215,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         }
       };
     }, [
+      readOnly,
       setDeletePopupPosition,
       setAnnotationToDelete,
       setDeletePopupVisible,
@@ -244,6 +249,10 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           if (annotation) {
             // Don't show delete popup for agreed annotations
             if (annotation.is_agreed) {
+              return;
+            }
+            // View-only users cannot edit or delete existing annotations.
+            if (readOnly) {
               return;
             }
 
@@ -318,6 +327,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       annotations,
       deletePopupVisible,
       currentSelection,
+      readOnly,
       resetDeletePopup,
       setBubbleMenuVisible,
       setDeletePopupPosition,
@@ -424,6 +434,10 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           setCurrentSelection(newCurrentSelection);
           onTextSelect({ text: selectedText, start, end });
 
+          // View-only users may select text to read and copy, but must not be
+          // offered the annotation menu.
+          if (readOnly) return;
+
           // Position and show bubble menu (for both selection and cursor click)
           if (editorRef.current?.view) {
             const view = editorRef.current.view;
@@ -504,6 +518,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         bubbleMenuVisible,
         deletePopupVisible,
         onTextSelect,
+        readOnly,
         resetBubbleMenu,
         resetDeletePopup,
         setCurrentSelection,
@@ -903,7 +918,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     }, [annotations.length, editorReady]); // Only when annotation count changes
 
     return (
-      <div className="flex-1 pt-4 min-h-[200px] h-full bg-white rounded-lg shadow-lg relative">
+      <div className="relative flex-1 min-h-0 min-w-0 pt-4 bg-white rounded-lg shadow-lg">
         <CodeMirror
           ref={editorRef}
           value={textRef.current}

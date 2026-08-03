@@ -1,8 +1,8 @@
 export type AccessTokenExtras = {
   /** Force a fresh token (e.g. Auth0 `getAccessTokenSilently({ cacheMode: 'off' })`). */
   refreshToken?: () => Promise<void>
-  /** Called when refresh fails or a retried request still returns 401. */
-  logout?: () => void
+  /** Called when refresh fails or a retried request still returns 401; should send the user through login again. */
+  onUnauthenticated?: () => void
 }
 
 let resolveToken: (() => Promise<string | null>) | null = null
@@ -47,7 +47,8 @@ async function fetchOnce(
 
 /**
  * `fetch` that merges headers and adds `Authorization` when a getter is registered.
- * On 401, if `refreshToken` and `logout` were provided to `setAccessTokenGetter`, refreshes once and retries, or logs out.
+ * On 401 it refreshes the token once and retries; if that still fails, `onUnauthenticated`
+ * is invoked so the user is asked to log in again instead of being left on a loading state.
  */
 export async function fetchWithAccessToken(
   input: RequestInfo | URL,
@@ -55,22 +56,19 @@ export async function fetchWithAccessToken(
 ): Promise<Response> {
   let response = await fetchOnce(input, init)
 
-  if (
-    response.status === 401 &&
-    registeredExtras?.refreshToken &&
-    registeredExtras?.logout
-  ) {
+  if (response.status !== 401) return response
+
+  if (registeredExtras?.refreshToken) {
     try {
       await registeredExtras.refreshToken()
+      response = await fetchOnce(input, init)
+      if (response.status !== 401) return response
     } catch {
-      registeredExtras.logout()
-      return response
-    }
-    response = await fetchOnce(input, init)
-    if (response.status === 401) {
-      registeredExtras.logout()
+      // Session can't be recovered silently; fall through to re-login.
     }
   }
+
+  registeredExtras?.onUnauthenticated?.()
 
   return response
 }

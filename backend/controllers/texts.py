@@ -11,6 +11,7 @@ from crud.text import text_crud
 from crud.annotation import annotation_crud
 from crud.annotation_type import annotation_type_crud
 from crud.annotation_list import annotation_list_crud
+from crud.user import user_crud
 from crud.user_rejected_text import user_rejected_text_crud
 from models.user import User
 from models.text import VALID_STATUSES, INITIALIZED, ANNOTATED, REVIEWED, SKIPPED, PROGRESS
@@ -369,6 +370,43 @@ def get_my_rejected_texts(db: Session, current_user: User) -> List[RejectedTextW
     return result
 
 
+def _get_contributing_user_ids(db: Session) -> set:
+    """Users who have actually worked on this corpus.
+
+    Registered accounts include everyone who has ever signed in, many of whom have
+    no involvement here, so project-level figures are based on this set instead.
+    """
+    from models.annotation import Annotation
+    from models.text import Text
+    from models.text_permission import TextPermission
+
+    contributing_ids = set()
+
+    text_columns = [Text.uploaded_by, Text.annotator_id, Text.reviewer_id]
+    for column in text_columns:
+        rows = (
+            db.query(column)
+            .filter(Text.deleted_at.is_(None), column.isnot(None))
+            .distinct()
+            .all()
+        )
+        contributing_ids.update(row[0] for row in rows)
+
+    annotator_rows = (
+        db.query(Annotation.annotator_id)
+        .filter(Annotation.annotator_id.isnot(None))
+        .distinct()
+        .all()
+    )
+    contributing_ids.update(row[0] for row in annotator_rows)
+
+    grantee_rows = db.query(TextPermission.grantee_user_id).distinct().all()
+    contributing_ids.update(row[0] for row in grantee_rows)
+
+    contributing_ids.discard(None)
+    return contributing_ids
+
+
 def get_admin_text_statistics(db: Session, current_user: User) -> dict:
     """Get comprehensive text statistics for admins."""
     from models.user import User as UserModel, UserRole
@@ -378,12 +416,7 @@ def get_admin_text_statistics(db: Session, current_user: User) -> dict:
     total_rejections = db.query(UserRejectedText).count()
     unique_rejected_texts = db.query(UserRejectedText.text_id).distinct().count()
     total_users = db.query(UserModel).filter(UserModel.is_active == True).count()
-    heavily_rejected_texts = (
-        db.query(UserRejectedText.text_id)
-        .group_by(UserRejectedText.text_id)
-        .having(func.count(UserRejectedText.user_id) >= max(1, total_users * 0.5))
-        .count()
-    )
+
     staff_roles = [UserRole.ADMIN, UserRole.ANNOTATOR, UserRole.REVIEWER]
     role_counts = {"admin": 0, "annotator": 0, "reviewer": 0}
     staff_work_totals = {
@@ -398,6 +431,19 @@ def get_admin_text_statistics(db: Session, current_user: User) -> dict:
         db.query(UserModel)
         .filter(UserModel.is_active == True, UserModel.role.in_(staff_roles))
         .all()
+    )
+
+    contributing_user_ids = _get_contributing_user_ids(db)
+
+    # A text counts as heavily rejected once half the people who actually work on
+    # this corpus have skipped it. Using every registered account instead would make
+    # the threshold drift upwards as unrelated people sign in.
+    annotating_pool = len(active_staff_users) or len(contributing_user_ids) or total_users
+    heavily_rejected_texts = (
+        db.query(UserRejectedText.text_id)
+        .group_by(UserRejectedText.text_id)
+        .having(func.count(UserRejectedText.user_id) >= max(1, annotating_pool * 0.5))
+        .count()
     )
 
     for staff_user in active_staff_users:
@@ -488,6 +534,7 @@ def get_admin_text_statistics(db: Session, current_user: User) -> dict:
         "heavily_rejected_texts": heavily_rejected_texts,
         "total_active_users": total_users,
         "total_staff_users": len(active_staff_users),
+        "contributing_users": len(contributing_user_ids),
         "staff_role_counts": role_counts,
         "staff_work_totals": staff_work_totals,
         "staff_details": staff_details,
@@ -834,6 +881,35 @@ def _ensure_share_manager(current_user: User, text) -> None:
     )
 
 
+def _resolve_grantee(db: Session, permission_in: TextPermissionUpsertRequest) -> User:
+    """Look up the user being granted access, by internal id or by email/username."""
+    if permission_in.grantee_user_id is not None:
+        grantee = user_crud.get(db=db, user_id=permission_in.grantee_user_id)
+        if not grantee:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="That user no longer exists",
+            )
+    else:
+        identifier = (permission_in.grantee_identifier or "").strip()
+        grantee = user_crud.get_by_identifier(db=db, identifier=identifier)
+        if not grantee:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=(
+                    f"No account found for '{identifier}'. Enter the email address or "
+                    "username of someone who has already signed in at least once."
+                ),
+            )
+
+    if not grantee.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="That account is deactivated, so it cannot be given access",
+        )
+    return grantee
+
+
 def upsert_text_permission(
     db: Session,
     current_user: User,
@@ -847,7 +923,8 @@ def upsert_text_permission(
             detail="Text not found",
         )
     _ensure_share_manager(current_user, text)
-    if permission_in.grantee_user_id == text.uploaded_by:
+    grantee = _resolve_grantee(db, permission_in)
+    if grantee.id == text.uploaded_by:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Owner already has write permission",
@@ -856,7 +933,7 @@ def upsert_text_permission(
         db=db,
         text_id=text_id,
         owner_user_id=current_user.id,
-        grantee_user_id=permission_in.grantee_user_id,
+        grantee_user_id=grantee.id,
         permission=permission_in.permission,
     )
 

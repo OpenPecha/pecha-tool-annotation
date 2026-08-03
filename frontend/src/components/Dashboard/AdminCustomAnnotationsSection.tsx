@@ -1,4 +1,4 @@
-import React, { useMemo, useState, type ReactNode } from "react";
+import React, { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Card,
   CardContent,
@@ -48,6 +48,15 @@ export const AdminCustomAnnotationsSection: React.FC = () => {
 
   const { data = [], isLoading, error } = useCustomAnnotationLabels();
 
+  // Filters apply on their own so the table always reflects the visible controls.
+  useEffect(() => {
+    const timer = globalThis.setTimeout(() => {
+      setAppliedSearch(searchInput);
+      setAppliedType(typeFilter);
+    }, 300);
+    return () => globalThis.clearTimeout(timer);
+  }, [searchInput, typeFilter]);
+
   const availableTypes = useMemo(() => {
     return data
       .map((item) => item.annotation_type_name?.trim())
@@ -71,9 +80,13 @@ export const AdminCustomAnnotationsSection: React.FC = () => {
     });
   }, [appliedSearch, appliedType, data]);
 
-  const handleApplyFilters = () => {
-    setAppliedSearch(searchInput);
-    setAppliedType(typeFilter);
+  const hasActiveFilters = searchInput.trim() !== "" || typeFilter !== "all";
+
+  const handleClearFilters = () => {
+    setSearchInput("");
+    setTypeFilter("all");
+    setAppliedSearch("");
+    setAppliedType("all");
   };
 
   const handleExportCsv = () => {
@@ -285,8 +298,14 @@ export const AdminCustomAnnotationsSection: React.FC = () => {
               </option>
             ))}
           </select>
-          <Button type="button" onClick={handleApplyFilters} className="w-full md:w-auto">
-            Apply Filters
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClearFilters}
+            disabled={!hasActiveFilters}
+            className="w-full md:w-auto"
+          >
+            Clear filters
           </Button>
           <Button
             type="button"

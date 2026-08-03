@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, validator
 from typing import Optional, Literal
 from datetime import datetime
 from models.text import VALID_STATUSES
@@ -146,8 +146,17 @@ class RecentActivityWithReviewCounts(BaseModel):
 
 
 class TextPermissionUpsertRequest(BaseModel):
-    grantee_user_id: int = Field(..., gt=0)
+    """Identify the grantee by internal id, or by email/username when the id is unknown."""
+
+    grantee_user_id: Optional[int] = Field(default=None, gt=0)
+    grantee_identifier: Optional[str] = Field(default=None, max_length=255)
     permission: Literal["read", "write"]
+
+    @model_validator(mode="after")
+    def require_a_grantee(self):
+        if self.grantee_user_id is None and not (self.grantee_identifier or "").strip():
+            raise ValueError("Provide either grantee_user_id or grantee_identifier")
+        return self
 
 
 class TextPermissionResponse(BaseModel):
@@ -200,6 +209,7 @@ class AdminTextStatistics(BaseModel):
     heavily_rejected_texts: int
     total_active_users: int
     total_staff_users: int
+    contributing_users: int = 0
     staff_role_counts: AdminStaffRoleCounts
     staff_work_totals: AdminStaffWorkTotals
     staff_details: list[AdminStaffDetail]

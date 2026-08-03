@@ -72,6 +72,9 @@ class TextCRUD:
     ) -> Optional[str]:
         if role == "admin":
             return TEXT_PERMISSION_WRITE
+        # Viewers can browse all documents read-only across the corpus
+        if role == "viewer":
+            return TEXT_PERMISSION_READ
         if text.uploaded_by == user_id:
             return TEXT_PERMISSION_WRITE
         if text.annotator_id == user_id and text.status in (

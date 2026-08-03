@@ -1,4 +1,4 @@
-import React, { useMemo, useState, type ReactNode } from "react";
+import React, { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Card,
   CardContent,
@@ -24,25 +24,50 @@ const escapeCsvValue = (value: string) => {
   return `"${escaped}"`;
 };
 
+/** The backend caps at 1000; request the maximum so filtering is not masked by paging. */
+const RECORDS_LIMIT = 1000;
+
+const EMPTY_FILTERS = {
+  title: "",
+  createdBy: "all",
+  createdAt: "",
+  type: "all",
+};
+
 export const AdminAnnotationRecordsSection: React.FC = () => {
   const [titleInput, setTitleInput] = useState("");
   const [createdByFilter, setCreatedByFilter] = useState("all");
   const [createdAtFilter, setCreatedAtFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [appliedFilters, setAppliedFilters] = useState({
-    title: "",
-    createdBy: "all",
-    createdAt: "",
-    type: "all",
-  });
-  const { data: annotationLists = [], isLoading, error } = useAllAnnotationLists({
+  const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
+
+  // Filters apply on their own so the list always reflects the visible controls.
+  useEffect(() => {
+    const timer = globalThis.setTimeout(() => {
+      setAppliedFilters({
+        title: titleInput.trim(),
+        createdBy: createdByFilter,
+        createdAt: createdAtFilter,
+        type: typeFilter,
+      });
+    }, 300);
+    return () => globalThis.clearTimeout(timer);
+  }, [titleInput, createdByFilter, createdAtFilter, typeFilter]);
+
+  const {
+    data: annotationLists = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useAllAnnotationLists({
     title: appliedFilters.title || undefined,
     created_by:
       appliedFilters.createdBy === "all" ? undefined : appliedFilters.createdBy,
     created_at: appliedFilters.createdAt || undefined,
     type: appliedFilters.type === "all" ? undefined : appliedFilters.type,
+    limit: RECORDS_LIMIT,
   });
-  const { data: users = [] } = useUsers();
+  const { data: users = [] } = useUsers({ limit: RECORDS_LIMIT });
   const { data: annotationTypes = [] } = useAnnotationTypes();
 
   const userNameByAuth0Id = useMemo(() => {
@@ -95,13 +120,18 @@ export const AdminAnnotationRecordsSection: React.FC = () => {
 
   const filteredLists = annotationLists;
 
-  const handleApplyFilters = () => {
-    setAppliedFilters({
-      title: titleInput.trim(),
-      createdBy: createdByFilter,
-      createdAt: createdAtFilter,
-      type: typeFilter,
-    });
+  const hasActiveFilters =
+    titleInput.trim() !== "" ||
+    createdByFilter !== "all" ||
+    createdAtFilter !== "" ||
+    typeFilter !== "all";
+
+  const handleClearFilters = () => {
+    setTitleInput("");
+    setCreatedByFilter("all");
+    setCreatedAtFilter("");
+    setTypeFilter("all");
+    setAppliedFilters(EMPTY_FILTERS);
   };
 
   const handleExportFiltered = () => {
@@ -149,7 +179,11 @@ export const AdminAnnotationRecordsSection: React.FC = () => {
     tableBody = (
       <div className="text-center py-8 text-gray-500">
         <IoList className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-        <p>No annotation records found</p>
+        <p>
+          {hasActiveFilters
+            ? "No annotation records match these filters"
+            : "No annotation records found"}
+        </p>
       </div>
     );
   } else {
@@ -214,7 +248,7 @@ export const AdminAnnotationRecordsSection: React.FC = () => {
           Annotation Records
         </CardTitle>
         <CardDescription>
-          View annotation list records and filter by creator, date, and type
+          View annotation list records. Filters apply as you change them.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -258,10 +292,12 @@ export const AdminAnnotationRecordsSection: React.FC = () => {
           </select>
           <Button
             type="button"
-            onClick={handleApplyFilters}
+            variant="outline"
+            onClick={handleClearFilters}
+            disabled={!hasActiveFilters}
             className="w-full md:w-auto"
           >
-            Apply Filters
+            Clear filters
           </Button>
           <Button
             type="button"
@@ -272,6 +308,15 @@ export const AdminAnnotationRecordsSection: React.FC = () => {
           >
             Export CSV
           </Button>
+        </div>
+        <div className="mb-3 flex items-center gap-2 text-sm text-gray-600">
+          {isFetching && !isLoading && (
+            <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin text-blue-600" />
+          )}
+          <span>
+            {filteredLists.length} record{filteredLists.length === 1 ? "" : "s"}
+            {hasActiveFilters ? " matching the current filters" : ""}
+          </span>
         </div>
         <div className="max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
           {tableBody}
