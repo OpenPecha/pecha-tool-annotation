@@ -92,9 +92,16 @@ class TextCRUD:
             )
             .first()
         )
-        if shared:
-            return shared.permission
-        return None
+        if not shared:
+            return None
+        # Shared write only applies when the user's role can annotate;
+        # otherwise treat as read so role and document rights stay aligned.
+        if (
+            shared.permission == TEXT_PERMISSION_WRITE
+            and role not in ("admin", "annotator", "reviewer")
+        ):
+            return TEXT_PERMISSION_READ
+        return shared.permission
 
     def can_read_text(self, db: Session, user_id: int, text: Text, role: str) -> bool:
         return self.get_effective_text_permission(db, user_id, text, role) is not None

@@ -319,10 +319,13 @@ const Index = () => {
         onSuccess: () => {
           toast.success("Permission updated");
         },
-        onError: (err) =>
-          toast.error("Failed to update permission", {
-            description: err instanceof Error ? err.message : "Please try again.",
-          }),
+        onError: (err) => {
+          const message =
+            err instanceof Error ? err.message : "Please try again.";
+          toast.error("Cannot update permission", {
+            description: message,
+          });
+        },
       }
     );
   };
@@ -332,10 +335,13 @@ const Index = () => {
     setRevokingPermissionUserId(granteeUserId);
     deleteTextPermissionMutation.mutate(granteeUserId, {
       onSuccess: () => toast.success("Permission removed"),
-      onError: (err) =>
-        toast.error("Failed to remove permission", {
-          description: err instanceof Error ? err.message : "Please try again.",
-        }),
+      onError: (err) => {
+        const message =
+          err instanceof Error ? err.message : "Please try again.";
+        toast.error("Cannot remove permission", {
+          description: message,
+        });
+      },
       onSettled: () => setRevokingPermissionUserId(null),
     });
   };

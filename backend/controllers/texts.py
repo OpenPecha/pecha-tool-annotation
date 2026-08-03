@@ -13,8 +13,9 @@ from crud.annotation_type import annotation_type_crud
 from crud.annotation_list import annotation_list_crud
 from crud.user import user_crud
 from crud.user_rejected_text import user_rejected_text_crud
-from models.user import User
+from models.user import User, UserRole
 from models.text import VALID_STATUSES, INITIALIZED, ANNOTATED, REVIEWED, SKIPPED, PROGRESS
+from models.text_permission import TEXT_PERMISSION_WRITE
 from models.user_rejected_text import UserRejectedText
 from schemas.text import (
     TextCreate,
@@ -868,6 +869,10 @@ def soft_delete_my_text(db: Session, current_user: User, text_id: int):
     return {"message": "Text deleted successfully"}
 
 
+# Edit/annotate work requires a staff role; viewers and default users are view-only.
+_WRITE_CAPABLE_ROLES = {UserRole.ADMIN, UserRole.ANNOTATOR, UserRole.REVIEWER}
+
+
 def _ensure_share_manager(current_user: User, text) -> None:
     if current_user.role.value == "admin":
         return
@@ -878,6 +883,25 @@ def _ensure_share_manager(current_user: User, text) -> None:
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="Only the text owner, assigned annotator, or an admin can manage sharing",
+    )
+
+
+def _ensure_grantee_role_allows_permission(grantee: User, permission: str) -> None:
+    """Reject document rights that the grantee's global role cannot use."""
+    if permission != TEXT_PERMISSION_WRITE:
+        return
+    if grantee.role in _WRITE_CAPABLE_ROLES:
+        return
+
+    who = grantee.email or grantee.username
+    role_label = grantee.role.value
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=(
+            f"Cannot grant edit access to '{who}' because their role is '{role_label}'. "
+            "Only annotators, reviewers, and admins can receive edit access. "
+            "Change their role first, or grant view-only access instead."
+        ),
     )
 
 
@@ -929,6 +953,7 @@ def upsert_text_permission(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Owner already has write permission",
         )
+    _ensure_grantee_role_allows_permission(grantee, permission_in.permission)
     return text_crud.upsert_permission(
         db=db,
         text_id=text_id,
