@@ -1,4 +1,5 @@
 from typing import List, Optional
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 import uuid
 from models.annotation_type import AnnotationType
@@ -29,6 +30,14 @@ class AnnotationTypeCRUD:
         """Get annotation type by name."""
         return db.query(AnnotationType).filter(AnnotationType.name == name).first()
     
+    def get_by_name_case_insensitive(self, db: Session, name: str) -> Optional[AnnotationType]:
+        """Get annotation type by name, ignoring case (e.g. 'animacy' matches 'Animacy')."""
+        return (
+            db.query(AnnotationType)
+            .filter(func.lower(AnnotationType.name) == (name or "").strip().lower())
+            .first()
+        )
+
     def get_all(
         self,
         db: Session,

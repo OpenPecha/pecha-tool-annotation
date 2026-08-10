@@ -28,9 +28,228 @@ function escapeXml(text: string): string {
 }
 
 /**
+ * Annotation types whose spans define the word tokens (<w>) of the annotated layer.
+ * Every other layer is exported as stand-off <spanGrp>/<span> so that a token can
+ * carry labels from several layers without repeating its text.
+ */
+const POS_ANNOTATION_TYPES = new Set([
+  "pos",
+  "part of speech",
+  "part_of_speech",
+  "parts of speech",
+]);
+
+function isPosAnnotation(ann: AnnotationResponse): boolean {
+  return POS_ANNOTATION_TYPES.has((ann.annotation_type ?? "").trim().toLowerCase());
+}
+
+/** A <w> element of the annotated layer. */
+type TeiToken = {
+  id: string;
+  start: number;
+  end: number;
+  text: string;
+  lemma?: string;
+  pos?: string;
+};
+
+/** A stand-off annotation pointing at a range of tokens. */
+type TeiSpan = {
+  from: string;
+  to: string;
+  label: string;
+  name?: string;
+  text: string;
+};
+
+/** Split content on newlines; each segment becomes one <u> in the annotated layer. */
+function splitSegments(content: string): Array<{ start: number; end: number }> {
+  const segments: Array<{ start: number; end: number }> = [];
+  let start = 0;
+  for (let i = 0; i < content.length; i++) {
+    if (content[i] === "\n") {
+      segments.push({ start, end: i });
+      start = i + 1;
+    }
+  }
+  segments.push({ start, end: content.length });
+  return segments;
+}
+
+/** Lemma written on a word token; falls back to the word itself. */
+function tokenLemma(ann: AnnotationResponse, text: string): string {
+  const rawLemma = ann.meta?.lemma;
+  if (typeof rawLemma === "string" && rawLemma) return rawLemma;
+  if (typeof rawLemma === "number" || typeof rawLemma === "boolean") return String(rawLemma);
+  return text;
+}
+
+/**
+ * Split annotations into the POS annotations that become words and the ones exported
+ * stand-off. Words must not overlap, so of two overlapping POS spans the first one wins
+ * and the other is kept as a stand-off span instead of being dropped.
+ */
+function partitionAnnotations(
+  content: string,
+  annotations: AnnotationResponse[]
+): { words: AnnotationResponse[]; standoff: AnnotationResponse[] } {
+  const standoff: AnnotationResponse[] = [];
+  const posAnnotations: AnnotationResponse[] = [];
+
+  for (const ann of annotations) {
+    const withinContent =
+      Number.isInteger(ann.start_position) &&
+      Number.isInteger(ann.end_position) &&
+      ann.start_position >= 0 &&
+      ann.start_position < content.length &&
+      ann.end_position > ann.start_position;
+    if (!withinContent) continue;
+    if (isPosAnnotation(ann)) posAnnotations.push(ann);
+    else standoff.push(ann);
+  }
+
+  posAnnotations.sort(
+    (a, b) => a.start_position - b.start_position || b.end_position - a.end_position
+  );
+
+  const words: AnnotationResponse[] = [];
+  let claimedUpTo = 0;
+  for (const ann of posAnnotations) {
+    if (ann.start_position >= claimedUpTo) {
+      words.push(ann);
+      claimedUpTo = Math.min(ann.end_position, content.length);
+    } else {
+      standoff.push(ann);
+    }
+  }
+
+  return { words, standoff };
+}
+
+/**
+ * Tokenize one segment: the words starting in it, with the text between them as
+ * attribute-less tokens, so the segment text is covered exactly once.
+ */
+function tokenizeSegment(
+  content: string,
+  segment: { start: number; end: number },
+  words: AnnotationResponse[],
+  firstWordIndex: number,
+  firstTokenNumber: number
+): { segmentTokens: TeiToken[]; nextWord: number } {
+  const segmentTokens: TeiToken[] = [];
+  const pushToken = (start: number, end: number, ann?: AnnotationResponse) => {
+    const text = content.slice(start, end);
+    if (!text) return;
+    const token: TeiToken = {
+      id: `w${firstTokenNumber + segmentTokens.length}`,
+      start,
+      end,
+      text,
+    };
+    if (ann) {
+      token.lemma = tokenLemma(ann, text);
+      token.pos = stripLabelPrefixForExport(ann.label) || undefined;
+    }
+    segmentTokens.push(token);
+  };
+
+  let nextWord = firstWordIndex;
+  let cursor = segment.start;
+  while (nextWord < words.length && words[nextWord].start_position < segment.end) {
+    const ann = words[nextWord];
+    const start = Math.max(ann.start_position, cursor);
+    const end = Math.min(ann.end_position, segment.end);
+    if (end > start) {
+      if (start > cursor) pushToken(cursor, start);
+      pushToken(start, end, ann);
+      cursor = end;
+    }
+    // A word that runs past this segment is continued in the next one
+    if (ann.end_position > segment.end) break;
+    nextWord++;
+  }
+  if (cursor < segment.end) pushToken(cursor, segment.end);
+
+  return { segmentTokens, nextWord };
+}
+
+/**
+ * Build the word tokens of the annotated layer from the POS annotations.
+ * Tokens tile the content without gaps or overlaps, so the text is written exactly once.
+ * Annotations that cannot become a token (other layers, overlapping POS spans) are
+ * returned for stand-off export.
+ */
+function buildAnnotatedLayer(
+  content: string,
+  annotations: AnnotationResponse[]
+): { segments: TeiToken[][]; tokens: TeiToken[]; standoff: AnnotationResponse[] } {
+  const { words, standoff } = partitionAnnotations(content, annotations);
+  const tokens: TeiToken[] = [];
+  const segments: TeiToken[][] = [];
+  let nextWord = 0;
+
+  for (const segment of splitSegments(content)) {
+    const tokenized = tokenizeSegment(content, segment, words, nextWord, tokens.length + 1);
+    nextWord = tokenized.nextWord;
+    tokens.push(...tokenized.segmentTokens);
+    segments.push(tokenized.segmentTokens);
+  }
+
+  return { segments, tokens, standoff };
+}
+
+/** First and last token overlapping the character range, or undefined if there is none. */
+function findTokenRange(
+  tokens: TeiToken[],
+  start: number,
+  end: number
+): { first: TeiToken; last: TeiToken } | undefined {
+  let first: TeiToken | undefined;
+  let last: TeiToken | undefined;
+  for (const token of tokens) {
+    if (token.end <= start) continue;
+    if (token.start >= end) break;
+    first ??= token;
+    last = token;
+  }
+  return first && last ? { first, last } : undefined;
+}
+
+/** Map each stand-off annotation onto the token range it covers, grouped by annotation type. */
+function buildStandoffGroups(
+  content: string,
+  tokens: TeiToken[],
+  standoff: AnnotationResponse[]
+): Map<string, TeiSpan[]> {
+  const groups = new Map<string, TeiSpan[]>();
+
+  for (const ann of standoff) {
+    const start = ann.start_position;
+    const end = Math.min(ann.end_position, content.length);
+    const range = findTokenRange(tokens, start, end);
+    if (!range) continue;
+    const { first, last } = range;
+
+    const type = (ann.annotation_type ?? "").trim() || "annotation";
+    const spans = groups.get(type) ?? [];
+    spans.push({
+      from: first.id,
+      to: last.id,
+      label: stripLabelPrefixForExport(ann.label),
+      name: ann.name || undefined,
+      text: ann.selected_text || content.slice(start, end),
+    });
+    groups.set(type, spans);
+  }
+
+  return groups;
+}
+
+/**
  * Convert text and annotations to TEI XML annotated layer format.
- * Produces output similar to input TEI structure with correct annotated data.
- * Includes: teiHeader, diplomatic layer (plain text), annotated layer (w elements with lemma, pos).
+ * Includes: teiHeader, diplomatic layer (plain text), annotated layer (w elements with
+ * lemma/pos) and one stand-off spanGrp per non-POS annotation layer (e.g. Animacy).
  */
 function convertToTeiXml(textData: TextWithAnnotations): string {
   const TEI_NS = "http://www.tei-c.org/ns/1.0";
@@ -43,53 +262,34 @@ function convertToTeiXml(textData: TextWithAnnotations): string {
       : content;
   const lang = textData.language ? ` xml:lang="${escapeXml(textData.language)}"` : "";
 
-  // Sort annotations by start_position
-  const sorted = [...(textData.annotations || [])].sort(
-    (a, b) => a.start_position - b.start_position
+  const { segments, tokens, standoff } = buildAnnotatedLayer(
+    content,
+    textData.annotations || []
   );
 
-  // Build w elements: annotated spans as <w lemma="..." pos="...">text</w>, gaps as <w>text</w>
-  const wElements: string[] = [];
-  let pos = 0;
+  const uElements = segments.map((segmentTokens, index) => {
+    const ws = segmentTokens.map((token) => {
+      const attrs = [`xml:id="${token.id}"`];
+      if (token.lemma !== undefined) attrs.push(`lemma="${escapeXml(token.lemma)}"`);
+      if (token.pos) attrs.push(`pos="${escapeXml(token.pos)}"`);
+      return `          <w ${attrs.join(" ")}>${escapeXml(token.text)}</w>`;
+    });
+    return `        <u xml:id="ann_u${index + 1}">\n${ws.join("\n")}\n        </u>`;
+  });
 
-  for (const ann of sorted) {
-    const gapStart = ann.start_position;
-    const gapEnd = ann.end_position;
-
-    // Unannotated text before this annotation
-    if (gapStart > pos) {
-      const gapText = content.slice(pos, gapStart);
-      if (gapText) {
-        wElements.push(`<w>${escapeXml(gapText)}</w>`);
-      }
+  const spanGroups = [...buildStandoffGroups(content, tokens, standoff)].map(
+    ([type, spans]) => {
+      const spanElements = spans.map((span) => {
+        const attrs = [`from="#${span.from}"`, `to="#${span.to}"`];
+        if (span.label) attrs.push(`ana="${escapeXml(span.label)}"`);
+        if (span.name) attrs.push(`n="${escapeXml(span.name)}"`);
+        return `          <span ${attrs.join(" ")}>${escapeXml(span.text)}</span>`;
+      });
+      return `        <spanGrp type="${escapeXml(type)}">\n${spanElements.join("\n")}\n        </spanGrp>`;
     }
+  );
 
-    const text = ann.selected_text ?? content.slice(gapStart, gapEnd);
-    if (text) {
-      const rawLemma = ann.meta?.lemma;
-      const lemma =
-        typeof rawLemma === "string"
-          ? rawLemma
-          : rawLemma != null
-            ? String(rawLemma)
-            : text;
-      const posTag = stripLabelPrefixForExport(ann.label) || "";
-      const attrs = [`lemma="${escapeXml(lemma)}"`];
-      if (posTag) attrs.push(`pos="${escapeXml(posTag)}"`);
-      wElements.push(`<w ${attrs.join(" ")}>${escapeXml(text)}</w>`);
-    }
-    pos = gapEnd;
-  }
-
-  // Trailing unannotated text
-  if (pos < content.length) {
-    const gapText = content.slice(pos);
-    if (gapText) {
-      wElements.push(`<w>${escapeXml(gapText)}</w>`);
-    }
-  }
-
-  const annotatedWs = wElements.map((w) => "          " + w).join("\n\n          ");
+  const annotatedLayer = [...uElements, ...spanGroups].join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <TEI xmlns="${TEI_NS}">
@@ -116,9 +316,7 @@ function convertToTeiXml(textData: TextWithAnnotations): string {
         <p>${escapeXml(diplomaticContent)}</p>
       </div>
       <div type="transcription" subtype="annotated">
-        <u xml:id="ann_u1">
-          ${annotatedWs}
-        </u>
+${annotatedLayer}
       </div>
     </body>
   </text>

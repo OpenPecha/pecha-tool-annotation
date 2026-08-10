@@ -4,28 +4,41 @@ Parses TEI P5 documents (Transkribus/OpenPecha style) and extracts:
 - Title from teiHeader
 - Plain text content from body (prefers segmented > normalized > diplomatic)
 - POS annotations from annotated layer (w elements with lemma, pos)
+- Other annotation layers (e.g. Animacy) that share the same words, either as extra
+  attributes on w (animacy="human") or as stand-off spanGrp/span pointing at w ids
 - Editorial annotations from diplomatic layer (add, unclear, hi, decoration)
 """
 
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
-from typing import List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 TEI_NS = "http://www.tei-c.org/ns/1.0"
+XML_NS = "http://www.w3.org/XML/1998/namespace"
 
 # Editorial TEI elements to extract as annotations
 EDITORIAL_ELEMENTS = {"add", "unclear", "hi", "decoration"}
 
+# Attributes of <w> that describe the word itself, not an annotation layer.
+# Any other attribute is read as "<layer>=<label>", e.g. animacy="human".
+W_RESERVED_ATTRS = {
+    "lemma", "pos", "id", "n", "type", "subtype", "lang", "rend", "rendition",
+    "ana", "corresp", "facs", "part", "join", "cert", "resp", "next", "prev",
+    "sameas", "copyof", "select", "norm", "orig", "reg", "space", "base",
+}
+
 
 @dataclass
 class TEIAnnotation:
-    """Parsed annotation from TEI - POS (w) or editorial (add, unclear, hi, decoration)."""
+    """Parsed annotation from TEI - POS (w), another layer (Animacy, ...) or editorial."""
     start_position: int
     end_position: int
     selected_text: str
-    label: Optional[str] = None  # POS tag or editorial element name
+    label: Optional[str] = None  # POS tag, layer value or editorial element name
     meta: Optional[dict] = None  # lemma, place, etc.
     is_editorial: bool = False  # True if from add/unclear/hi/decoration
+    annotation_type: Optional[str] = None  # Layer name for non-POS annotations
+    name: Optional[str] = None  # Optional display name (span/@n)
 
 
 @dataclass
@@ -39,6 +52,8 @@ class TEIParseResult:
     diplomatic_text: Optional[str] = None  # Plain text from div type=transcription subtype=diplomatic
     pos_values: Optional[Set[str]] = None  # Distinct POS tags from XML
     editorial_labels: Optional[Set[str]] = None  # Distinct editorial element names from XML
+    other_annotations: List[TEIAnnotation] = field(default_factory=list)  # Non-POS layers
+    other_values: Dict[str, Set[str]] = field(default_factory=dict)  # Layer name -> distinct labels
 
 
 def _ns(tag: str) -> str:
@@ -222,11 +237,49 @@ def _get_segment_word_counts_from_segmented(body: ET.Element) -> Optional[List[i
     return None
 
 
+def _word_text(w: ET.Element) -> str:
+    """Text of a <w>. Pretty-printed indentation is dropped, real spacing is kept."""
+    raw = w.text or ""
+    if "\n" in raw or "\r" in raw:
+        return raw.strip()
+    return raw
+
+
+def _word_id(w: ET.Element) -> Optional[str]:
+    """xml:id (or id) of a <w>, used as target of stand-off spans."""
+    return w.get(f"{{{XML_NS}}}id") or w.get("id")
+
+
+def _layer_attributes(w: ET.Element) -> List[Tuple[str, str]]:
+    """Non-reserved attributes of a <w>, read as (layer name, label) pairs."""
+    layers: List[Tuple[str, str]] = []
+    for key, value in w.attrib.items():
+        local = _local_name(key)
+        if local.lower() in W_RESERVED_ATTRS:
+            continue
+        label = (value or "").strip()
+        if label:
+            layers.append((local, label))
+    return layers
+
+
+@dataclass
+class _AnnotatedLayer:
+    """Text and annotations extracted from the annotated transcription layer."""
+    content: Optional[str] = None
+    annotations: List[TEIAnnotation] = field(default_factory=list)  # POS
+    other_annotations: List[TEIAnnotation] = field(default_factory=list)  # Other layers on <w>
+    token_ranges: Dict[str, Tuple[int, int]] = field(default_factory=dict)  # w id -> offsets
+
+
 def _text_and_annotations_from_annotated(
     body: ET.Element,
     segment_word_counts: Optional[List[int]] = None,
-) -> tuple[Optional[str], List[TEIAnnotation]]:
-    """Extract text and POS annotations from annotated layer.
+) -> _AnnotatedLayer:
+    """Extract text and annotations from annotated layer.
+
+    Words with a pos/lemma attribute become POS annotations; any other attribute
+    (e.g. animacy="human") becomes an annotation of that layer over the same word.
 
     Inserts a newline at segment boundaries. If segment_word_counts is provided (from
     the segmented layer), those boundaries are used; otherwise uses <u> in the annotated layer.
@@ -257,33 +310,126 @@ def _text_and_annotations_from_annotated(
                     word_items.append((w, False))
 
             content_parts = []
-            annotations = []
+            annotations: List[TEIAnnotation] = []
+            other_annotations: List[TEIAnnotation] = []
+            token_ranges: Dict[str, Tuple[int, int]] = {}
             current_pos = 0
             for w, add_newline_after in word_items:
-                text = (w.text or "").strip()
+                text = _word_text(w)
                 if text:
                     start = current_pos
                     end = current_pos + len(text)
                     content_parts.append(text)
                     current_pos = end  # no space between words (preserves source spacing, e.g. Tibetan)
+                    word_id = _word_id(w)
+                    if word_id:
+                        token_ranges[word_id] = (start, end)
                     lemma = w.get("lemma")
                     pos_tag = w.get("pos")
-                    meta = {"lemma": lemma} if lemma else None
-                    annotations.append(
-                        TEIAnnotation(
-                            start_position=start,
-                            end_position=end,
-                            selected_text=text,
-                            label=pos_tag,
-                            meta=meta,
+                    # Words without pos/lemma are plain text (e.g. spacing between annotated
+                    # words) and must not become empty POS annotations.
+                    if pos_tag or lemma:
+                        annotations.append(
+                            TEIAnnotation(
+                                start_position=start,
+                                end_position=end,
+                                selected_text=text,
+                                label=pos_tag,
+                                meta={"lemma": lemma} if lemma else None,
+                            )
                         )
-                    )
+                    for layer_name, label in _layer_attributes(w):
+                        other_annotations.append(
+                            TEIAnnotation(
+                                start_position=start,
+                                end_position=end,
+                                selected_text=text,
+                                label=label,
+                                annotation_type=layer_name,
+                            )
+                        )
                 if add_newline_after:
                     content_parts.append("\n")
                     current_pos += 1
             content = "".join(content_parts).rstrip() if u_elements else "".join(content_parts).strip()
-            return content, annotations
-    return None, []
+            return _AnnotatedLayer(
+                content=content,
+                annotations=annotations,
+                other_annotations=other_annotations,
+                token_ranges=token_ranges,
+            )
+    return _AnnotatedLayer()
+
+
+def _resolve_span_range(
+    span: ET.Element, token_ranges: Dict[str, Tuple[int, int]]
+) -> Optional[Tuple[int, int]]:
+    """Resolve a <span>'s from/to/target pointers (#w12) to character offsets."""
+    ranges: List[Tuple[int, int]] = []
+    for attr in ("from", "to", "target"):
+        value = span.get(attr)
+        if not value:
+            continue
+        for ref in value.split():
+            token_range = token_ranges.get(ref.lstrip("#"))
+            if token_range:
+                ranges.append(token_range)
+    if not ranges:
+        return None
+    return min(r[0] for r in ranges), max(r[1] for r in ranges)
+
+
+def _span_to_annotation(
+    span: ET.Element,
+    group_type: str,
+    token_ranges: Dict[str, Tuple[int, int]],
+    content: str,
+) -> Optional[TEIAnnotation]:
+    """Build an annotation from a stand-off <span>, or None if it cannot be placed."""
+    type_name = (span.get("type") or group_type or "").strip()
+    if not type_name:
+        return None
+    span_range = _resolve_span_range(span, token_ranges)
+    if span_range is None:
+        return None
+    start, end = span_range
+    return TEIAnnotation(
+        start_position=start,
+        end_position=end,
+        selected_text=content[start:end],
+        label=(span.get("ana") or "").strip().lstrip("#") or None,
+        annotation_type=type_name,
+        name=(span.get("n") or "").strip() or None,
+    )
+
+
+def _standoff_annotations(
+    body: ET.Element, token_ranges: Dict[str, Tuple[int, int]], content: str
+) -> List[TEIAnnotation]:
+    """Extract stand-off annotations (spanGrp/span) that point at word ids.
+
+    This is how layers that cover several words (e.g. an Animacy label over a phrase)
+    are encoded without repeating the text of those words.
+    """
+    if not token_ranges:
+        return []
+
+    annotations: List[TEIAnnotation] = []
+    handled: Set[int] = set()
+    for group in body.iter(_ns("spanGrp")):
+        group_type = (group.get("type") or "").strip()
+        for span in group.iter(_ns("span")):
+            handled.add(id(span))
+            annotation = _span_to_annotation(span, group_type, token_ranges, content)
+            if annotation:
+                annotations.append(annotation)
+    for span in body.iter(_ns("span")):
+        if id(span) in handled:
+            continue
+        annotation = _span_to_annotation(span, "", token_ranges, content)
+        if annotation:
+            annotations.append(annotation)
+    return annotations
 
 
 def _get_body(root: ET.Element) -> Optional[ET.Element]:
@@ -317,15 +463,19 @@ def parse_tei(content: str, filename: str = "") -> TEIParseResult:
     content = ""
     pos_annotations: List[TEIAnnotation] = []
     editorial_annotations: List[TEIAnnotation] = []
+    other_annotations: List[TEIAnnotation] = []
 
     # Segment boundaries: use segmented layer when present so UI shows that segmentation
     segment_word_counts = _get_segment_word_counts_from_segmented(body)
 
     # Try annotated layer first (gives content + POS annotations)
-    ann_content, ann_annotations = _text_and_annotations_from_annotated(body, segment_word_counts)
-    if ann_content:
-        content = ann_content
-        pos_annotations = ann_annotations
+    annotated = _text_and_annotations_from_annotated(body, segment_word_counts)
+    if annotated.content:
+        content = annotated.content
+        pos_annotations = annotated.annotations
+        other_annotations = annotated.other_annotations + _standoff_annotations(
+            body, annotated.token_ranges, annotated.content
+        )
 
     # Fallbacks for content
     if not content:
@@ -358,6 +508,13 @@ def parse_tei(content: str, filename: str = "") -> TEIParseResult:
     editorial_labels_val: Optional[Set[str]] = None
     if editorial_annotations:
         editorial_labels_val = {ann.label.strip() for ann in editorial_annotations if ann.label and ann.label.strip()}
+    other_values: Dict[str, Set[str]] = {}
+    for ann in other_annotations:
+        if not ann.annotation_type:
+            continue
+        labels = other_values.setdefault(ann.annotation_type, set())
+        if ann.label and ann.label.strip():
+            labels.add(ann.label.strip())
 
     return TEIParseResult(
         title=title,
@@ -368,4 +525,6 @@ def parse_tei(content: str, filename: str = "") -> TEIParseResult:
         diplomatic_text=diplomatic_text,
         pos_values=pos_values,
         editorial_labels=editorial_labels_val,
+        other_annotations=other_annotations,
+        other_values=other_values,
     )

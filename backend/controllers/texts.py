@@ -153,6 +153,8 @@ def upload_text_file(
     filename = file.filename or ""
     tei_annotations: list[TEIAnnotation] = []
     tei_editorial_annotations: list[TEIAnnotation] = []
+    tei_other_annotations: list[TEIAnnotation] = []
+    other_type_names: dict[str, str] = {}  # Layer name in XML -> annotation type name in DB
     diplomatic_text: Optional[str] = None
     primary_annotation_type_id: Optional[str] = None
     selected_type_name: Optional[str] = None
@@ -166,11 +168,13 @@ def upload_text_file(
             content = parsed.content
             tei_annotations = parsed.annotations  # POS from annotated layer
             tei_editorial_annotations = parsed.editorial_annotations  # add, unclear, hi, decoration
+            tei_other_annotations = parsed.other_annotations  # Animacy and other layers
             source = parsed.source
             # Diplomatic text is not taken from XML; user adds it in the text workspace
             diplomatic_text = None
             pos_values = getattr(parsed, "pos_values", None) or set()
             editorial_labels = getattr(parsed, "editorial_labels", None) or set()
+            other_values = getattr(parsed, "other_values", None) or {}
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -189,6 +193,15 @@ def upload_text_file(
                     db=db, type_name="tei_editorial", values=editorial_labels, created_by=uploader_id
                 )
                 selected_type_name = "tei_editorial"
+            # Reuse the existing typology when the XML names a layer with different casing
+            # (animacy="human" must land in the "Animacy" list, not a second type).
+            for layer_name, labels in other_values.items():
+                existing = annotation_type_crud.get_by_name_case_insensitive(db=db, name=layer_name)
+                canonical_name = existing.name if existing else layer_name
+                other_type_names[layer_name] = canonical_name
+                annotation_list_crud.ensure_annotation_list_values(
+                    db=db, type_name=canonical_name, values=labels, created_by=uploader_id
+                )
             primary_annotation_type_id = pos_type_id or editorial_type_id
     else:
         base_title = filename.rsplit(".", 1)[0] if filename else "Uploaded Text"
@@ -264,6 +277,31 @@ def upload_text_file(
                 text_id=created_text.id,
                 set_text_progress=False,
             )
+        # Create annotations of the other layers (Animacy, ...) over the same words.
+        if tei_other_annotations:
+            other_creates = [
+                AnnotationCreate(
+                    text_id=created_text.id,
+                    annotation_type=other_type_names.get(
+                        ann.annotation_type, ann.annotation_type
+                    ),
+                    start_position=ann.start_position,
+                    end_position=ann.end_position,
+                    selected_text=ann.selected_text,
+                    label=ann.label,
+                    name=ann.name,
+                    meta=ann.meta,
+                )
+                for ann in tei_other_annotations
+                if ann.annotation_type
+            ]
+            annotation_crud.create_many_in_one_commit(
+                db=db,
+                items=other_creates,
+                annotator_id=None,
+                text_id=created_text.id,
+                set_text_progress=False,
+            )
         # Attach annotation types for frontend filter selection (XML upload only)
         types_created: List[str] = []
         if tei_annotations:
@@ -271,6 +309,9 @@ def upload_text_file(
         if tei_editorial_annotations and selected_type_name:
             if selected_type_name not in types_created:
                 types_created.append(selected_type_name)
+        for type_name in other_type_names.values():
+            if type_name not in types_created:
+                types_created.append(type_name)
         if types_created:
             setattr(created_text, "annotation_types_created", types_created)
         return created_text

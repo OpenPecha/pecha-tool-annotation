@@ -110,6 +110,17 @@ export const AdminDocumentUpload: React.FC<AdminDocumentUploadProps> = ({
           </span>
         </label>
 
+        <p className="text-xs text-muted-foreground">
+          <a
+            href="../../docs/TEI_XML_FORMAT.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline font-medium hover:text-foreground"
+          >
+            TEI XML format
+          </a>{" "}
+          — how to include POS and other annotation layers in an uploaded file.
+        </p>
 
         <Button
           className="w-full sm:w-auto"
