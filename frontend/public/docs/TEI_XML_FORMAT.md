@@ -79,6 +79,50 @@ annotations, so export → annotate → re-upload is a lossless cycle for POS an
 Annotation types named `pos`, `part of speech` or `part_of_speech` become the `<w>` tokens; every
 other type is exported as a stand-off group.
 
+## From CoNLL-U (token / pos / animacy columns)
+
+If your pipeline produces a simple CoNLL-U-style file — one token per line, tab or
+space separated, blank line between sentences — map it onto `<w>` like this:
+
+| CoNLL-U column | TEI |
+| --- | --- |
+| token (form) | `<w>` text content |
+| pos | `pos="..."` attribute |
+| animacy (3rd column, blank for most tokens) | `animacy="..."` attribute — **only** this name works, see below |
+
+```
+# input.conllu
+རྒྱལ་པོ་	n.count	human
+མ་སྐྱེས་དགྲ་	n.prop	animate
+ནི	part
+```
+
+becomes:
+
+```xml
+<div type="transcription" subtype="annotated">
+  <u xml:id="ann_u1">
+    <w xml:id="w1" pos="n.count" animacy="human">རྒྱལ་པོ་</w>
+    <w xml:id="w2" pos="n.prop" animacy="animate">མ་སྐྱེས་དགྲ་</w>
+    <w xml:id="w3" pos="part">ནི</w>
+  </u>
+</div>
+```
+
+**Common mistake:** writing the animacy value into `ana="human"` and/or `n="human"` on
+the `<w>` itself. Both `ana` and `n` are reserved TEI word attributes (see the reserved
+list above) and are silently ignored there — nothing shows up after upload, with no error.
+`ana`/`n` only mean something on a stand-off `<span>` (see previous section); on `<w>` use
+`animacy="..."` instead. Lemma is optional — if your CoNLL-U has no lemma column, just
+omit `lemma` (the tool falls back to the word text itself).
+
+A ready-to-use converter for exactly this 2-or-3-column format is at
+[`scripts/conllu_to_tei.py`](../../../scripts/conllu_to_tei.py):
+
+```bash
+python scripts/conllu_to_tei.py input.conllu output.xml --title "My Text"
+```
+
 ## JSON alternative
 
 `Export → JSON` produces the bulk upload format described in

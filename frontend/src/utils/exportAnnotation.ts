@@ -232,12 +232,16 @@ function buildStandoffGroups(
     const { first, last } = range;
 
     const type = (ann.annotation_type ?? "").trim() || "annotation";
+    const label = stripLabelPrefixForExport(ann.label);
+    // The UI stores the picked label in both `label` and `name`; only write @n
+    // when the name is a real display name (e.g. a header title), not a copy.
+    const name = ann.name && ann.name !== label ? ann.name : undefined;
     const spans = groups.get(type) ?? [];
     spans.push({
       from: first.id,
       to: last.id,
-      label: stripLabelPrefixForExport(ann.label),
-      name: ann.name || undefined,
+      label,
+      name,
       text: ann.selected_text || content.slice(start, end),
     });
     groups.set(type, spans);
