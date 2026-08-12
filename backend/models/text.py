@@ -36,9 +36,15 @@ class Text(Base):
     deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    annotations = relationship("Annotation", back_populates="text", cascade="all, delete-orphan")
-    reviewer = relationship("User", back_populates="reviewed_texts", foreign_keys=[reviewer_id]) 
+    annotations = relationship(
+        "Annotation", back_populates="text", cascade="all, delete-orphan", passive_deletes=True
+    )
+    reviewer = relationship("User", back_populates="reviewed_texts", foreign_keys=[reviewer_id])
     annotator = relationship("User", back_populates="annotated_texts", foreign_keys=[annotator_id])
     uploader = relationship("User", back_populates="uploaded_texts", foreign_keys=[uploaded_by])
-    rejected_by_users = relationship("UserRejectedText", back_populates="text", cascade="all, delete-orphan")
-    permissions = relationship("TextPermission", back_populates="text", cascade="all, delete-orphan")
+    rejected_by_users = relationship(
+        "UserRejectedText", back_populates="text", cascade="all, delete-orphan", passive_deletes=True
+    )
+    permissions = relationship(
+        "TextPermission", back_populates="text", cascade="all, delete-orphan", passive_deletes=True
+    )

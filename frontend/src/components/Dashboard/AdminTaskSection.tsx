@@ -258,6 +258,9 @@ export const AdminTaskSection: React.FC = () => {
                   const exportPending =
                     exportMutation.isPending &&
                     exportMutation.variables?.textId === text.id;
+                  const deletePending =
+                    deleteTaskMutation.isPending &&
+                    deleteTaskMutation.variables === text.id;
 
                   return (
                     <li
@@ -318,9 +321,9 @@ export const AdminTaskSection: React.FC = () => {
                                 variant="outline"
                                 size="sm"
                                 className="rounded-lg border-destructive/30 text-destructive hover:bg-destructive/10"
-                                disabled={deleteTaskMutation.isPending}
+                                disabled={deletePending}
                               >
-                                {deleteTaskMutation.isPending ? (
+                                {deletePending ? (
                                   <AiOutlineLoading3Quarters className="h-4 w-4 animate-spin" />
                                 ) : (
                                   <IoTrash className="h-4 w-4" />
