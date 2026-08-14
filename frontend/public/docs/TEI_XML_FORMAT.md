@@ -64,11 +64,37 @@ covers. Put the `<spanGrp>` inside the annotated `<div>`, after the `<u>` elemen
 | `span/@type` | Overrides the group type for a single span |
 | `span/@from`, `span/@to` | First and last `<w>` covered, as `#id` |
 | `span/@target` | Alternative to from/to; a space separated list of `#id` |
+| `span/@fromChar`, `span/@toChar` | Optional sub-token refinement, see below |
 | `span/@ana` | The label. A leading `#` is stripped, so `human` and `#human` are equivalent |
 | `span/@n` | Optional display name |
 | span content | Ignored on import; written on export for readability |
 
 Spans may overlap each other and overlap POS words freely, in any number of layers.
+
+### Annotating part of a word: `@fromChar`/`@toChar`
+
+`from`/`to` can only point at whole `<w>` elements, so a span that covers only *part* of
+a token — e.g. labelling just "ཞེ" inside the token "ཞེས་" — still has to give `from`/`to`
+as that token's id. `fromChar` and `toChar` refine it to the exact characters:
+
+```xml
+<w xml:id="w86" pos="cl.quot">ཞེས་</w>
+...
+<spanGrp type="Animacy">
+  <span from="#w86" to="#w86" fromChar="0" toChar="2" ana="human">ཞེ</span>
+</spanGrp>
+```
+
+- `fromChar` — character offset into the `from` token where the span starts (`0` = the
+  token's first character)
+- `toChar` — character offset into the `to` token where the span ends, exclusive
+
+Both are counted from the start of their own token, not from the document. Omit them
+entirely when the span already starts/ends exactly on a token boundary — the tool only
+writes them when needed, and a span with neither behaves exactly as before. They also
+work when `from` and `to` are different tokens (e.g. a span starting partway into one
+token and ending partway into another): `fromChar` always applies to the `from` token,
+`toChar` always applies to the `to` token.
 
 ## Preparing a file to import: which layer names to use
 
@@ -167,7 +193,8 @@ id directly — you don't need any extra field for this.
 
 The TEI export writes the same structure: `<w>` elements carrying `lemma` and `pos`, and one
 `<spanGrp>` per non-POS layer. Uploading an exported file reproduces the same text and the same
-annotations, so export → annotate → re-upload is a lossless cycle for POS and every other layer.
+annotations, including sub-token boundaries (via `fromChar`/`toChar`), so export → annotate →
+re-upload is a lossless cycle for POS and every other layer, down to the character.
 
 Annotation types named `pos`, `part of speech` or `part_of_speech` become the `<w>` tokens; every
 other type is exported as a stand-off group.

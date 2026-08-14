@@ -57,6 +57,10 @@ type TeiToken = {
 type TeiSpan = {
   from: string;
   to: string;
+  /** Character offset into the `from` token where the span starts; omitted when it starts at the token's own start. */
+  fromChar?: number;
+  /** Character offset into the `to` token where the span ends (exclusive); omitted when it ends at the token's own end. */
+  toChar?: number;
   label: string;
   name?: string;
   text: string;
@@ -236,10 +240,17 @@ function buildStandoffGroups(
     // The UI stores the picked label in both `label` and `name`; only write @n
     // when the name is a real display name (e.g. a header title), not a copy.
     const name = ann.name && ann.name !== label ? ann.name : undefined;
+    // Record sub-token boundaries when the selection doesn't line up with the token(s)
+    // it falls in (e.g. annotating just "ཞེ" inside the token "ཞེས་"), so re-importing
+    // recovers the exact character range instead of snapping to the whole token(s).
+    const fromChar = start > first.start ? start - first.start : undefined;
+    const toChar = end < last.end ? end - last.start : undefined;
     const spans = groups.get(type) ?? [];
     spans.push({
       from: first.id,
       to: last.id,
+      fromChar,
+      toChar,
       label,
       name,
       text: ann.selected_text || content.slice(start, end),
@@ -285,6 +296,8 @@ function convertToTeiXml(textData: TextWithAnnotations): string {
     ([type, spans]) => {
       const spanElements = spans.map((span) => {
         const attrs = [`from="#${span.from}"`, `to="#${span.to}"`];
+        if (span.fromChar !== undefined) attrs.push(`fromChar="${span.fromChar}"`);
+        if (span.toChar !== undefined) attrs.push(`toChar="${span.toChar}"`);
         if (span.label) attrs.push(`ana="${escapeXml(span.label)}"`);
         if (span.name) attrs.push(`n="${escapeXml(span.name)}"`);
         return `          <span ${attrs.join(" ")}>${escapeXml(span.text)}</span>`;

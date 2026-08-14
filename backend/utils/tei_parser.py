@@ -364,7 +364,15 @@ def _text_and_annotations_from_annotated(
 def _resolve_span_range(
     span: ET.Element, token_ranges: Dict[str, Tuple[int, int]]
 ) -> Optional[Tuple[int, int]]:
-    """Resolve a <span>'s from/to/target pointers (#w12) to character offsets."""
+    """Resolve a <span>'s from/to/target pointers (#w12) to character offsets.
+
+    @fromChar/@toChar (if present) refine the range to a sub-token position:
+    @fromChar is the character offset into the `from` token where the span actually
+    starts, @toChar is the character offset into the `to` token where it actually ends
+    (exclusive). They let a span cover part of a token (e.g. annotating just "ཞེ" inside
+    the token "ཞེས་") instead of always snapping to whole tokens. Ignored if they'd move
+    the range outside the token-level bounds (e.g. hand-edited to something nonsensical).
+    """
     ranges: List[Tuple[int, int]] = []
     for attr in ("from", "to", "target"):
         value = span.get(attr)
@@ -376,7 +384,29 @@ def _resolve_span_range(
                 ranges.append(token_range)
     if not ranges:
         return None
-    return min(r[0] for r in ranges), max(r[1] for r in ranges)
+    start = min(r[0] for r in ranges)
+    end = max(r[1] for r in ranges)
+
+    from_id = (span.get("from") or "").lstrip("#") or None
+    to_id = (span.get("to") or "").lstrip("#") or None
+    from_char = span.get("fromChar")
+    to_char = span.get("toChar")
+    if from_char is not None and from_id and from_id in token_ranges:
+        try:
+            candidate = token_ranges[from_id][0] + int(from_char)
+            if start <= candidate < end:
+                start = candidate
+        except ValueError:
+            pass
+    if to_char is not None and to_id and to_id in token_ranges:
+        try:
+            candidate = token_ranges[to_id][0] + int(to_char)
+            if start < candidate <= end:
+                end = candidate
+        except ValueError:
+            pass
+
+    return start, end
 
 
 def _span_to_annotation(
