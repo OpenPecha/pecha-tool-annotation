@@ -70,6 +70,77 @@ covers. Put the `<spanGrp>` inside the annotated `<div>`, after the `<u>` elemen
 
 Spans may overlap each other and overlap POS words freely, in any number of layers.
 
+## Preparing a file to import: which layer names to use
+
+`spanGrp/@type` (and a layer attribute on `<w>`) must match the name of an existing
+category **exactly**, except for letter case. Not close, not abbreviated — exactly the
+same letters, spaces and punctuation. If it doesn't match, the tool doesn't complain:
+it silently creates a brand-new category with whatever name you wrote, and your
+annotations land there instead of merging into the one you meant.
+
+This is the most common way a project ends up with confusing duplicate categories, e.g.
+`roles` and `Semantic roles  Features` (note the double space — that's the current real
+name) existing side by side because one import used a short form.
+
+**Before you prepare a file, get the current exact names from your project.** As of this
+writing, the categories are:
+
+| Exact name to write in `spanGrp/@type` | |
+| --- | --- |
+| `Animacy` | |
+| `Codicological/Philological Features` | |
+| `Content Features` | |
+| `Semantic roles  Features` | has a double space between "roles" and "Features" — copy/paste it, don't retype it |
+| `Text Correction` | |
+| `pos` | drives `<w>` tokens directly, see above — not a spanGrp |
+
+These names can change (categories get renamed or merged), so treat this table as a
+snapshot, not a permanent reference — check with the project admin or the categories
+list in the tool if you're unsure. Do **not** invent short forms like `roles`, `content`,
+or `phil`: there is no separate code system, the category name *is* the code.
+
+### Worked example
+
+```xml
+<spanGrp type="Animacy">
+  <span from="#w12293" to="#w12293" ana="human">སྒོ་སྲུང་</span>
+  <span from="#w12299" to="#w12299" ana="inanimate">མ་སྐྱེས་དགྲ་</span>
+</spanGrp>
+<spanGrp type="Semantic roles  Features">
+  <span from="#w12293" to="#w12293" ana="agent">སྒོ་སྲུང་</span>
+  <span from="#w12294" to="#w12295" ana="theme">གིས་བཟུང་</span>
+</spanGrp>
+<spanGrp type="Content Features">
+  <span from="#w13" to="#w14" ana="HIPPO">བདག་ཀྱང་</span>
+</spanGrp>
+<spanGrp type="Codicological/Philological Features">
+  <span from="#w51" to="#w53" ana="small">བསམས་ནས།</span>
+</spanGrp>
+<spanGrp type="Text Correction">
+  <span from="#w122" to="#w127" ana="Other">ད་ཅེས་ཐོས་ནས།ཕྱི</span>
+</spanGrp>
+```
+
+Every `<span>` still uses `ana="..."` for its value regardless of which category it's
+in — `ana` is the standard TEI attribute for "the value of this span," it's not
+category-specific. The category comes entirely from `spanGrp/@type`.
+
+### Matching spans back to tokens in your own scripts
+
+A span's `from`/`to` already points at the exact `xml:id` of the `<w>` it covers
+(`from="#w12293"` ↔ `<w xml:id="w12293">`), so a script can join spans to tokens on that
+id directly — you don't need any extra field for this.
+
+### Checklist before importing
+
+- [ ] Every `spanGrp/@type` is copy-pasted from the current category list, not retyped
+      from memory (watch for extra/missing spaces, different capitalization, `/` vs `-`)
+- [ ] Every `<span>` uses `ana="..."` for its value, `from`/`to` (or `target`) for the
+      token range, and points at `<w xml:id="...">`s that actually exist in the file
+- [ ] Single-token labels can also be written as a plain attribute on `<w>` instead
+      (e.g. `animacy="human"`) — the attribute name is matched the same way, exactly
+      against an existing category name, case-insensitive only
+
 ## What the tool exports
 
 The TEI export writes the same structure: `<w>` elements carrying `lemma` and `pos`, and one
