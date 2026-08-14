@@ -121,6 +121,28 @@ or `phil`: there is no separate code system, the category name *is* the code.
 </spanGrp>
 ```
 
+### `spanGrp/@type` values found in a sample export
+
+Pulled directly from one export file, in the order they appear:
+
+1. `Animacy`
+2. `roles`
+3. `Content Features`
+4. `Semantic roles Features` (single space)
+5. `Codicological/Philological Features`
+6. `Text Correction`
+
+Two of these are not the canonical names from the table above and will each create a new,
+separate category on import instead of merging into the intended one:
+
+- `roles` — should be `Semantic roles  Features` (double space)
+- `Semantic roles Features` (single space) — also does not match `Semantic roles  Features`
+  (double space) in the database
+
+Until the database name is fixed to a single space, **neither** `roles` nor
+`Semantic roles Features` will import correctly — only `Semantic roles  Features`, typed
+with the double space exactly as stored, currently matches.
+
 Every `<span>` still uses `ana="..."` for its value regardless of which category it's
 in — `ana` is the standard TEI attribute for "the value of this span," it's not
 category-specific. The category comes entirely from `spanGrp/@type`.
