@@ -21,8 +21,11 @@ interface TextAnnotatorProps {
   onRemoveAnnotation: (id: string) => void;
   onUpdateAnnotation?: (
     annotationId: string,
-    newType: string,
-    newText?: string
+    newLabel: string,
+    newText?: string,
+    newLevel?: string,
+    /** Move the annotation to a different annotation type; omit to keep the current one. */
+    newAnnotationType?: string
   ) => void;
   onHeaderSelected?: (selection: {
     text: string;

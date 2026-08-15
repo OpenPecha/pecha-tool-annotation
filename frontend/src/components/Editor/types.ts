@@ -11,9 +11,11 @@ export interface EditorProps {
   onRemoveAnnotation: (id: string) => void;
   onUpdateAnnotation?: (
     annotationId: string,
-    newType: string,
+    newLabel: string,
     newText?: string,
-    newLevel?: string
+    newLevel?: string,
+    /** Move the annotation to a different annotation type; omit to keep the current one. */
+    newAnnotationType?: string
   ) => void;
   onHeaderSelected?: (selection: {
     text: string;
@@ -96,9 +98,11 @@ export interface EditPopupProps {
   isUpdatingAnnotation: boolean;
   onUpdate: (
     annotationId: string,
-    newType: string,
+    newLabel: string,
     newText?: string,
-    newLevel?: string
+    newLevel?: string,
+    /** Move the annotation to a different annotation type; omit to keep the current one. */
+    newAnnotationType?: string
   ) => void;
   onDelete: () => void;
   onCancel: () => void;

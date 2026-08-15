@@ -612,13 +612,20 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     const handleUpdateAnnotation = useCallback(
       (
         annotationId: string,
-        newType: string,
+        newLabel: string,
         newText?: string,
-        newLevel?: string
+        newLevel?: string,
+        newAnnotationType?: string
       ) => {
         if (onUpdateAnnotation) {
           // Use the passed update function if available
-          onUpdateAnnotation(annotationId, newType, newText, newLevel);
+          onUpdateAnnotation(
+            annotationId,
+            newLabel,
+            newText,
+            newLevel,
+            newAnnotationType
+          );
         } else {
           // Fallback to remove and add if no update function provided
           // Save scroll position before update
@@ -629,8 +636,12 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           if (annotation) {
             // Remove the old annotation and add the updated one
             onRemoveAnnotation(annotationId);
-            // Add new annotation with same position but new type/text/level
-            onAddAnnotation(newType, newText, newLevel);
+            // Add new annotation with same position but new type/label/level
+            onAddAnnotation(
+              newAnnotationType || annotation.type,
+              newText || newLabel,
+              newLevel
+            );
           }
 
           // Restore scroll position after update

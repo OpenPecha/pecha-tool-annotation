@@ -31,9 +31,11 @@ interface EditPopupProps {
   isUpdatingAnnotation?: boolean;
   onUpdate: (
     annotationId: string,
-    newType: string,
+    newLabel: string,
     newText?: string,
-    newLevel?: string
+    newLevel?: string,
+    /** Move the annotation to a different annotation type; omit to keep the current one. */
+    newAnnotationType?: string,
   ) => void;
   onDelete: () => void;
   onCancel: () => void;
@@ -57,6 +59,8 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   onDelete,
   onCancel,
 }) => {
+  const [selectedTypeName, setSelectedTypeName] = useState<string>("");
+  const [isChoosingType, setIsChoosingType] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState<string>("");
   const [customInput, setCustomInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,9 +69,15 @@ export const EditPopup: React.FC<EditPopupProps> = ({
     useCustomAnnotationsStore();
   const { data: annotationTypes = [] } = useAnnotationTypes();
 
+  const originalTypeName = annotation?.type ?? "";
+  const typeChanged =
+    !!selectedTypeName && selectedTypeName !== originalTypeName;
+
+  // The label list follows the selected type, so switching type reloads the
+  // labels the annotation can be given.
   const listTypeId =
-    annotation?.type != null
-      ? annotationTypes.find((t) => t.name === annotation.type)?.id ?? ""
+    selectedTypeName !== ""
+      ? (annotationTypes.find((t) => t.name === selectedTypeName)?.id ?? "")
       : selectedAnnotationListType;
 
   const { data: annotationList, isLoading: isLoadingList } =
@@ -80,7 +90,9 @@ export const EditPopup: React.FC<EditPopupProps> = ({
 
   useEffect(() => {
     if (annotation) {
+      setSelectedTypeName(annotation.type ?? "");
       setSelectedLabel(getAnnotationDisplayLabel(annotation));
+      setIsChoosingType(false);
       setSearchQuery("");
       setCustomInput("");
     }
@@ -93,11 +105,18 @@ export const EditPopup: React.FC<EditPopupProps> = ({
       : [];
     const custom = listTypeId ? getCustomOptions(listTypeId) : [];
     const all = [...fromList, ...custom];
+    // The existing label belongs to the original type, so only offer it while
+    // that type is still selected.
     if (
+      !typeChanged &&
       displayLabel &&
       !all.some((o) => o.label === displayLabel || o.id === displayLabel)
     ) {
-      all.push({ id: displayLabel, label: displayLabel, ...LOOSE_OPTION_STYLE });
+      all.push({
+        id: displayLabel,
+        label: displayLabel,
+        ...LOOSE_OPTION_STYLE,
+      });
     }
     return all;
     // customOptionsByListType is the store slice that changes when a custom value is added
@@ -105,9 +124,16 @@ export const EditPopup: React.FC<EditPopupProps> = ({
     annotationList,
     listTypeId,
     displayLabel,
+    typeChanged,
     getCustomOptions,
     customOptionsByListType,
   ]);
+
+  const filteredTypes = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return annotationTypes;
+    return annotationTypes.filter((t) => t.name.toLowerCase().includes(q));
+  }, [annotationTypes, searchQuery]);
 
   const filteredOptions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -117,7 +143,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
         o.label?.toLowerCase().includes(q) ||
         o.id?.toLowerCase().includes(q) ||
         o.mnemonic?.toLowerCase().includes(q) ||
-        o.description?.toLowerCase().includes(q)
+        o.description?.toLowerCase().includes(q),
     );
   }, [options, searchQuery]);
 
@@ -235,8 +261,10 @@ export const EditPopup: React.FC<EditPopupProps> = ({
     );
   }
 
-  const canAddCustomValue = allowsCustomValues(annotation.type);
-  const hasChanged = selectedLabel.trim() !== displayLabel;
+  const canAddCustomValue = allowsCustomValues(selectedTypeName);
+  const labelChanged = selectedLabel.trim() !== displayLabel;
+  const hasChanged = labelChanged || typeChanged;
+  const canSave = hasChanged && !!selectedLabel.trim() && !isChoosingType;
 
   const handleDelete = () => {
     onDelete();
@@ -245,12 +273,29 @@ export const EditPopup: React.FC<EditPopupProps> = ({
   /**
    * Relabel in place. Both label and name are set: the display prefers name,
    * so writing only one of them would leave the annotation looking unchanged.
-   * The annotation type and its span are untouched.
+   * The annotation type moves only when the user picked a different one; the
+   * span is untouched either way.
    */
   const handleSave = () => {
     const next = selectedLabel.trim();
     if (!next || !hasChanged) return;
-    onUpdate(annotation.id, next, next, annotation.level || undefined);
+    onUpdate(
+      annotation.id,
+      next,
+      next,
+      annotation.level || undefined,
+      typeChanged ? selectedTypeName : undefined,
+    );
+  };
+
+  const chooseType = (typeName: string) => {
+    setIsChoosingType(false);
+    setSearchQuery("");
+    setCustomInput("");
+    if (typeName === selectedTypeName) return;
+    setSelectedTypeName(typeName);
+    // Labels are type-specific, so the old one cannot carry over.
+    setSelectedLabel(typeName === originalTypeName ? displayLabel : "");
   };
 
   const addCustomValue = () => {
@@ -353,48 +398,54 @@ export const EditPopup: React.FC<EditPopupProps> = ({
           </div>
         )}
 
-        {/* Label picker: change the label in place rather than delete and re-add */}
+        {/* Type + label picker: change either in place rather than delete and re-add */}
         <div className="mb-3">
-          <p className="text-xs text-gray-500 mb-2">
-            Label
-            {annotation.type && (
-              <span className="text-gray-400"> ({annotation.type})</span>
-            )}
-            :
-          </p>
-
-          <div className="mb-2 flex items-center gap-2 text-sm">
-            <span className="px-2 py-1 rounded bg-gray-100 border text-gray-700">
-              {displayLabel || "—"}
-            </span>
-            {hasChanged && (
-              <>
-                <span className="text-gray-400">→</span>
-                <span className="px-2 py-1 rounded bg-orange-50 border border-orange-200 text-orange-900 font-medium">
-                  {selectedLabel}
+          {/* Annotation type, with the option to move to a different one */}
+          <div className="mb-3">
+            <p className="text-xs text-gray-500 mb-1">Annotation type:</p>
+            <div className="flex items-center gap-2">
+              <span
+                className={`px-2 py-1 rounded border text-sm ${
+                  typeChanged
+                    ? "bg-orange-50 border-orange-200 text-orange-900 font-medium"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {selectedTypeName || "—"}
+              </span>
+              {typeChanged && (
+                <span className="text-xs text-gray-400">
+                  (was {originalTypeName})
                 </span>
-              </>
-            )}
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={isUpdatingAnnotation}
+                onClick={() => {
+                  setIsChoosingType((choosing) => !choosing);
+                  setSearchQuery("");
+                }}
+                className="ml-auto text-xs text-gray-600 hover:text-gray-900"
+              >
+                {isChoosingType ? "Cancel" : "Change type"}
+              </Button>
+            </div>
           </div>
 
-          {isLoadingList ? (
-            <div className="text-center py-4">
-              <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin mx-auto mb-2 text-gray-400" />
-              <p className="text-xs text-gray-500">Loading labels...</p>
-            </div>
-          ) : (
+          {isChoosingType ? (
             <>
-              {/* Search */}
               <div className="relative mb-2">
                 <IoSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search labels..."
+                  placeholder="Search annotation types..."
                   autoComplete="off"
-                  disabled={isUpdatingAnnotation}
-                  className="w-full pl-7 pr-8 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent disabled:opacity-50"
+                  autoFocus
+                  className="w-full pl-7 pr-8 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent"
                 />
                 {searchQuery && (
                   <button
@@ -406,76 +457,158 @@ export const EditPopup: React.FC<EditPopupProps> = ({
                 )}
               </div>
 
-              {/* Options */}
               <div className="max-h-48 overflow-y-auto overflow-x-hidden border rounded">
                 <div className="space-y-1 p-1">
-                  {filteredOptions.map((option) => {
-                    const isSelected = option.label === selectedLabel;
-                    return (
-                      <Button
-                        key={option.id}
-                        onClick={() => setSelectedLabel(option.label)}
-                        disabled={isUpdatingAnnotation}
-                        variant="ghost"
-                        className={`w-full h-auto p-2 justify-start text-left transition-all duration-200 border-l-2 ${
-                          isSelected
-                            ? "border-orange-400 bg-orange-50 text-orange-900"
-                            : "border-transparent hover:border-orange-200 hover:bg-orange-25"
-                        }`}
-                      >
-                        <div className="w-full min-w-0">
-                          <div className="text-sm font-medium truncate">
-                            {option.label}
-                          </div>
-                          {option.description && (
-                            <div className="text-xs text-gray-500 truncate">
-                              {option.description}
-                            </div>
-                          )}
-                        </div>
-                      </Button>
-                    );
-                  })}
+                  {filteredTypes.map((type) => (
+                    <Button
+                      key={type.id}
+                      onClick={() => chooseType(type.name)}
+                      variant="ghost"
+                      className={`w-full h-auto p-2 justify-start text-left transition-all duration-200 border-l-2 ${
+                        type.name === selectedTypeName
+                          ? "border-orange-400 bg-orange-50 text-orange-900"
+                          : "border-transparent hover:border-orange-200 hover:bg-orange-25"
+                      }`}
+                    >
+                      <div className="text-sm font-medium truncate">
+                        {type.name}
+                      </div>
+                    </Button>
+                  ))}
 
-                  {filteredOptions.length === 0 && (
+                  {filteredTypes.length === 0 && (
                     <p className="text-xs text-gray-500 italic px-3 py-4 text-center">
-                      {options.length === 0
-                        ? "No labels available for this annotation type."
-                        : "No labels found matching your search."}
+                      No annotation types found matching your search.
                     </p>
                   )}
                 </div>
               </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-gray-500 mb-2">Label:</p>
 
-              {/* Add your own value, for types with an open vocabulary */}
-              {canAddCustomValue && listTypeId && (
-                <div className="mt-2 flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Can't find it? Add your own..."
-                    value={customInput}
-                    onChange={(e) => setCustomInput(e.target.value)}
-                    autoComplete="off"
-                    disabled={isUpdatingAnnotation}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addCustomValue();
-                      }
-                    }}
-                    className="flex-1 px-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent disabled:opacity-50"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={!customInput.trim() || isUpdatingAnnotation}
-                    onClick={addCustomValue}
-                    className="shrink-0 px-2 py-1.5 text-xs"
-                  >
-                    <IoAdd className="w-3 h-3" />
-                  </Button>
+              <div className="mb-2 flex items-center gap-2 text-sm">
+                <span className="px-2 py-1 rounded bg-gray-100 border text-gray-700">
+                  {displayLabel || "—"}
+                </span>
+                {(labelChanged || typeChanged) && (
+                  <>
+                    <span className="text-gray-400">→</span>
+                    <span
+                      className={`px-2 py-1 rounded border font-medium ${
+                        selectedLabel
+                          ? "bg-orange-50 border-orange-200 text-orange-900"
+                          : "bg-gray-50 border-dashed border-gray-300 text-gray-400 italic"
+                      }`}
+                    >
+                      {selectedLabel || "pick a label"}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {isLoadingList ? (
+                <div className="text-center py-4">
+                  <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin mx-auto mb-2 text-gray-400" />
+                  <p className="text-xs text-gray-500">Loading labels...</p>
                 </div>
+              ) : (
+                <>
+                  {/* Search */}
+                  <div className="relative mb-2">
+                    <IoSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search labels..."
+                      autoComplete="off"
+                      disabled={isUpdatingAnnotation}
+                      className="w-full pl-7 pr-8 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent disabled:opacity-50"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 hover:text-gray-600"
+                      >
+                        <IoClose className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Options */}
+                  <div className="max-h-48 overflow-y-auto overflow-x-hidden border rounded">
+                    <div className="space-y-1 p-1">
+                      {filteredOptions.map((option) => {
+                        const isSelected = option.label === selectedLabel;
+                        return (
+                          <Button
+                            key={option.id}
+                            onClick={() => setSelectedLabel(option.label)}
+                            disabled={isUpdatingAnnotation}
+                            variant="ghost"
+                            className={`w-full h-auto p-2 justify-start text-left transition-all duration-200 border-l-2 ${
+                              isSelected
+                                ? "border-orange-400 bg-orange-50 text-orange-900"
+                                : "border-transparent hover:border-orange-200 hover:bg-orange-25"
+                            }`}
+                          >
+                            <div className="w-full min-w-0">
+                              <div className="text-sm font-medium truncate">
+                                {option.label}
+                              </div>
+                              {option.description && (
+                                <div className="text-xs text-gray-500 truncate">
+                                  {option.description}
+                                </div>
+                              )}
+                            </div>
+                          </Button>
+                        );
+                      })}
+
+                      {filteredOptions.length === 0 && (
+                        <p className="text-xs text-gray-500 italic px-3 py-4 text-center">
+                          {options.length === 0
+                            ? "No labels available for this annotation type."
+                            : "No labels found matching your search."}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Add your own value, for types with an open vocabulary */}
+                  {canAddCustomValue && listTypeId && (
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Can't find it? Add your own..."
+                        value={customInput}
+                        onChange={(e) => setCustomInput(e.target.value)}
+                        autoComplete="off"
+                        disabled={isUpdatingAnnotation}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addCustomValue();
+                          }
+                        }}
+                        className="flex-1 px-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-transparent disabled:opacity-50"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={!customInput.trim() || isUpdatingAnnotation}
+                        onClick={addCustomValue}
+                        className="shrink-0 px-2 py-1.5 text-xs"
+                      >
+                        <IoAdd className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
@@ -505,7 +638,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({
             </Button>
             <Button
               onClick={handleSave}
-              disabled={!hasChanged || !selectedLabel.trim() || isUpdatingAnnotation}
+              disabled={!canSave || isUpdatingAnnotation}
               size="sm"
               className="px-3 py-2 text-sm bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >

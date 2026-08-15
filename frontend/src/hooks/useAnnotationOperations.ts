@@ -301,14 +301,15 @@ export const useAnnotationOperations = (
   }, [textId, text, validateAnnotationType, toast, queryClient, findAllOccurrences]);
 
   /**
-   * Update annotation in place via PUT (label, name, level).
+   * Update annotation in place via PUT (label, name, level, annotation type).
    * Keeps the same record; no delete+create.
    */
   const updateAnnotation = useCallback(async (
     annotationId: string,
     newType: string,
     newText?: string,
-    newLevel?: string
+    newLevel?: string,
+    newAnnotationType?: string
   ) => {
     const textIdNumber = textId ? parseInt(textId, 10) : NaN;
     const cacheKey = queryKeys.texts.withAnnotations(textIdNumber);
@@ -346,10 +347,18 @@ export const useAnnotationOperations = (
       ? (newLevel as "minor" | "major" | "critical")
       : undefined;
 
+    // Only send the annotation type when the caller is actually moving the
+    // annotation to a different type, so a plain relabel stays a minimal patch.
+    const retypedTo =
+      newAnnotationType && newAnnotationType !== annotation?.annotation_type
+        ? newAnnotationType
+        : undefined;
+
     const updateData = {
       label: newType,
       name: newText,
       ...(levelValue !== undefined && { level: levelValue }),
+      ...(retypedTo !== undefined && { annotation_type: retypedTo }),
     };
 
     const previous = current ? { ...current } : undefined;
@@ -358,7 +367,13 @@ export const useAnnotationOperations = (
         ...current,
         annotations: current.annotations.map((ann) =>
           ann.id === annotationIdNumber
-            ? { ...ann, label: newType, name: newText, level: levelValue }
+            ? {
+                ...ann,
+                label: newType,
+                name: newText,
+                level: levelValue,
+                ...(retypedTo !== undefined && { annotation_type: retypedTo }),
+              }
             : ann
         ),
       });
