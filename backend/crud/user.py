@@ -1,6 +1,7 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
+from sqlalchemy.exc import IntegrityError
 from models.user import User, UserRole
 from schemas.user import UserCreate, UserUpdate
 
@@ -20,6 +21,7 @@ class UserCRUD:
             username=obj_in.username,
             email=obj_in.email,
             full_name=obj_in.full_name,
+            picture=obj_in.picture,
             role=obj_in.role,
             is_active=obj_in.is_active,
         )
@@ -224,18 +226,81 @@ class UserCRUD:
         """Check if Auth0 user ID is already taken."""
         return db.query(User).filter(User.auth0_user_id == auth0_user_id).first() is not None
 
+    def available_username(self, db: Session, desired: str, auth0_user_id: str) -> str:
+        """Return `desired`, or the first free numbered variant of it."""
+        base = (desired or "").strip() or auth0_user_id
+        if not self.is_username_taken(db, base):
+            return base
+        for suffix in range(2, 100):
+            candidate = f"{base}{suffix}"
+            if not self.is_username_taken(db, candidate):
+                return candidate
+        # Auth0 ids are unique, so this always resolves.
+        return f"{base}-{auth0_user_id}"
+
+    def sync_login_profile(self, db: Session, user: User, obj_in: UserCreate) -> User:
+        """Apply login details to an existing row.
+
+        Blank values are skipped: the register endpoint and the token path each
+        supply a different subset of the profile, so writing them unconditionally
+        makes them wipe each other's fields on alternate requests. The username
+        is left alone once set — the two paths derive it differently (Auth0
+        nickname vs. email local part) and would otherwise rename the user back
+        and forth on every call.
+        """
+        if obj_in.email:
+            user.email = obj_in.email
+        if obj_in.full_name:
+            user.full_name = obj_in.full_name
+        if obj_in.picture:
+            user.picture = obj_in.picture
+
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
+
     def upsert_by_auth0_id(self, db: Session, obj_in: UserCreate) -> User:
-        """Get or create user by Auth0 ID. Updates existing user with new details."""
+        """Get or create user by Auth0 ID. Updates existing user with new details.
+
+        When no row matches the Auth0 id, fall back to matching on email and adopt
+        that row by re-pointing its `auth0_user_id`. Without this, a user who
+        already has an account from another identity source — an admin-created
+        "manual|<email>" account, or an earlier login through a different Auth0
+        connection — collides with their own row's unique username/email on every
+        request and can never sign in.
+        """
         existing = self.get_by_auth0_id(db, obj_in.auth0_user_id)
-        if existing:
-            update_data = UserUpdate(
-                username=obj_in.username,
-                email=obj_in.email,
-                full_name=obj_in.full_name,
-                picture=obj_in.picture,
-            )
-            return self.update(db, existing, update_data)
-        return self.create(db, obj_in)
+
+        if existing is None and obj_in.email:
+            existing = self.get_by_email(db, obj_in.email)
+            if existing is not None:
+                existing.auth0_user_id = obj_in.auth0_user_id
+
+        if existing is not None:
+            return self.sync_login_profile(db, existing, obj_in)
+
+        to_create = obj_in.model_copy(
+            update={
+                "username": self.available_username(
+                    db, obj_in.username, obj_in.auth0_user_id
+                )
+            }
+        )
+        try:
+            return self.create(db, to_create)
+        except IntegrityError:
+            # Lost a race with a concurrent login, or the row collides on a
+            # column we cannot match on. Adopt the existing row if we can find it.
+            db.rollback()
+            existing = self.get_by_auth0_id(db, obj_in.auth0_user_id)
+            if existing is None and obj_in.email:
+                existing = self.get_by_email(db, obj_in.email)
+                if existing is not None:
+                    existing.auth0_user_id = obj_in.auth0_user_id
+            if existing is None:
+                raise
+            return self.sync_login_profile(db, existing, obj_in)
 
 
 user_crud = UserCRUD() 

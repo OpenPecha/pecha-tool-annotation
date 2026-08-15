@@ -6,7 +6,9 @@ from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from deps import get_db
+from crud.user import user_crud
 from models.user import User, UserRole
+from schemas.user import UserCreate
 import os
 from functools import lru_cache
 
@@ -118,38 +120,39 @@ def get_or_create_user_from_token(db: Session, token_payload: Dict[str, Any]) ->
     
     # Try to find existing user by Auth0 ID
     user = db.query(User).filter(User.auth0_user_id == user_id).first()
-    
+
     if not user:
         # Extract custom claims (same as Node.js)
         user_email = token_payload.get("https://pecha-tool/email")
         picture = token_payload.get("https://pecha-tool/picture")
-        
+
         if not user_email or not picture:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Email or picture claim missing from token"
             )
-        
+
         # Create username from email (same as Node.js: email.split("@")[0])
         username = user_email.split("@")[0]
-        
-        # Create new user (matching Node.js logic)
-        user = User(
-            auth0_user_id=user_id,
-            username=username,
-            email=user_email,
-            full_name=None,  # Not provided in Node.js version
-            role=UserRole.USER,  # Default role
-            is_active=True,
-            picture=picture  # Store picture URL
+
+        # Provision through the CRUD upsert so a user who already has a row under
+        # a different identity (manual admin account, other Auth0 connection)
+        # adopts it instead of colliding on the unique username/email.
+        user = user_crud.upsert_by_auth0_id(
+            db,
+            UserCreate(
+                auth0_user_id=user_id,
+                username=username,
+                email=user_email,
+                full_name=None,  # Not provided in Node.js version
+                picture=picture,
+                role=UserRole.USER,  # Default role
+                is_active=True,
+            ),
         )
-        
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        
-        print(f"✅ Created new user: {username} ({user_email})")
-    
+
+        print(f"✅ Provisioned user: {user.username} ({user_email})")
+
     return user
 
 
@@ -190,11 +193,16 @@ def authenticate(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication failed"
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"❌ Unexpected authentication error: {str(e)}")
+        # Not an auth failure — reporting it as 401 sends the client back through
+        # login forever instead of surfacing the real (usually database) error.
+        print(f"❌ Unexpected error while authenticating: {str(e)}")
+        db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not complete sign-in"
         )
 
 
