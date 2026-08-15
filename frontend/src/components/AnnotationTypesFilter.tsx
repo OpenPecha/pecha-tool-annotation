@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQueries } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { IoChevronDown, IoChevronForward } from "react-icons/io5";
 import {
   getDisplayLabelForFilter,
@@ -140,14 +140,19 @@ export const AnnotationTypesFilter = (props: AnnotationTypesFilterProps) => {
     [sortedDbTypes]
   );
 
-  const listQueries = useQueries({
-    queries: dbTypesWithIds.map((at) => ({
-      queryKey: queryKeys.annotationLists.byType(at.id),
-      queryFn: () => annotationListApi.getByTypeHierarchical(at.id),
-      enabled: Boolean(at.id),
-      staleTime: 5 * 60 * 1000,
-      retry: 2,
-    })),
+  const typeIds = useMemo(
+    () => dbTypesWithIds.map((at) => at.id),
+    [dbTypesWithIds]
+  );
+
+  // One request for every type's list. Asking per type opened a connection per
+  // annotation type on each page load, which exhausted the server's pool.
+  const listsQuery = useQuery({
+    queryKey: queryKeys.annotationLists.hierarchies(typeIds),
+    queryFn: () => annotationListApi.getHierarchiesByTypes(typeIds),
+    enabled: typeIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
   const listMetaByTypeId = useMemo(() => {
@@ -155,16 +160,17 @@ export const AnnotationTypesFilter = (props: AnnotationTypesFilterProps) => {
       string,
       { leaves: ReturnType<typeof extractLeafNodes>; isLoading: boolean }
     >();
-    dbTypesWithIds.forEach((at, i) => {
-      const q = listQueries[i];
+    const isLoading = listsQuery.isLoading;
+    dbTypesWithIds.forEach((at) => {
+      const hierarchy = listsQuery.data?.[at.id];
       const leaves =
-        q.data?.categories && q.data.categories.length > 0
-          ? extractLeafNodes(q.data.categories, 0)
+        hierarchy?.categories && hierarchy.categories.length > 0
+          ? extractLeafNodes(hierarchy.categories, 0)
           : [];
-      m.set(at.id, { leaves, isLoading: q.isLoading });
+      m.set(at.id, { leaves, isLoading });
     });
     return m;
-  }, [dbTypesWithIds, listQueries]);
+  }, [dbTypesWithIds, listsQuery.data, listsQuery.isLoading]);
 
   /** All types to show: every DB type, then any type that appears in the text but not in DB */
   const typesToRender = useMemo((): TypeRowModel[] => {

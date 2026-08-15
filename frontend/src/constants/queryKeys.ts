@@ -4,6 +4,8 @@ export const queryKeys = {
     all: ["annotation-lists"] as const,
     types: ["annotation-list-types"] as const,
     byType: (type: string) => ["annotation-list", type] as const,
+    hierarchies: (typeIds: string[]) =>
+      ["annotation-list-hierarchies", typeIds.join(",")] as const,
   },
 
   // Annotation Types

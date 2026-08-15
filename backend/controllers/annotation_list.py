@@ -1,6 +1,6 @@
 """Annotation list route actions. All functions take db, current_user, and request data; return result or raise HTTPException."""
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -11,6 +11,7 @@ from schemas.annotation_list import (
     AnnotationListCreate,
     AnnotationListUpdate,
     HierarchicalJSONInput,
+    HierarchicalJSONOutput,
     AnnotationListBulkCreateResponse,
 )
 
@@ -129,6 +130,28 @@ def get_annotation_lists_by_type_hierarchical(
             detail=f"No annotation lists found with type '{type_id}'",
         )
     return annotation_list_crud.reconstruct_hierarchy(items)
+
+
+def get_annotation_lists_hierarchies(
+    db: Session, current_user: User, type_ids: List[str]
+) -> Dict[str, HierarchicalJSONOutput]:
+    """Get hierarchies for several types in one call, keyed by type id.
+
+    The type filter panel needs a list per annotation type; asking for them one
+    request at a time opened a fan of parallel connections wide enough to
+    exhaust the pool. Types that are hidden or have no list are simply absent
+    from the result — for a batch, "nothing to show" is not an error.
+    """
+    grouped = annotation_list_crud.get_by_type_ids(db=db, type_ids=type_ids)
+    hierarchies: Dict[str, HierarchicalJSONOutput] = {}
+    for type_id, items in grouped.items():
+        if not items:
+            continue
+        annotation_type = items[0].annotation_type
+        if annotation_type and annotation_type.is_hidden:
+            continue
+        hierarchies[type_id] = annotation_list_crud.reconstruct_hierarchy(items)
+    return hierarchies
 
 
 def delete_annotation_lists_by_type(

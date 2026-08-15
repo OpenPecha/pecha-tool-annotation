@@ -1,6 +1,6 @@
 """Annotation lists API routes. Thin layer: dependencies and controller delegation."""
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 from sqlalchemy.orm import Session
@@ -55,6 +55,19 @@ async def upload_annotation_list_file(
     content = await file.read()
     return await annotation_list_controller.upload_annotation_list_file(
         db, current_user, content, file.filename or "unknown"
+    )
+
+
+@router.get("/hierarchies", response_model=Dict[str, HierarchicalJSONOutput])
+def get_annotation_lists_hierarchies(
+    type_ids: str = Query(..., description="Comma-separated annotation type ids"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Get hierarchies for several annotation types in one request, keyed by type id."""
+    ids = [type_id.strip() for type_id in type_ids.split(",") if type_id.strip()]
+    return annotation_list_controller.get_annotation_lists_hierarchies(
+        db, current_user, ids
     )
 
 

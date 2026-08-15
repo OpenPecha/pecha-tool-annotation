@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Any, Set
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from datetime import date
 import uuid
@@ -154,6 +154,27 @@ class AnnotationListCRUD:
     def get_by_type_id(self, db: Session, type_id: str) -> List[AnnotationList]:
         """Get all annotation lists by type ID."""
         return db.query(AnnotationList).filter(AnnotationList.type_id == type_id).all()
+
+    def get_by_type_ids(
+        self, db: Session, type_ids: List[str]
+    ) -> Dict[str, List[AnnotationList]]:
+        """Get annotation lists for several types at once, grouped by type ID.
+
+        One query for the rows plus an eager join on the type, so building N
+        hierarchies costs one round trip instead of 2N.
+        """
+        if not type_ids:
+            return {}
+        items = (
+            db.query(AnnotationList)
+            .options(joinedload(AnnotationList.annotation_type))
+            .filter(AnnotationList.type_id.in_(type_ids))
+            .all()
+        )
+        grouped: Dict[str, List[AnnotationList]] = {}
+        for item in items:
+            grouped.setdefault(item.type_id, []).append(item)
+        return grouped
     
     def get_children(self, db: Session, parent_id: str) -> List[AnnotationList]:
         """Get all children of a parent annotation list."""

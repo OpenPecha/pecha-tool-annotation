@@ -94,6 +94,20 @@ export const annotationListApi = {
     );
   },
 
+  /**
+   * Get hierarchies for several types in one request, keyed by type id.
+   * Types with no list are absent from the result.
+   */
+  getHierarchiesByTypes: async (
+    type_ids: string[]
+  ): Promise<Record<string, HierarchicalJSONOutput>> => {
+    if (type_ids.length === 0) return {};
+    return await apiClient.get<Record<string, HierarchicalJSONOutput>>(
+      `/annotation-lists/hierarchies`,
+      { type_ids: type_ids.join(",") }
+    );
+  },
+
   getAll: async (params?: AnnotationListFilters): Promise<AnnotationListResponse[]> => {
     return await apiClient.get<AnnotationListResponse[]>(
       `/annotation-lists/`,
