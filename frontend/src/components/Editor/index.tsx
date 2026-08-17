@@ -22,6 +22,51 @@ import {
 } from "./extensions/annotationField";
 import type { EditorProps, EditorRef } from "./types";
 
+/**
+ * Position a click-anchored popup (EditPopup/DeletePopup) near `rect`, flipping
+ * above when there isn't enough room below - same strategy as the selection
+ * bubble menu. `popupHeight` is only an estimate (actual content is variable:
+ * reviewer comments, label lists, etc.), so callers must also cap the popup's
+ * own CSS max-height/overflow as a safety net for when content exceeds it.
+ */
+const computeClickPopupPosition = (
+  rect: DOMRect,
+  popupWidth: number,
+  popupHeight: number
+) => {
+  const margin = 10;
+  const spacing = 5;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  let popupX = rect.left + rect.width / 2;
+  const popupHalfWidth = popupWidth / 2;
+  if (popupX - popupHalfWidth < margin) {
+    popupX = popupHalfWidth + margin;
+  } else if (popupX + popupHalfWidth > viewportWidth - margin) {
+    popupX = viewportWidth - popupHalfWidth - margin;
+  }
+
+  const spaceBelow = viewportHeight - rect.bottom;
+  const spaceAbove = rect.top;
+
+  let popupY =
+    spaceBelow >= popupHeight + margin + spacing
+      ? rect.bottom + spacing
+      : spaceAbove >= popupHeight + margin + spacing
+      ? rect.top - popupHeight - spacing
+      : spaceBelow > spaceAbove
+      ? rect.bottom + spacing
+      : rect.top - popupHeight - spacing;
+
+  if (popupY < margin) popupY = margin;
+  else if (popupY + popupHeight > viewportHeight - margin) {
+    popupY = viewportHeight - popupHeight - margin;
+  }
+
+  return { x: popupX, y: popupY };
+};
+
 export const Editor = forwardRef<EditorRef, EditorProps>(
   (
     {
@@ -157,28 +202,20 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
 
           // Handle annotation label click (same as clicking on annotation mark)
           {
-            const popupWidth = 256;
-            const popupHeight = 120;
-            const margin = 10;
+            // EditPopup's real height varies a lot (reviewer comments, label
+            // lists, type picker) - this is only a starting estimate; the
+            // popup's own CSS max-height/overflow is what actually guarantees
+            // it fits on short laptop screens.
+            const popupWidth = 450;
+            const popupHeight = 420;
 
             // Position popup near the label click using viewport coordinates
             const rect = (event.target as HTMLElement).getBoundingClientRect();
-            let popupX = rect.left + rect.width / 2;
-            let popupY = rect.bottom + 5;
-
-            // Ensure popup stays within viewport bounds
-            const popupHalfWidth = popupWidth / 2;
-            if (popupX - popupHalfWidth < margin) {
-              popupX = popupHalfWidth + margin;
-            } else if (popupX + popupHalfWidth > window.innerWidth - margin) {
-              popupX = window.innerWidth - popupHalfWidth - margin;
-            }
-
-            if (popupY < margin) {
-              popupY = margin;
-            } else if (popupY + popupHeight > window.innerHeight - margin) {
-              popupY = window.innerHeight - popupHeight - margin;
-            }
+            const { x: popupX, y: popupY } = computeClickPopupPosition(
+              rect,
+              popupWidth,
+              popupHeight
+            );
 
             // Store initial scroll position and edit popup position
             const scrollElement = editorRef.current?.view?.scrollDOM;
@@ -266,29 +303,16 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
             if (!hasMultiCharSelection) {
               const rect = annotationElement.getBoundingClientRect();
               {
-                const popupWidth = 256;
-                const popupHeight = 120;
-                const margin = 10;
+                // Same estimate/caveat as the label-click handler above -
+                // the popup's own CSS max-height/overflow is the real guard.
+                const popupWidth = 450;
+                const popupHeight = 420;
 
-                let popupX = rect.left + rect.width / 2;
-                let popupY = rect.bottom + 5;
-
-                // Ensure popup stays within viewport bounds
-                const popupHalfWidth = popupWidth / 2;
-                if (popupX - popupHalfWidth < margin) {
-                  popupX = popupHalfWidth + margin;
-                } else if (
-                  popupX + popupHalfWidth >
-                  window.innerWidth - margin
-                ) {
-                  popupX = window.innerWidth - popupHalfWidth - margin;
-                }
-
-                if (popupY < margin) {
-                  popupY = margin;
-                } else if (popupY + popupHeight > window.innerHeight - margin) {
-                  popupY = window.innerHeight - popupHeight - margin;
-                }
+                const { x: popupX, y: popupY } = computeClickPopupPosition(
+                  rect,
+                  popupWidth,
+                  popupHeight
+                );
 
                 // Store initial scroll position and edit popup position
                 const scrollElement = editorRef.current?.view?.scrollDOM;
@@ -457,7 +481,10 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               const viewportWidth = window.innerWidth;
               const viewportHeight = window.innerHeight;
               const bubbleWidth = 380;
-              const bubbleHeight = 350; // Must match BubbleMenu actual height (search, list max-h-60, buttons) to avoid overlapping selection
+              // Estimate only - actual height varies with content (search box,
+              // custom-add row, list, buttons) and can exceed this. BubbleMenu's
+              // own CSS max-height/overflow is what actually guarantees it fits.
+              const bubbleHeight = 480;
               const margin = 10;
 
               const spaceBelow = viewportHeight - selectionBottom;

@@ -294,11 +294,15 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
 
   const modalContent = (
     <div
-      className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50 w-[380px] max-w-[90vw] overflow-hidden"
+      className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50 w-[380px] max-w-[90vw] overflow-y-auto overflow-x-hidden"
       style={{
         left: `max(${position.x}px, 5vw)`,
         right: `max(calc(100vw - ${position.x}px), 5vw)`,
         top: `${position.y}px`,
+        // Position math above is only an estimate of this popup's height, so
+        // this is what actually guarantees it never renders taller than the
+        // viewport (with its own scrollbar) on short laptop screens.
+        maxHeight: `calc(100vh - ${position.y}px - 10px)`,
         transform: `translateX(${position.transformX})`,
       }}
     >

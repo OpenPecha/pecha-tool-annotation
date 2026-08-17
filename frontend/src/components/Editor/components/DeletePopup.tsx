@@ -23,10 +23,14 @@ export const DeletePopup: React.FC<DeletePopupProps> = ({
   const displayLabel = getAnnotationDisplayLabel(annotation);
   const modalContent = (
     <div
-      className="delete-popup fixed bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-64"
+      className="delete-popup fixed bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-64 overflow-y-auto"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
+        // Position math upstream only estimates this popup's height; this is
+        // what actually guarantees it never renders taller than the viewport
+        // (with its own scrollbar) on short laptop screens.
+        maxHeight: `calc(100vh - ${position.y}px - 10px)`,
         transform: "translateX(-50%)",
       }}
     >
