@@ -11,6 +11,7 @@ instead of raising, so a Redis outage never takes the API down with it.
 import json
 import logging
 import os
+import time
 from typing import Optional
 
 import redis
@@ -22,30 +23,44 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 TEXT_CONTENT_CACHE_TTL = int(os.getenv("TEXT_CONTENT_CACHE_TTL", "3600"))
 _CONTENT_KEY_PREFIX = "text:content:"
 
+# A remote, TLS-secured managed Redis (cross-region WAN + TLS handshake, and
+# free-tier instances can be slow to wake from idle) needs more headroom than
+# a local instance would.
+_SOCKET_TIMEOUT_SECONDS = 5
+_RETRY_COOLDOWN_SECONDS = 30
+
 _client: Optional["redis.Redis"] = None
-_client_unavailable = False
+_unavailable_until = 0.0
 
 
 def _get_client() -> Optional["redis.Redis"]:
-    """Lazily connect to Redis. Once a connection attempt fails, stop retrying
-    for the life of the process so a Redis outage doesn't add latency to every
-    request."""
-    global _client, _client_unavailable
-    if _client_unavailable:
+    """Lazily connect to Redis. On failure, stop retrying for a cooldown
+    window (not forever) so a single transient blip doesn't disable caching
+    for the rest of the process's life, while a genuine outage still doesn't
+    add connection-attempt latency to every request."""
+    global _client, _unavailable_until
+    if _client is not None:
+        return _client
+    now = time.monotonic()
+    if now < _unavailable_until:
         return None
-    if _client is None:
-        try:
-            _client = redis.from_url(
-                REDIS_URL,
-                decode_responses=True,
-                socket_connect_timeout=1,
-                socket_timeout=1,
-            )
-            _client.ping()
-        except RedisError as e:
-            logger.warning("Redis unavailable, text content caching disabled: %s", e)
-            _client_unavailable = True
-            _client = None
+    try:
+        client = redis.from_url(
+            REDIS_URL,
+            decode_responses=True,
+            socket_connect_timeout=_SOCKET_TIMEOUT_SECONDS,
+            socket_timeout=_SOCKET_TIMEOUT_SECONDS,
+        )
+        client.ping()
+        _client = client
+        logger.warning("[CACHE-DEBUG] Connected to Redis OK")  # TEMP DEBUG - remove after verifying
+    except RedisError as e:
+        logger.warning(
+            "Redis unavailable, text content caching disabled for %ss: %s",
+            _RETRY_COOLDOWN_SECONDS,
+            e,
+        )
+        _unavailable_until = now + _RETRY_COOLDOWN_SECONDS
     return _client
 
 
@@ -60,7 +75,9 @@ def get_cached_text_content(text_id: int) -> Optional[dict]:
         logger.warning("Redis GET failed for text %s: %s", text_id, e)
         return None
     if raw is None:
+        logger.warning("[CACHE-DEBUG] MISS for text %s", text_id)  # TEMP DEBUG - remove after verifying
         return None
+    logger.warning("[CACHE-DEBUG] HIT for text %s", text_id)  # TEMP DEBUG - remove after verifying
     try:
         return json.loads(raw)
     except ValueError:
@@ -81,6 +98,7 @@ def set_cached_text_content(
     )
     try:
         client.set(f"{_CONTENT_KEY_PREFIX}{text_id}", payload, ex=TEXT_CONTENT_CACHE_TTL)
+        logger.warning("[CACHE-DEBUG] SET for text %s", text_id)  # TEMP DEBUG - remove after verifying
     except RedisError as e:
         logger.warning("Redis SET failed for text %s: %s", text_id, e)
 
