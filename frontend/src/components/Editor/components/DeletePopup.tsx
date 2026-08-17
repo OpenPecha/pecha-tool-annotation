@@ -27,10 +27,11 @@ export const DeletePopup: React.FC<DeletePopupProps> = ({
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
-        // Position math upstream only estimates this popup's height; this is
-        // what actually guarantees it never renders taller than the viewport
-        // (with its own scrollbar) on short laptop screens.
-        maxHeight: `calc(100vh - ${position.y}px - 10px)`,
+        // computeVerticalPlacement already sized this so the popup fits in
+        // its side's available space without crossing into the annotation or
+        // off the viewport edge; overflow-y above lets it scroll internally
+        // if content is still taller than that.
+        maxHeight: `${position.maxHeight}px`,
         transform: "translateX(-50%)",
       }}
     >

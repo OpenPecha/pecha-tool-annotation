@@ -24,7 +24,7 @@ import { useAnnotationListHierarchical, useAnnotationTypes } from "@/hooks/";
 
 interface EditPopupProps {
   visible: boolean;
-  position: { x: number; y: number };
+  position: { x: number; y: number; maxHeight: number };
   annotation: Annotation | null;
   /** Full document content - used to derive selected text so display matches document (fixes XML encoding issues) */
   content?: string;
@@ -157,10 +157,11 @@ export const EditPopup: React.FC<EditPopupProps> = ({
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
-          // Position math upstream only estimates this popup's height; this is
-          // what actually guarantees it never renders taller than the viewport
-          // (with its own scrollbar) on short laptop screens.
-          maxHeight: `calc(100vh - ${position.y}px - 10px)`,
+          // computeVerticalPlacement already sized this so the popup fits in
+          // its side's available space without crossing into the annotation
+          // or off the viewport edge; overflow-y above lets it scroll
+          // internally if content is still taller than that.
+          maxHeight: `${position.maxHeight}px`,
           transform: "translateX(-50%)",
         }}
       >
@@ -322,10 +323,11 @@ export const EditPopup: React.FC<EditPopupProps> = ({
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
-        // Position math upstream only estimates this popup's height; this is
-        // what actually guarantees it never renders taller than the viewport
-        // (with its own scrollbar) on short laptop screens.
-        maxHeight: `calc(100vh - ${position.y}px - 10px)`,
+        // computeVerticalPlacement already sized this so the popup fits in
+        // its side's available space without crossing into the annotation
+        // or off the viewport edge; overflow-y above lets it scroll
+        // internally if content is still taller than that.
+        maxHeight: `${position.maxHeight}px`,
         transform: "translateX(-50%)",
       }}
     >

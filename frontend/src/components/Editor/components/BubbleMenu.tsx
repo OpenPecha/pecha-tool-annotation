@@ -299,10 +299,11 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
         left: `max(${position.x}px, 5vw)`,
         right: `max(calc(100vw - ${position.x}px), 5vw)`,
         top: `${position.y}px`,
-        // Position math above is only an estimate of this popup's height, so
-        // this is what actually guarantees it never renders taller than the
-        // viewport (with its own scrollbar) on short laptop screens.
-        maxHeight: `calc(100vh - ${position.y}px - 10px)`,
+        // computeVerticalPlacement already sized this so the popup fits in
+        // its side's available space without crossing into the selection or
+        // off the viewport edge; overflow-y above lets it scroll internally
+        // if content is still taller than that.
+        maxHeight: `${position.maxHeight}px`,
         transform: `translateX(${position.transformX})`,
       }}
     >

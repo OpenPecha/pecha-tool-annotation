@@ -53,12 +53,20 @@ export interface CurrentSelection {
 export interface BubbleMenuPosition {
   x: number;
   y: number;
+  /** Max height in px the popup may render at without overlapping its
+   * anchor (selection/annotation) or the viewport edge - see
+   * computeVerticalPlacement in Editor/index.tsx. */
+  maxHeight: number;
   transformX: string;
 }
 
 export interface DeletePopupPosition {
   x: number;
   y: number;
+  /** Max height in px the popup may render at without overlapping its
+   * anchor (selection/annotation) or the viewport edge - see
+   * computeVerticalPlacement in Editor/index.tsx. */
+  maxHeight: number;
 }
 
 export interface BubbleMenuProps {

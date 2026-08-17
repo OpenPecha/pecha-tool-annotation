@@ -22,49 +22,60 @@ import {
 } from "./extensions/annotationField";
 import type { EditorProps, EditorRef } from "./types";
 
+const POPUP_MARGIN = 10;
+const POPUP_MIN_HEIGHT = 120;
+const BUBBLE_SPACING = 20;
+const CLICK_POPUP_SPACING = 5;
+
 /**
- * Position a click-anchored popup (EditPopup/DeletePopup) near `rect`, flipping
- * above when there isn't enough room below - same strategy as the selection
- * bubble menu. `popupHeight` is only an estimate (actual content is variable:
- * reviewer comments, label lists, etc.), so callers must also cap the popup's
- * own CSS max-height/overflow as a safety net for when content exceeds it.
+ * Vertical placement for a popup anchored to [anchorTop, anchorBottom]
+ * (viewport coordinates - e.g. a text selection or a clicked annotation
+ * span): pins the popup to whichever side (below/above the anchor) has more
+ * room and shrinks it to fit that space, rather than ever repositioning it
+ * across to the other side. That means it can never end up covering the
+ * selection/annotation it's anchored to, and never renders outside the
+ * viewport - the popup's own CSS max-height/overflow-y is what makes the
+ * "shrink to fit" half of that true; this only decides how much room it gets.
  */
-const computeClickPopupPosition = (
-  rect: DOMRect,
-  popupWidth: number,
-  popupHeight: number
+const computeVerticalPlacement = (
+  anchorTop: number,
+  anchorBottom: number,
+  spacing: number
 ) => {
-  const margin = 10;
-  const spacing = 5;
-  const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
+  const spaceBelow = viewportHeight - anchorBottom;
+  const spaceAbove = anchorTop;
 
-  let popupX = rect.left + rect.width / 2;
+  if (spaceBelow >= spaceAbove) {
+    const y = anchorBottom + spacing;
+    return { y, maxHeight: Math.max(POPUP_MIN_HEIGHT, viewportHeight - y - POPUP_MARGIN) };
+  }
+  const y = POPUP_MARGIN;
+  return { y, maxHeight: Math.max(POPUP_MIN_HEIGHT, anchorTop - spacing - POPUP_MARGIN) };
+};
+
+/** Horizontal placement, centered on `centerX`, clamped within the viewport. */
+const computeHorizontalPlacement = (centerX: number, popupWidth: number) => {
+  const viewportWidth = window.innerWidth;
   const popupHalfWidth = popupWidth / 2;
-  if (popupX - popupHalfWidth < margin) {
-    popupX = popupHalfWidth + margin;
-  } else if (popupX + popupHalfWidth > viewportWidth - margin) {
-    popupX = viewportWidth - popupHalfWidth - margin;
+  let x = centerX;
+  if (x - popupHalfWidth < POPUP_MARGIN) {
+    x = popupHalfWidth + POPUP_MARGIN;
+  } else if (x + popupHalfWidth > viewportWidth - POPUP_MARGIN) {
+    x = viewportWidth - popupHalfWidth - POPUP_MARGIN;
   }
+  return x;
+};
 
-  const spaceBelow = viewportHeight - rect.bottom;
-  const spaceAbove = rect.top;
-
-  let popupY =
-    spaceBelow >= popupHeight + margin + spacing
-      ? rect.bottom + spacing
-      : spaceAbove >= popupHeight + margin + spacing
-      ? rect.top - popupHeight - spacing
-      : spaceBelow > spaceAbove
-      ? rect.bottom + spacing
-      : rect.top - popupHeight - spacing;
-
-  if (popupY < margin) popupY = margin;
-  else if (popupY + popupHeight > viewportHeight - margin) {
-    popupY = viewportHeight - popupHeight - margin;
-  }
-
-  return { x: popupX, y: popupY };
+/** Position a click-anchored popup (EditPopup/DeletePopup) near `rect` - see computeVerticalPlacement. */
+const computeClickPopupPosition = (rect: DOMRect, popupWidth: number) => {
+  const x = computeHorizontalPlacement(rect.left + rect.width / 2, popupWidth);
+  const { y, maxHeight } = computeVerticalPlacement(
+    rect.top,
+    rect.bottom,
+    CLICK_POPUP_SPACING
+  );
+  return { x, y, maxHeight };
 };
 
 export const Editor = forwardRef<EditorRef, EditorProps>(
@@ -133,12 +144,21 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       top: 0,
       left: 0,
     });
-    const initialBubblePositionRef = useRef<{ x: number; y: number } | null>(
-      null
-    );
-    const initialEditPopupPositionRef = useRef<{ x: number; y: number } | null>(
-      null
-    );
+    // anchorTop/anchorBottom are the selection/element's viewport-relative
+    // bounds at the moment the popup opened - scrolling shifts them by the
+    // same delta as the popup, so re-running computeVerticalPlacement with
+    // the shifted bounds keeps the "never overlap the anchor" guarantee as
+    // the user scrolls, instead of just translating a fixed y by the delta.
+    const initialBubblePositionRef = useRef<{
+      x: number;
+      anchorTop: number;
+      anchorBottom: number;
+    } | null>(null);
+    const initialEditPopupPositionRef = useRef<{
+      x: number;
+      anchorTop: number;
+      anchorBottom: number;
+    } | null>(null);
 
     const editorRef = useAnnotationEffects(annotations, editorReady);
 
@@ -202,19 +222,13 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
 
           // Handle annotation label click (same as clicking on annotation mark)
           {
-            // EditPopup's real height varies a lot (reviewer comments, label
-            // lists, type picker) - this is only a starting estimate; the
-            // popup's own CSS max-height/overflow is what actually guarantees
-            // it fits on short laptop screens.
             const popupWidth = 450;
-            const popupHeight = 420;
 
             // Position popup near the label click using viewport coordinates
             const rect = (event.target as HTMLElement).getBoundingClientRect();
-            const { x: popupX, y: popupY } = computeClickPopupPosition(
+            const { x: popupX, y: popupY, maxHeight } = computeClickPopupPosition(
               rect,
-              popupWidth,
-              popupHeight
+              popupWidth
             );
 
             // Store initial scroll position and edit popup position
@@ -224,10 +238,14 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                 top: scrollElement.scrollTop,
                 left: scrollElement.scrollLeft,
               };
-              initialEditPopupPositionRef.current = { x: popupX, y: popupY };
+              initialEditPopupPositionRef.current = {
+                x: popupX,
+                anchorTop: rect.top,
+                anchorBottom: rect.bottom,
+              };
             }
 
-            setEditPopupPosition({ x: popupX, y: popupY });
+            setEditPopupPosition({ x: popupX, y: popupY, maxHeight });
             setAnnotationToEdit(annotation);
             setEditPopupVisible(true);
             setBubbleMenuVisible(false);
@@ -303,15 +321,11 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
             if (!hasMultiCharSelection) {
               const rect = annotationElement.getBoundingClientRect();
               {
-                // Same estimate/caveat as the label-click handler above -
-                // the popup's own CSS max-height/overflow is the real guard.
                 const popupWidth = 450;
-                const popupHeight = 420;
 
-                const { x: popupX, y: popupY } = computeClickPopupPosition(
+                const { x: popupX, y: popupY, maxHeight } = computeClickPopupPosition(
                   rect,
-                  popupWidth,
-                  popupHeight
+                  popupWidth
                 );
 
                 // Store initial scroll position and edit popup position
@@ -323,11 +337,12 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
                   };
                   initialEditPopupPositionRef.current = {
                     x: popupX,
-                    y: popupY,
+                    anchorTop: rect.top,
+                    anchorBottom: rect.bottom,
                   };
                 }
 
-                setEditPopupPosition({ x: popupX, y: popupY });
+                setEditPopupPosition({ x: popupX, y: popupY, maxHeight });
                 setAnnotationToEdit(annotation);
                 setEditPopupVisible(true);
                 setBubbleMenuVisible(false);
@@ -388,21 +403,34 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         const scrollDeltaX =
           currentScrollLeft - initialScrollPositionRef.current.left;
 
-        // Update bubble menu position if visible
+        // Update bubble menu position if visible - recompute (not just
+        // translate) so it keeps shrinking/growing to fit as the anchor's
+        // position relative to the viewport edges changes with scroll,
+        // instead of dragging a stale maxHeight along with it.
         if (bubbleMenuVisible && initialBubblePositionRef.current) {
+          const { x, anchorTop, anchorBottom } = initialBubblePositionRef.current;
+          const { y, maxHeight } = computeVerticalPlacement(
+            anchorTop - scrollDeltaY,
+            anchorBottom - scrollDeltaY,
+            BUBBLE_SPACING
+          );
           setBubbleMenuPosition({
-            x: initialBubblePositionRef.current.x - scrollDeltaX,
-            y: initialBubblePositionRef.current.y - scrollDeltaY,
+            x: x - scrollDeltaX,
+            y,
+            maxHeight,
             transformX: "-50%",
           });
         }
 
-        // Update edit popup position if visible
+        // Update edit popup position if visible (same reasoning as above)
         if (editPopupVisible && initialEditPopupPositionRef.current) {
-          setEditPopupPosition({
-            x: initialEditPopupPositionRef.current.x - scrollDeltaX,
-            y: initialEditPopupPositionRef.current.y - scrollDeltaY,
-          });
+          const { x, anchorTop, anchorBottom } = initialEditPopupPositionRef.current;
+          const { y, maxHeight } = computeVerticalPlacement(
+            anchorTop - scrollDeltaY,
+            anchorBottom - scrollDeltaY,
+            CLICK_POPUP_SPACING
+          );
+          setEditPopupPosition({ x: x - scrollDeltaX, y, maxHeight });
         }
       };
 
@@ -478,54 +506,35 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
               );
               const selectionTop = Math.min(startCoords.top, endCoords.top);
 
-              const viewportWidth = window.innerWidth;
-              const viewportHeight = window.innerHeight;
               const bubbleWidth = 380;
-              // Estimate only - actual height varies with content (search box,
-              // custom-add row, list, buttons) and can exceed this. BubbleMenu's
-              // own CSS max-height/overflow is what actually guarantees it fits.
-              const bubbleHeight = 480;
-              const margin = 10;
 
-              const spaceBelow = viewportHeight - selectionBottom;
-              const spaceAbove = selectionTop;
-              const bubbleSpacing = 20;
-
-              let bubbleY =
-                spaceBelow >= bubbleHeight + margin + bubbleSpacing
-                  ? selectionBottom + bubbleSpacing
-                  : spaceAbove >= bubbleHeight + margin + bubbleSpacing
-                  ? selectionTop - bubbleHeight - bubbleSpacing
-                  : spaceBelow > spaceAbove
-                  ? selectionBottom + bubbleSpacing
-                  : selectionTop - bubbleHeight - bubbleSpacing;
-
-              if (bubbleY < margin) bubbleY = margin;
-              else if (bubbleY + bubbleHeight > viewportHeight - margin) {
-                bubbleY = viewportHeight - bubbleHeight - margin;
-              }
-
-              let bubbleX = selectionCenterX;
-              const bubbleTransformX = "-50%";
-              const bubbleHalfWidth = bubbleWidth / 2;
-
-              if (bubbleX - bubbleHalfWidth < margin) {
-                bubbleX = bubbleHalfWidth + margin;
-              } else if (bubbleX + bubbleHalfWidth > viewportWidth - margin) {
-                bubbleX = viewportWidth - bubbleHalfWidth - margin;
-              }
+              const bubbleX = computeHorizontalPlacement(
+                selectionCenterX,
+                bubbleWidth
+              );
+              const { y: bubbleY, maxHeight: bubbleMaxHeight } =
+                computeVerticalPlacement(
+                  selectionTop,
+                  selectionBottom,
+                  BUBBLE_SPACING
+                );
 
               const scrollElement = editorRef.current.view.scrollDOM;
               initialScrollPositionRef.current = {
                 top: scrollElement.scrollTop,
                 left: scrollElement.scrollLeft,
               };
-              initialBubblePositionRef.current = { x: bubbleX, y: bubbleY };
+              initialBubblePositionRef.current = {
+                x: bubbleX,
+                anchorTop: selectionTop,
+                anchorBottom: selectionBottom,
+              };
 
               setBubbleMenuPosition({
                 x: bubbleX,
                 y: bubbleY,
-                transformX: bubbleTransformX,
+                maxHeight: bubbleMaxHeight,
+                transformX: "-50%",
               });
               setBubbleMenuVisible(true);
             }

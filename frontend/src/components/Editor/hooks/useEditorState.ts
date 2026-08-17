@@ -14,6 +14,7 @@ export const useEditorState = () => {
     useState<BubbleMenuPosition>({
       x: 0,
       y: 0,
+      maxHeight: 0,
       transformX: "-50%",
     });
   const [annotationText, setAnnotationText] = useState("");
@@ -24,6 +25,7 @@ export const useEditorState = () => {
     useState<DeletePopupPosition>({
       x: 0,
       y: 0,
+      maxHeight: 0,
     });
   const [annotationToDelete, setAnnotationToDelete] =
     useState<Annotation | null>(null);
@@ -32,6 +34,7 @@ export const useEditorState = () => {
     useState<DeletePopupPosition>({
       x: 0,
       y: 0,
+      maxHeight: 0,
     });
   const [annotationToEdit, setAnnotationToEdit] = useState<Annotation | null>(
     null
