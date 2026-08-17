@@ -102,6 +102,25 @@ class AnnotationCRUD:
         ).first()
         return agreed_review is not None
 
+    def _attach_is_agreed(self, db: Session, annotations: List[Annotation]) -> List[Annotation]:
+        """Set is_agreed on every annotation in one query instead of one query per annotation."""
+        if not annotations:
+            return annotations
+        annotation_ids = [a.id for a in annotations]
+        agreed_ids = {
+            row[0]
+            for row in db.query(AnnotationReview.annotation_id)
+            .filter(
+                AnnotationReview.annotation_id.in_(annotation_ids),
+                AnnotationReview.decision == "agree",
+            )
+            .distinct()
+            .all()
+        }
+        for annotation in annotations:
+            annotation.is_agreed = annotation.id in agreed_ids
+        return annotations
+
     def get_multi(
         self, 
         db: Session, 
@@ -125,12 +144,8 @@ class AnnotationCRUD:
         
         query = query.order_by(Annotation.created_at.desc())
         annotations = query.offset(skip).limit(limit).all()
-        
-        # Add is_agreed status for each annotation
-        for annotation in annotations:
-            annotation.is_agreed = self.is_annotation_agreed(db, annotation.id)
-        
-        return annotations
+
+        return self._attach_is_agreed(db, annotations)
 
     def get_by_text(self, db: Session, text_id: int) -> List[Annotation]:
         """Get all annotations for a specific text, ordered by created_at descending."""
@@ -140,12 +155,8 @@ class AnnotationCRUD:
             .order_by(Annotation.created_at.desc())
             .all()
         )
-        
-        # Add is_agreed status for each annotation
-        for annotation in annotations:
-            annotation.is_agreed = self.is_annotation_agreed(db, annotation.id)
-        
-        return annotations
+
+        return self._attach_is_agreed(db, annotations)
 
     def get_by_annotator(self, db: Session, annotator_id: int, skip: int = 0, limit: int = 100) -> List[Annotation]:
         """Get annotations by a specific annotator, ordered by created_at descending."""
@@ -157,12 +168,8 @@ class AnnotationCRUD:
             .limit(limit)
             .all()
         )
-        
-        # Add is_agreed status for each annotation
-        for annotation in annotations:
-            annotation.is_agreed = self.is_annotation_agreed(db, annotation.id)
-        
-        return annotations
+
+        return self._attach_is_agreed(db, annotations)
 
     def get_by_type(self, db: Session, annotation_type: str, skip: int = 0, limit: int = 100) -> List[Annotation]:
         """Get annotations by type, ordered by created_at descending."""
@@ -174,12 +181,8 @@ class AnnotationCRUD:
             .limit(limit)
             .all()
         )
-        
-        # Add is_agreed status for each annotation
-        for annotation in annotations:
-            annotation.is_agreed = self.is_annotation_agreed(db, annotation.id)
-        
-        return annotations
+
+        return self._attach_is_agreed(db, annotations)
 
     def update(self, db: Session, db_obj: Annotation, obj_in: AnnotationUpdate) -> Annotation:
         """Update annotation."""

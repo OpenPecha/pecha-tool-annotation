@@ -1,11 +1,14 @@
 from typing import List, Optional
 from datetime import datetime, timezone
-from sqlalchemy.orm import Session, joinedload, defer
+from sqlalchemy.orm import Session, joinedload, defer, attributes
 from sqlalchemy import func, and_, exists, select, or_
 from models.text import Text, INITIALIZED, ANNOTATED, REVIEWED, REVIEWED_NEEDS_REVISION, SKIPPED, PROGRESS, VALID_STATUSES
 from models.text_permission import TextPermission, TEXT_PERMISSION_READ, TEXT_PERMISSION_WRITE
 from models.annotation import Annotation
 from schemas.text import TextCreate, TextListResponse, TextUpdate
+from cache import get_cached_text_content, set_cached_text_content, invalidate_text_content
+
+_CONTENT_FIELDS = ("content", "translation", "diplomatic_text")
 
 
 class TextCRUD:
@@ -138,13 +141,39 @@ class TextCRUD:
             joinedload(Text.uploader)
         ).filter(Text.id == text_id).first()
 
+    def _populate_content_fields(self, db: Session, text: Text) -> None:
+        """Fill content/translation/diplomatic_text on a Text row loaded with those
+        columns deferred, serving them from Redis when available. On a cache miss,
+        fetch just those columns and populate the cache for next time."""
+        cached = get_cached_text_content(text.id)
+        if cached is not None:
+            for field in _CONTENT_FIELDS:
+                attributes.set_committed_value(text, field, cached.get(field))
+            return
+
+        row = (
+            db.query(Text.content, Text.translation, Text.diplomatic_text)
+            .filter(Text.id == text.id)
+            .one()
+        )
+        for field in _CONTENT_FIELDS:
+            attributes.set_committed_value(text, field, getattr(row, field))
+        set_cached_text_content(text.id, row.content, row.translation, row.diplomatic_text)
+
     def get_with_annotations(self, db: Session, text_id: int) -> Optional[Text]:
-        """Get text with its annotations."""
-        return self._not_deleted(db.query(Text)).options(
+        """Get text with its annotations. content/translation/diplomatic_text are
+        served from Redis when cached, falling back to Postgres on a miss."""
+        text = self._not_deleted(db.query(Text)).options(
             joinedload(Text.annotator),
             joinedload(Text.reviewer),
-            joinedload(Text.uploader)
+            joinedload(Text.uploader),
+            defer(Text.content),
+            defer(Text.translation),
+            defer(Text.diplomatic_text),
         ).filter(Text.id == text_id).first()
+        if text:
+            self._populate_content_fields(db, text)
+        return text
 
     def get_by_title(self, db: Session, title: str) -> Optional[Text]:
         """Get text by title."""
@@ -229,6 +258,8 @@ class TextCRUD:
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
+        if _CONTENT_FIELDS & obj_data.keys():
+            invalidate_text_content(db_obj.id)
         return db_obj
 
     def update_status(self, db: Session, text_id: int, status: str, reviewer_id: Optional[int] = None) -> Optional[Text]:
@@ -249,6 +280,7 @@ class TextCRUD:
         if obj:
             db.delete(obj)
             db.commit()
+            invalidate_text_content(text_id)
         return obj
 
     def soft_delete(self, db: Session, text_id: int) -> Optional[Text]:
@@ -411,41 +443,52 @@ class TextCRUD:
         """Get recent texts annotated or reviewed by the user with annotation review counts."""
         from models.annotation import Annotation
         from models.annotation_review import AnnotationReview
-        
+
         # Get recent texts
         recent_texts = self.get_recent_activity(db, user_id, limit, user_role)
-        
+        if not recent_texts:
+            return []
+
+        text_ids = [text.id for text in recent_texts]
+
+        # One query for annotation counts per text, instead of one query per text.
+        annotation_counts = dict(
+            db.query(Annotation.text_id, func.count(Annotation.id))
+            .filter(Annotation.text_id.in_(text_ids))
+            .group_by(Annotation.text_id)
+            .all()
+        )
+
+        # One query for review decision counts per text, instead of one query per annotation.
+        review_rows = (
+            db.query(
+                Annotation.text_id,
+                AnnotationReview.decision,
+                func.count(AnnotationReview.id),
+            )
+            .join(AnnotationReview, AnnotationReview.annotation_id == Annotation.id)
+            .filter(Annotation.text_id.in_(text_ids))
+            .group_by(Annotation.text_id, AnnotationReview.decision)
+            .all()
+        )
+        review_counts_by_text: dict = {}
+        for text_id, decision, count in review_rows:
+            counts = review_counts_by_text.setdefault(text_id, {"agree": 0, "disagree": 0})
+            if decision in counts:
+                counts[decision] = count
+
         result = []
         for text in recent_texts:
-            # Get all annotations for this text
-            annotations = db.query(Annotation).filter(Annotation.text_id == text.id).all()
-            
-            # Count total annotations
-            total_annotations = len(annotations)
-            
-            # Count accepted and rejected annotations
-            accepted_count = 0
-            rejected_count = 0
-            
-            for annotation in annotations:
-                reviews = db.query(AnnotationReview).filter(
-                    AnnotationReview.annotation_id == annotation.id
-                ).all()
-                
-                # For each annotation, check if there are reviews
-                if reviews:
-                    # Count agree vs disagree decisions
-                    for review in reviews:
-                        if review.decision == "agree":
-                            accepted_count += 1
-                        elif review.decision == "disagree":
-                            rejected_count += 1
-            
+            total_annotations = annotation_counts.get(text.id, 0)
+            counts = review_counts_by_text.get(text.id, {"agree": 0, "disagree": 0})
+            accepted_count = counts["agree"]
+            rejected_count = counts["disagree"]
+
             # Calculate if all annotations are accepted (no rejections and all have reviews)
-            all_accepted = (total_annotations > 0 and 
-                           rejected_count == 0 and 
+            all_accepted = (total_annotations > 0 and
+                           rejected_count == 0 and
                            accepted_count == total_annotations)
-            
+
             result.append({
                 "text": text,
                 "total_annotations": total_annotations,
@@ -453,7 +496,7 @@ class TextCRUD:
                 "rejected_count": rejected_count,
                 "all_accepted": all_accepted
             })
-        
+
         return result
 
     def get_user_stats(self, db: Session, user_id: int) -> dict:
