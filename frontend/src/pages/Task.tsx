@@ -358,11 +358,19 @@ const Index = () => {
     });
   }, [annotationsForUI, selectedAnnotationTypes]);
   /**
-   * Annotations without headers (for sidebar display)
+   * Annotations for the sidebar list: only ones added in the tool by a real
+   * annotator, not pre-loaded from an XML/bulk upload (those carry no
+   * annotator_id) - otherwise the list is dominated by preloaded entries and
+   * a freshly added annotation is hard to spot. Deliberately independent of
+   * the highlight type-filter (`filteredAnnotations`) so a new annotation
+   * always shows here regardless of which types are toggled on for in-editor
+   * highlighting.
    */
-  const annotationsWithoutHeader = useMemo(() => {
-    return filteredAnnotations.filter((ann) => ann.type !== "header");
-  }, [filteredAnnotations]);
+  const sidebarAnnotations = useMemo(() => {
+    return annotationsForUI.filter(
+      (ann) => ann.type !== "header" && ann.annotator_id != null
+    );
+  }, [annotationsForUI]);
   const dbUserId = currentUserId ?? undefined;
   const canDeleteMyText =
     !!parsedTextId &&
@@ -539,7 +547,7 @@ const Index = () => {
             }
           />
           <AnnotationSidebar
-            annotations={annotationsWithoutHeader}
+            annotations={sidebarAnnotations}
             fullText={text}
             isBulkOperationPending={isCreatingAnnotation || isDeletingAnnotation || isBulkOperationPending}
             onRemoveAnnotation={guardedRemoveAnnotation}
