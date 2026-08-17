@@ -21,8 +21,6 @@ type AnnotationForFilter = {
   annotation_type?: string;
   label?: string | null;
   name?: string | null;
-  /** null/undefined means preloaded (XML/bulk upload), not added in the tool */
-  annotator_id?: number | null;
 };
 
 /** Filter option: key is type|label, displayLabel is the label part for showing under a type group */
@@ -83,17 +81,10 @@ export const AnnotationTypesFilter = (props: AnnotationTypesFilterProps) => {
     });
   };
 
-  // Preloaded annotations (XML/bulk upload) have no annotator_id - exclude them
-  // so the filter panel's counts/options reflect only annotations added in the tool.
-  const toolAddedAnnotations = useMemo(
-    () => annotations.filter((a) => a.annotator_id != null),
-    [annotations]
-  );
-
   // Build filter keys (type|label) with counts, grouped by annotation type (from current text)
   const groupedByType = useMemo(() => {
     const counts = new Map<string, number>();
-    toolAddedAnnotations.forEach((annotation) => {
+    annotations.forEach((annotation) => {
       const key = getDisplayLabelForFilter(annotation);
       if (key) counts.set(key, (counts.get(key) || 0) + 1);
     });
@@ -122,7 +113,7 @@ export const AnnotationTypesFilter = (props: AnnotationTypesFilterProps) => {
     return Array.from(byType.entries()).sort((a, b) =>
       a[0].localeCompare(b[0])
     );
-  }, [toolAddedAnnotations, selectedAnnotationTypes]);
+  }, [annotations, selectedAnnotationTypes]);
 
   const optsByTypeName = useMemo(() => {
     const m = new Map<string, FilterOption[]>();
@@ -132,12 +123,12 @@ export const AnnotationTypesFilter = (props: AnnotationTypesFilterProps) => {
 
   const countsByFilterKey = useMemo(() => {
     const m = new Map<string, number>();
-    toolAddedAnnotations.forEach((annotation) => {
+    annotations.forEach((annotation) => {
       const key = getDisplayLabelForFilter(annotation);
       if (key) m.set(key, (m.get(key) || 0) + 1);
     });
     return m;
-  }, [toolAddedAnnotations]);
+  }, [annotations]);
 
   const sortedDbTypes = useMemo(
     () => [...dbAnnotationTypes].sort((a, b) => a.name.localeCompare(b.name)),

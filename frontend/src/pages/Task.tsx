@@ -349,6 +349,9 @@ const Index = () => {
   /**
    * Only show annotations when selected in the filter (no annotations by default).
    * Headers are shown only when "header" (or their display label) is selected.
+   * Includes preloaded annotations (no annotator_id) - this drives in-editor
+   * highlighting, which should reflect every annotation in the document
+   * regardless of origin.
    */
   const filteredAnnotations = useMemo(() => {
     if (selectedAnnotationTypes.size === 0) return [];
@@ -358,13 +361,14 @@ const Index = () => {
     });
   }, [annotationsForUI, selectedAnnotationTypes]);
   /**
-   * Annotations for the sidebar list: only ones added in the tool by a real
-   * annotator, not pre-loaded from an XML/bulk upload (those carry no
-   * annotator_id) - otherwise the list is dominated by preloaded entries and
-   * a freshly added annotation is hard to spot. Deliberately independent of
-   * the highlight type-filter (`filteredAnnotations`) so a new annotation
+   * Annotations for the right-hand sidebar list only: ones added in the tool
+   * by a real annotator, not pre-loaded from an XML/bulk upload (those carry
+   * no annotator_id) - otherwise the list is dominated by preloaded entries
+   * and a freshly added annotation is hard to spot. Deliberately independent
+   * of the highlight type-filter (`filteredAnnotations`) so a new annotation
    * always shows here regardless of which types are toggled on for in-editor
-   * highlighting.
+   * highlighting. Scoped to just this list - the left filter panel and the
+   * editor's own highlighting intentionally still include preloaded ones.
    */
   const sidebarAnnotations = useMemo(() => {
     return annotationsForUI.filter(
