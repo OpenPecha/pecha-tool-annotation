@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { IoChevronDown, IoChevronForward } from "react-icons/io5";
+import { IoChevronBack, IoChevronDown, IoChevronForward } from "react-icons/io5";
 import {
   getDisplayLabelForFilter,
   getFilterKey,
@@ -40,6 +40,8 @@ interface AnnotationTypesFilterProps {
   onDeselectAllAnnotationTypes: () => void;
   /** Set selection to exactly these keys (e.g. "show only this type") */
   onSetSelectedAnnotationTypes?: (filterKeys: Set<string>) => void;
+  /** When provided, shows a collapse button in the panel header. */
+  onCollapse?: () => void;
 }
 
 const getSectionSelectionState = (
@@ -61,6 +63,7 @@ export const AnnotationTypesFilter = (props: AnnotationTypesFilterProps) => {
     selectedAnnotationTypes,
     onToggleAnnotationType,
     onSetSelectedAnnotationTypes,
+    onCollapse,
   } = props;
   const { annotationTypeColors } = useAnnotationColors();
   const {
@@ -300,7 +303,16 @@ export const AnnotationTypesFilter = (props: AnnotationTypesFilterProps) => {
           <span className="text-xs font-medium text-gray-700">
             Filter by Annotations
           </span>
-        
+          {onCollapse && (
+            <button
+              type="button"
+              onClick={onCollapse}
+              className="p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors"
+              title="Hide filter panel"
+            >
+              <IoChevronBack className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
         <div className="px-3 pb-2 flex items-center gap-2 border-b border-gray-100 bg-gray-50">
           <input

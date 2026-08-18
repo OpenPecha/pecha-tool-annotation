@@ -15,6 +15,7 @@ import { getAnnotationDisplayLabel, getDisplayLabelForFilter, type Annotation } 
 import {
   isStructuralAnnotationType,
   getStructuralAnnotationType,
+  POSITION_STRUCTURAL_TYPE_IDS,
 } from "@/config/structural-annotations";
 import { truncateText } from "@/lib/utils";
 
@@ -118,6 +119,12 @@ function GroupHeader({
   if (!first) return null;
   const hasAgreed = group.items.some((a) => a.is_agreed);
   const canModify = !hasAgreed && canEdit;
+  // Line/page breaks are zero-width position markers: they have no selected
+  // text, so "apply to all occurrences of this text" is meaningless for them.
+  const isPositionMarker = POSITION_STRUCTURAL_TYPE_IDS.includes(first.type);
+  const groupTitle = isPositionMarker
+    ? getStructuralAnnotationType(first.type)?.name ?? first.type
+    : `"${truncateText(first.text, 25)}"`;
 
   return (
     <div className="flex flex-col items-stretch gap-1 p-2 rounded-md border border-gray-200 bg-gray-50/80 hover:bg-gray-100/80 transition-colors">
@@ -132,8 +139,8 @@ function GroupHeader({
           className={`h-3.5 w-3.5 text-gray-600 transition-transform flex-shrink-0 ${isExpanded ? "rotate-90" : ""}`}
         />
         <div className="flex items-center gap-1.5 justify-between min-w-0 flex-1">
-          <span className="text-xs font-monlam leading-tight text-gray-900 truncate" title={first.text}>
-            "{truncateText(first.text, 25)}"
+          <span className="font-monlam-2 text-gray-900 truncate" title={first.text}>
+            {groupTitle}
           </span>
           <Badge
             variant="secondary"
@@ -163,7 +170,7 @@ function GroupHeader({
             </span>
           )}
           <div className="flex items-center gap-0.5 relative">
-            {onApplyToAll && (
+            {onApplyToAll && !isPositionMarker && (
               <Button
                 variant="ghost"
                 size="sm"

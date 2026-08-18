@@ -8,8 +8,8 @@ import React, {
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
-import { EditorView } from "@codemirror/view";
-import { EditorSelection } from "@codemirror/state";
+import { EditorView, keymap } from "@codemirror/view";
+import { EditorSelection, EditorState, Prec } from "@codemirror/state";
 import { BubbleMenu } from "./components/BubbleMenu";
 import { DeletePopup } from "./components/DeletePopup";
 import { EditPopup } from "./components/EditPopup";
@@ -161,6 +161,67 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     } | null>(null);
 
     const editorRef = useAnnotationEffects(annotations, editorReady);
+
+    // Latest props for the CodeMirror keymap handlers below - the extensions
+    // array is rebuilt every render, but refs keep the handlers safe even if
+    // CodeMirror holds on to an older configuration for a tick.
+    const annotationsRef = useRef(annotations);
+    annotationsRef.current = annotations;
+    const readOnlyRef = useRef(readOnly);
+    readOnlyRef.current = readOnly;
+    const onAddAnnotationRef = useRef(onAddAnnotation);
+    onAddAnnotationRef.current = onAddAnnotation;
+    const onRemoveAnnotationRef = useRef(onRemoveAnnotation);
+    onRemoveAnnotationRef.current = onRemoveAnnotation;
+    const isCreatingAnnotationRef = useRef(isCreatingAnnotation);
+    isCreatingAnnotationRef.current = isCreatingAnnotation;
+
+    /**
+     * Line/page-break markers are keyboard-driven instead of popup-driven:
+     * Enter inserts a line-break annotation at the cursor, Shift+Enter a
+     * page-break, Backspace/Delete removes the marker sitting at the cursor.
+     * The handlers always consume the key (return true) so the underlying
+     * document text - which this tool never edits - can't be modified.
+     */
+    const insertBreakMarker = useCallback(
+      (view: EditorView, type: "line-break" | "page-break") => {
+        if (readOnlyRef.current) return true;
+        const range = view.state.selection.main;
+        // Only a bare cursor marks a break position; with a text selection
+        // Enter is just swallowed so it can't replace the selection.
+        if (!range.empty) return true;
+        if (isCreatingAnnotationRef.current) return true;
+        const pos = range.head;
+        const alreadyThere = annotationsRef.current.some(
+          (ann) => ann.type === type && ann.start === pos && ann.end === pos
+        );
+        if (!alreadyThere) {
+          // The parent's selected-text state already tracks the cursor
+          // (every selection change flows through onTextSelect), so the add
+          // handler creates the marker at the current cursor position.
+          onAddAnnotationRef.current(type);
+        }
+        return true;
+      },
+      []
+    );
+
+    const deleteBreakMarker = useCallback((view: EditorView) => {
+      if (readOnlyRef.current) return true;
+      const range = view.state.selection.main;
+      if (range.empty) {
+        const pos = range.head;
+        const marker = annotationsRef.current.find(
+          (ann) =>
+            (ann.type === "line-break" || ann.type === "page-break") &&
+            ann.start === pos &&
+            ann.end === pos
+        );
+        // Agreed (locked) markers are rejected downstream with a toast.
+        if (marker) onRemoveAnnotationRef.current(marker.id);
+      }
+      return true;
+    }, []);
 
     // Function to save current scroll position
     const saveScrollPosition = useCallback(() => {
@@ -490,7 +551,16 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           // offered the annotation menu.
           if (readOnly) return;
 
-          // Position and show bubble menu (for both selection and cursor click)
+          // A bare cursor click no longer opens the annotation popup - line
+          // and page break markers are managed from the keyboard instead
+          // (Enter / Shift+Enter to add, Backspace/Delete to remove). Just
+          // close a popup left over from an earlier text selection.
+          if (isCursorPosition) {
+            if (bubbleMenuVisible) setBubbleMenuVisible(false);
+            return;
+          }
+
+          // Position and show bubble menu for a text selection
           if (editorRef.current?.view) {
             const view = editorRef.current.view;
             const startCoords = view.coordsAtPos(start);
@@ -723,6 +793,24 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     const extensions = [
       markdown({ base: markdownLanguage, codeLanguages: languages }),
       annotationField,
+      // Keyboard editing of position markers; highest precedence so the
+      // default Enter/Backspace/Delete text-editing commands never run.
+      Prec.highest(
+        keymap.of([
+          { key: "Enter", run: (view) => insertBreakMarker(view, "line-break") },
+          { key: "Shift-Enter", run: (view) => insertBreakMarker(view, "page-break") },
+          { key: "Mod-Enter", run: () => true },
+          { key: "Backspace", run: deleteBreakMarker },
+          { key: "Delete", run: deleteBreakMarker },
+        ])
+      ),
+      // The source text itself must never change from user input (typing,
+      // paste, cut, drag-drop); annotations are the only editable layer.
+      // Programmatic transactions (loading the text value) carry no
+      // userEvent annotation and still go through.
+      EditorState.changeFilter.of(
+        (tr) => !tr.isUserEvent("input") && !tr.isUserEvent("delete")
+      ),
       EditorView.updateListener.of((update) => {
         if (update.selectionSet) {
           handleSelectionComplete(update.state.selection);
@@ -994,6 +1082,11 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         />
 
         <div className="text-xs text-gray-500 sticky w-max right-1 bottom-1 float-right border  rounded-md py-1 px-2">
+          {!readOnly && (
+            <span className="mr-3 text-gray-400">
+              Enter: line break · Shift+Enter: page break · Backspace: remove
+            </span>
+          )}
           {textRef.current?.length || 0} characters
         </div>
 

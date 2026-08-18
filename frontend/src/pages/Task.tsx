@@ -27,12 +27,15 @@ import {
   getDisplayLabelForFilter,
   type Annotation,
 } from "@/utils/annotationConverter";
+import { POSITION_STRUCTURAL_TYPE_IDS } from "@/config/structural-annotations";
 import { useAnnotationOperations } from "@/hooks/useAnnotationOperations";
 import { useTaskOperations } from "@/hooks/useTaskOperations";
 import { useAnnotationNavigation } from "@/hooks/useAnnotationNavigation";
 import { exportAsJsonFile, exportAsTeiXmlFile } from "@/utils/exportAnnotation";
 import { TOAST_MESSAGES } from "@/constants/taskConstants";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { IoChevronBack, IoChevronForward } from "react-icons/io5";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/constants/queryKeys";
 import { toast } from "sonner";
@@ -59,6 +62,16 @@ const Index = () => {
   } = useAnnotationFiltersStore();
 
   const [diplomaticPanelOpen, setDiplomaticPanelOpen] = useState(false);
+  // Collapsible side panels: give the editor the full width when the user
+  // wants to focus on the text. Remembered per browser.
+  const [filterPanelOpen, setFilterPanelOpen] = useLocalStorage(
+    "taskFilterPanelOpen",
+    true
+  );
+  const [rightPanelOpen, setRightPanelOpen] = useLocalStorage(
+    "taskRightPanelOpen",
+    true
+  );
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
   const [revokingPermissionUserId, setRevokingPermissionUserId] = useState<number | null>(null);
   const location = useLocation();
@@ -354,8 +367,12 @@ const Index = () => {
    * regardless of origin.
    */
   const filteredAnnotations = useMemo(() => {
-    if (selectedAnnotationTypes.size === 0) return [];
     return annotationsForUI.filter((ann) => {
+      // Position markers (line/page breaks) are always visible in the editor:
+      // the type-filter panel deliberately doesn't list them, so they would
+      // otherwise never be rendered (or keyboard-deletable).
+      if (POSITION_STRUCTURAL_TYPE_IDS.includes(ann.type)) return true;
+      if (selectedAnnotationTypes.size === 0) return false;
       const filterKey = getDisplayLabelForFilter(ann);
       return filterKey ? selectedAnnotationTypes.has(filterKey) : false;
     });
@@ -422,43 +439,54 @@ const Index = () => {
       <div className="flex w-full gap-6 flex-1 px-6 mx-auto overflow-hidden">
         {/* Left: Filter + Main content */}
         <div className="flex flex-1 gap-4 min-w-0">
-          {/* Filter: left of editor */}
+          {/* Filter: left of editor (collapsible to a slim rail) */}
           <div className="flex-shrink-0 mt-4 mb-4">
-            <AnnotationTypesFilter
-              annotations={annotationsForUI}
-              loading={isFilterPending}
-              selectedAnnotationTypes={selectedAnnotationTypes}
-              onToggleAnnotationType={(displayLabel) => {
-                startFilterTransition(() => {
-                  const next = new Set(selectedAnnotationTypes);
-                  if (next.has(displayLabel)) next.delete(displayLabel);
-                  else next.add(displayLabel);
-                  setSelectedAnnotationTypes(next);
-                });
-              }}
-              onSelectAllAnnotationTypes={(displayLabels) => {
-                startFilterTransition(() =>
-                  setSelectedAnnotationTypes(new Set(displayLabels))
-                );
-              }}
-              onDeselectAllAnnotationTypes={() => {
-                startFilterTransition(() => setSelectedAnnotationTypes(new Set()));
-              }}
-              onSetSelectedAnnotationTypes={(set) => {
-                startFilterTransition(() => setSelectedAnnotationTypes(set));
-              }}
-            />
+            {filterPanelOpen ? (
+              <AnnotationTypesFilter
+                annotations={annotationsForUI}
+                loading={isFilterPending}
+                selectedAnnotationTypes={selectedAnnotationTypes}
+                onToggleAnnotationType={(displayLabel) => {
+                  startFilterTransition(() => {
+                    const next = new Set(selectedAnnotationTypes);
+                    if (next.has(displayLabel)) next.delete(displayLabel);
+                    else next.add(displayLabel);
+                    setSelectedAnnotationTypes(next);
+                  });
+                }}
+                onSelectAllAnnotationTypes={(displayLabels) => {
+                  startFilterTransition(() =>
+                    setSelectedAnnotationTypes(new Set(displayLabels))
+                  );
+                }}
+                onDeselectAllAnnotationTypes={() => {
+                  startFilterTransition(() => setSelectedAnnotationTypes(new Set()));
+                }}
+                onSetSelectedAnnotationTypes={(set) => {
+                  startFilterTransition(() => setSelectedAnnotationTypes(set));
+                }}
+                onCollapse={() => setFilterPanelOpen(false)}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setFilterPanelOpen(true)}
+                className="h-full w-8 flex flex-col items-center gap-2 py-3 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                title="Show annotation filters"
+              >
+                <IoChevronForward className="w-4 h-4 text-gray-600" />
+                <span
+                  className="text-[11px] font-medium text-gray-600 select-none"
+                  style={{ writingMode: "vertical-rl" }}
+                >
+                  Filters
+                </span>
+              </button>
+            )}
           </div>
 
           {/* Main Content Area: Diplomatic panel (top) + Text Annotator */}
-          <div
-            className={`flex-1 flex flex-col gap-3 mt-4 mb-4 transition-all duration-300 ease-in-out min-w-0 min-h-0 ${
-              sidebarOpen ? "mr-3" : "mr-0"
-            }`}
-            style={{
-              marginRight: sidebarOpen ? "0" : "60px",
-            }}
-          >
+          <div className="flex-1 flex flex-col gap-3 mt-4 mb-4 transition-all duration-300 ease-in-out min-w-0 min-h-0">
             <DiplomaticTextPanel
               textId={parsedTextId}
               isVisible={diplomaticPanelOpen}
@@ -511,9 +539,39 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Right Sidebar: Action Buttons + Annotation List */}
-        <div className="w-80 flex flex-col gap-4 h-[90vh] mt-4 mb-4 overflow-y-hidden">
-          {isViewOnly && (
+        {/* Right Sidebar: Action Buttons + Annotation List (collapsible to a slim rail) */}
+        <div
+          className={`flex flex-col gap-4 h-[90vh] mt-4 mb-4 overflow-y-hidden transition-all duration-300 ${
+            rightPanelOpen ? "w-80" : "w-8 flex-shrink-0"
+          }`}
+        >
+          {!rightPanelOpen && (
+            <button
+              type="button"
+              onClick={() => setRightPanelOpen(true)}
+              className="h-full w-8 flex flex-col items-center gap-2 py-3 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+              title="Show actions and annotations panel"
+            >
+              <IoChevronBack className="w-4 h-4 text-gray-600" />
+              <span
+                className="text-[11px] font-medium text-gray-600 select-none"
+                style={{ writingMode: "vertical-rl" }}
+              >
+                Actions & annotations
+              </span>
+            </button>
+          )}
+          {rightPanelOpen && (
+            <button
+              type="button"
+              onClick={() => setRightPanelOpen(false)}
+              className="self-end flex items-center gap-1 px-1.5 py-0.5 -mb-3 rounded text-[11px] text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors"
+              title="Hide side panel"
+            >
+              Hide <IoChevronForward className="w-3 h-3" />
+            </button>
+          )}
+          {rightPanelOpen && isViewOnly && (
             <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2">
               <p className="text-sm font-medium text-amber-900">View only</p>
               <p className="mt-0.5 text-xs text-amber-800">
@@ -522,6 +580,8 @@ const Index = () => {
               </p>
             </div>
           )}
+          {rightPanelOpen && (
+          <>
           <ActionButtons
             annotations={annotationsForUI}
             onSubmitTask={handleSubmitTask}
@@ -562,6 +622,8 @@ const Index = () => {
             isOpen={sidebarOpen}
             onToggle={toggleSidebar}
           />
+          </>
+          )}
         </div>
       </div>
 

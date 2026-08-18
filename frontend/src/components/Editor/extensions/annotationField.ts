@@ -4,6 +4,7 @@ import type { DecorationSet } from "@codemirror/view";
 import {
   isStructuralAnnotationType,
   getStructuralAnnotationType,
+  POSITION_STRUCTURAL_TYPE_IDS,
 } from "@/config/structural-annotations";
 import { getAnnotationDisplayLabel } from "@/utils/annotationConverter";
 import { sanitizeAnnotationTypeForClass } from "@/utils/annotationColorUtils";
@@ -54,6 +55,21 @@ class AnnotationLabelWidget extends WidgetType {
       this.isHighlighted ? "annotation-label-highlighted" : ""
     }`;
 
+    // Position markers (line/page break) render as a compact icon chip -
+    // showing the full "line-break" text at every break would swamp the text.
+    // The full name stays available as the hover tooltip.
+    const structuralType = isStructural
+      ? getStructuralAnnotationType(this.annotation.type)
+      : undefined;
+    const isPositionMarker = POSITION_STRUCTURAL_TYPE_IDS.includes(
+      this.annotation.type
+    );
+    const displayText =
+      isPositionMarker && structuralType?.icon
+        ? structuralType.icon
+        : this.titleText;
+    label.title = this.titleText;
+
     if (this.annotation.is_agreed) {
       // Create lock icon and text for agreed annotations
       const lockIcon = document.createElement("span");
@@ -62,7 +78,7 @@ class AnnotationLabelWidget extends WidgetType {
       lockIcon.style.fontSize = "10px";
 
       const textSpan = document.createElement("span");
-      textSpan.textContent = this.titleText;
+      textSpan.textContent = displayText;
 
       label.appendChild(lockIcon);
       label.appendChild(textSpan);
@@ -73,19 +89,14 @@ class AnnotationLabelWidget extends WidgetType {
       label.style.border = "1px solid #22c55e";
       label.style.cursor = "default";
     } else {
-      label.textContent = this.titleText;
+      label.textContent = displayText;
       label.style.cursor = "pointer";
 
       // Apply structural annotation colors if it's a structural type
-      if (isStructural) {
-        const structuralType = getStructuralAnnotationType(
-          this.annotation.type
-        );
-        if (structuralType) {
-          label.style.backgroundColor = structuralType.backgroundColor;
-          label.style.color = structuralType.color;
-          label.style.border = `1px solid ${structuralType.borderColor}`;
-        }
+      if (structuralType) {
+        label.style.backgroundColor = structuralType.backgroundColor;
+        label.style.color = structuralType.color;
+        label.style.border = `1px solid ${structuralType.borderColor}`;
       }
     }
 
