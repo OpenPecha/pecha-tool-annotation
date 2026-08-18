@@ -40,6 +40,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/constants/queryKeys";
 import { toast } from "sonner";
 
+/**
+ * Session bookmark: a per-user, per-text "I stopped here" position kept in
+ * this browser so an annotator can resume the next day. Deliberately not an
+ * annotation - it never touches the database, submissions, or exports.
+ */
+type TaskBookmark = { pos: number; savedAt: string };
+
+const bookmarkStorageKey = (userId: number | null, textId: number) =>
+  `taskBookmark:${userId ?? "anon"}:${textId}`;
+
 const Index = () => {
   const { textId } = useParams<{ textId: string }>();
   const navigate = useNavigate();
@@ -198,6 +208,77 @@ const Index = () => {
    * Handles scrolling to annotations and URL-based navigation
    */
   const { textAnnotatorRef, highlightedAnnotationId, handleAnnotationClick } = useAnnotationNavigation(annotationsForUI);
+
+  // --- Session bookmark (see TaskBookmark above) ---
+  const [bookmark, setBookmark] = useState<TaskBookmark | null>(null);
+
+  // Load the bookmark for this user+text; currentUserId arrives async.
+  useEffect(() => {
+    if (parsedTextId == null || isNaN(parsedTextId)) {
+      setBookmark(null);
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(
+        bookmarkStorageKey(currentUserId, parsedTextId)
+      );
+      setBookmark(raw ? (JSON.parse(raw) as TaskBookmark) : null);
+    } catch {
+      setBookmark(null);
+    }
+  }, [parsedTextId, currentUserId]);
+
+  const bookmarkLine = useMemo(() => {
+    if (!bookmark || !text) return null;
+    const pos = Math.min(bookmark.pos, text.length);
+    return text.slice(0, pos).split("\n").length;
+  }, [bookmark, text]);
+
+  const handleSetBookmark = () => {
+    if (parsedTextId == null || isNaN(parsedTextId)) return;
+    if (!selectedText) {
+      toast.info("Click in the text first", {
+        description:
+          "Place the cursor where you stopped, then press Bookmark.",
+      });
+      return;
+    }
+    const bm: TaskBookmark = {
+      pos: selectedText.start,
+      savedAt: new Date().toISOString(),
+    };
+    try {
+      localStorage.setItem(
+        bookmarkStorageKey(currentUserId, parsedTextId),
+        JSON.stringify(bm)
+      );
+    } catch {
+      // Storage blocked/full: the in-memory bookmark below still works for
+      // this session, it just won't survive a reload.
+    }
+    setBookmark(bm);
+    const line = text.slice(0, bm.pos).split("\n").length;
+    toast.success("Bookmark saved", {
+      description: `Line ${line} - use "Resume" to jump back here next session.`,
+    });
+  };
+
+  const handleGoToBookmark = () => {
+    if (!bookmark) return;
+    const pos = Math.min(bookmark.pos, text.length);
+    textAnnotatorRef.current?.scrollToPosition(pos, pos);
+  };
+
+  const handleClearBookmark = () => {
+    if (parsedTextId != null && !isNaN(parsedTextId)) {
+      try {
+        localStorage.removeItem(bookmarkStorageKey(currentUserId, parsedTextId));
+      } catch {
+        // Nothing to clean up if storage is unavailable.
+      }
+    }
+    setBookmark(null);
+  };
 
   const softDeleteMutation = useSoftDeleteMyText({
     onSuccess: () => navigate("/"),
@@ -500,6 +581,37 @@ const Index = () => {
                 }
               }}
             />
+          {/* Session bookmark bar */}
+          <div className="flex items-center gap-2 text-xs">
+            <button
+              type="button"
+              onClick={handleSetBookmark}
+              className="flex items-center gap-1 px-2 py-1 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+              title="Save your current cursor position so you can resume there next session"
+            >
+              🔖 Bookmark here
+            </button>
+            {bookmark && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleGoToBookmark}
+                  className="flex items-center gap-1 px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                  title={`Bookmarked ${new Date(bookmark.savedAt).toLocaleString()}`}
+                >
+                  Resume at line {bookmarkLine}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearBookmark}
+                  className="px-1.5 py-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  title="Remove bookmark"
+                >
+                  ✕
+                </button>
+              </>
+            )}
+          </div>
           <div className="flex-1 min-h-0 mt-0 relative">
             {isFilterPending && (
               <div

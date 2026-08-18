@@ -20,6 +20,7 @@ import { TOAST_MESSAGES } from "@/constants/taskConstants";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/constants/queryKeys";
 import { getDisplayLabelForFilter, type Annotation } from "@/utils/annotationConverter";
+import { truncateText } from "@/lib/utils";
 
 /**
  * Custom hook that encapsulates all annotation CRUD operations
@@ -56,6 +57,24 @@ export const useAnnotationOperations = (
   const createAnnotationMutation = useCreateAnnotation();
   const updateAnnotationMutation = useUpdateAnnotation();
   const deleteAnnotationMutation = useDeleteAnnotation();
+
+  /**
+   * Human-readable description of where an annotation sits: the quoted
+   * (truncated) selected text, or - for zero-width position markers like
+   * line/page breaks - the line number in the document.
+   */
+  const describeAnnotationTarget = useCallback(
+    (start: number, selectedText?: string | null): string => {
+      const snippet = selectedText?.trim();
+      if (snippet) return `"${truncateText(snippet, 40)}"`;
+      if (text && start >= 0 && start <= text.length) {
+        const line = text.slice(0, start).split("\n").length;
+        return `line ${line}`;
+      }
+      return `position ${start}`;
+    },
+    [text]
+  );
 
   /**
    * Validates annotation type against current navigation mode.
@@ -151,10 +170,8 @@ export const useAnnotationOperations = (
       });
     }
 
-    toast({
-      title: TOAST_MESSAGES.CREATING_ANNOTATION,
-      description: `Adding ${type} annotation`,
-    });
+    // No "creating..." toast: creation is optimistic and fast, and the
+    // success toast below already confirms the save.
 
     // Create annotation data for API (type = annotation_type, name = label)
     const annotationData: AnnotationCreate = {
@@ -184,9 +201,15 @@ export const useAnnotationOperations = (
           });
         }
 
+        const savedLabel =
+          data.name?.trim() || data.label || data.annotation_type;
         toast({
           title: TOAST_MESSAGES.ANNOTATION_CREATED,
-          description: `${data.annotation_type} annotation saved to database`,
+          description: `"${savedLabel}" applied to ${describeAnnotationTarget(
+            data.start_position,
+            data.selected_text
+          )}`,
+          variant: "success",
         });
       },
       onError: (error) => {
@@ -203,7 +226,7 @@ export const useAnnotationOperations = (
         queryClient.invalidateQueries({ queryKey: cacheKey });
       },
     });
-  }, [textId, validateAnnotationType, currentUserId, toast, createAnnotationMutation, queryClient]);
+  }, [textId, validateAnnotationType, describeAnnotationTarget, currentUserId, toast, createAnnotationMutation, queryClient]);
 
   /**
    * Find all non-overlapping occurrences of search in text.
@@ -599,11 +622,6 @@ export const useAnnotationOperations = (
       });
     }
 
-    toast({
-      title: TOAST_MESSAGES.CREATING_HEADER,
-      description: `Adding header "${name}"`,
-    });
-
     const annotationData: AnnotationCreate = {
       text_id: textIdNumber,
       annotation_type: "header",
@@ -630,7 +648,11 @@ export const useAnnotationOperations = (
 
         toast({
           title: TOAST_MESSAGES.ANNOTATION_CREATED,
-          description: `${data.annotation_type} annotation saved to database`,
+          description: `Header "${data.name || name}" applied to ${describeAnnotationTarget(
+            data.start_position,
+            data.selected_text
+          )}`,
+          variant: "success",
         });
       },
       onError: (error) => {
@@ -647,7 +669,7 @@ export const useAnnotationOperations = (
       },
     });
     setPendingHeader(null);
-  }, [pendingHeader, textId, currentUserId, queryClient, toast, createAnnotationMutation]);
+  }, [pendingHeader, textId, currentUserId, describeAnnotationTarget, queryClient, toast, createAnnotationMutation]);
 
   /**
    * Cancels header creation
