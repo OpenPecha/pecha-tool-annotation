@@ -540,5 +540,73 @@ class AnnotationCRUD:
             "by_type": {item.annotation_type: item.count for item in type_counts}
         }
 
+    def get_annotation_counts_summary(self, db: Session) -> dict:
+        """Per-user and per-text annotation counts for the statistics view."""
+        user_rows = (
+            db.query(
+                User.id.label("user_id"),
+                User.username,
+                User.full_name,
+                func.count(Annotation.id).label("annotation_count"),
+                func.count(func.distinct(Annotation.text_id)).label("text_count"),
+                func.max(Annotation.created_at).label("last_annotated_at"),
+            )
+            .join(User, User.id == Annotation.annotator_id)
+            .join(Text, Text.id == Annotation.text_id)
+            .filter(Text.deleted_at.is_(None))
+            .group_by(User.id, User.username, User.full_name)
+            .order_by(func.count(Annotation.id).desc())
+            .all()
+        )
+
+        text_rows = (
+            db.query(
+                Text.id.label("text_id"),
+                Text.title,
+                Text.status,
+                func.count(Annotation.id).label("annotation_count"),
+                func.count(func.distinct(Annotation.annotator_id)).label("annotator_count"),
+                func.max(Annotation.created_at).label("last_annotated_at"),
+            )
+            .join(Annotation, Annotation.text_id == Text.id)
+            .filter(Text.deleted_at.is_(None))
+            .group_by(Text.id, Text.title, Text.status)
+            .order_by(func.count(Annotation.id).desc())
+            .all()
+        )
+
+        total_annotations = (
+            db.query(Annotation)
+            .join(Text, Text.id == Annotation.text_id)
+            .filter(Text.deleted_at.is_(None))
+            .count()
+        )
+
+        return {
+            "total_annotations": total_annotations,
+            "by_user": [
+                {
+                    "user_id": row.user_id,
+                    "username": row.username,
+                    "full_name": row.full_name,
+                    "annotation_count": int(row.annotation_count or 0),
+                    "text_count": int(row.text_count or 0),
+                    "last_annotated_at": row.last_annotated_at,
+                }
+                for row in user_rows
+            ],
+            "by_text": [
+                {
+                    "text_id": row.text_id,
+                    "title": row.title,
+                    "status": row.status,
+                    "annotation_count": int(row.annotation_count or 0),
+                    "annotator_count": int(row.annotator_count or 0),
+                    "last_annotated_at": row.last_annotated_at,
+                }
+                for row in text_rows
+            ],
+        }
+
 
 annotation_crud = AnnotationCRUD() 

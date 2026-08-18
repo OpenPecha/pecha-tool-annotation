@@ -15,7 +15,8 @@ import {
   useTexts,
   useTextsForReviewList,
 } from "@/hooks";
-import { ClipboardCheck, ListTodo } from "lucide-react";
+import { BarChart3, ClipboardCheck, ListTodo } from "lucide-react";
+import { AnnotationStatsPanel } from "@/components/AnnotationStatsPanel";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TextStatus, type TextResponse, type UserRole } from "@/api/types";
@@ -66,7 +67,7 @@ export const RegularUserDashboard: React.FC = () => {
   const [isAssigning, setIsAssigning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "my-work" | "shared" | "all-tasks" | "to-review"
+    "my-work" | "shared" | "all-tasks" | "to-review" | "stats"
   >("my-work");
   const [myWorkPage, setMyWorkPage] = useState(1);
   const [sharedPage, setSharedPage] = useState(1);
@@ -366,6 +367,15 @@ export const RegularUserDashboard: React.FC = () => {
                     All Tasks
                   </Button>
                 )}
+
+                <Button
+                  variant={activeTab === "stats" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setActiveTab("stats")}
+                  className="rounded-md"
+                >
+                  Statistics
+                </Button>
               </div>
             </div>
           )}
@@ -729,6 +739,23 @@ export const RegularUserDashboard: React.FC = () => {
                   <p className="text-muted-foreground">No documents found on this page.</p>
                 </div>
               )}
+            </div>
+          )}
+          {user && activeTab === "stats" && (
+            <div className="mb-8">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <BarChart3 className="w-5 h-5 text-muted-foreground" />
+                  <h2 className="font-display text-lg font-semibold text-foreground">
+                    Statistics
+                  </h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  How many annotations each user has made, and how many each
+                  text has received.
+                </p>
+              </div>
+              <AnnotationStatsPanel />
             </div>
           )}
         </div>

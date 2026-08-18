@@ -150,7 +150,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         </div>
 
         <nav className="flex flex-1 flex-col gap-1.5">
-         
+          {navBtn(
+            "statistics",
+            <IoBarChart className="h-4 w-4" />,
+            "Statistics",
+            "Annotations per user and per text"
+          )}
           {navBtn(
             "tasks",
             <IoList className="h-4 w-4" />,

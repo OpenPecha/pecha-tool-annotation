@@ -41,6 +41,7 @@ export {
   useAnnotationsByType,
   useMyAnnotations,
   useAnnotationStats,
+  useAnnotationCountsSummary,
   useCreateAnnotation,
   useUpdateAnnotation,
   useDeleteAnnotation,

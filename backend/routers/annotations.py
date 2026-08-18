@@ -108,6 +108,15 @@ def get_annotation_stats(
     )
 
 
+@router.get("/stats/summary")
+def get_annotation_counts_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Get per-user and per-text annotation counts (visible to all signed-in users)."""
+    return annotations_controller.get_annotation_counts_summary(db, current_user)
+
+
 @router.get("/custom-labels", response_model=List[CustomAnnotationListResponse])
 def read_custom_annotation_labels(
     db: Session = Depends(get_db),

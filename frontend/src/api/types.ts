@@ -140,6 +140,30 @@ export interface AnnotationStats {
   annotations_by_user: Record<string, number>;
 }
 
+export interface AnnotationUserCount {
+  user_id: number;
+  username: string;
+  full_name?: string | null;
+  annotation_count: number;
+  text_count: number;
+  last_annotated_at?: string | null;
+}
+
+export interface AnnotationTextCount {
+  text_id: number;
+  title: string;
+  status: string;
+  annotation_count: number;
+  annotator_count: number;
+  last_annotated_at?: string | null;
+}
+
+export interface AnnotationCountsSummary {
+  total_annotations: number;
+  by_user: AnnotationUserCount[];
+  by_text: AnnotationTextCount[];
+}
+
 export interface ValidatePositionsRequest {
   text_id: number;
   start_position: number;

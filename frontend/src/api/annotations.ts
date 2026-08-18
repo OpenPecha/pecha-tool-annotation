@@ -5,6 +5,7 @@ import type {
   AnnotationUpdate,
   AnnotationFilters,
   AnnotationStats,
+  AnnotationCountsSummary,
   ValidatePositionsRequest,
   ValidatePositionsResponse,
   DeleteMyAnnotationsResponse,
@@ -99,6 +100,11 @@ export const annotationsApi = {
   getAnnotationStats: async (textId?: number): Promise<AnnotationStats> => {
     const params = textId ? { text_id: textId } : {};
     return apiClient.get<AnnotationStats>("/annotations/stats", params);
+  },
+
+  // Get per-user and per-text annotation counts
+  getAnnotationCountsSummary: async (): Promise<AnnotationCountsSummary> => {
+    return apiClient.get<AnnotationCountsSummary>("/annotations/stats/summary");
   },
 
   // Get unique custom annotation labels used by users but missing from the canonical annotation list

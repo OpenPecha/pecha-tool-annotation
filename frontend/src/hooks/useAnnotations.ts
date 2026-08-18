@@ -10,6 +10,7 @@ import type {
   AnnotationUpdate,
   AnnotationFilters,
   AnnotationStats,
+  AnnotationCountsSummary,
   ValidatePositionsRequest,
   ValidatePositionsResponse,
   DeleteMyAnnotationsResponse,
@@ -87,6 +88,17 @@ export const useAnnotationStats = (textId?: number) => {
   return useQuery<AnnotationStats>({
     queryKey: queryKeys.annotations.stats(textId),
     queryFn: () => annotationsApi.getAnnotationStats(textId),
+    staleTime: 1000 * 60, // 1 minute
+  });
+};
+
+/**
+ * Get per-user and per-text annotation counts for the statistics view
+ */
+export const useAnnotationCountsSummary = () => {
+  return useQuery<AnnotationCountsSummary>({
+    queryKey: queryKeys.annotations.countsSummary,
+    queryFn: () => annotationsApi.getAnnotationCountsSummary(),
     staleTime: 1000 * 60, // 1 minute
   });
 };

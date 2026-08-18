@@ -21,6 +21,7 @@ export const queryKeys = {
     byType: (type: string) => ["annotations-by-type", type] as const,
     myAnnotations: ["my-annotations"] as const,
     stats: (textId?: number) => textId ? ["annotation-stats", textId] as const : ["annotation-stats"] as const,
+    countsSummary: ["annotation-counts-summary"] as const,
   },
 
   // Texts
